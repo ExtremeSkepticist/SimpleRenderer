@@ -1,5 +1,10 @@
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
 #include <cassert>
 #include <Windows.h>
+
+// TODO: Organize folder structure (src, include, bin, etc..)
+// TODO: Automate pre-build & post-build steps with submodules (e.g. copying assimp dll files, etc.)
 
 HINSTANCE g_hInstance = nullptr;
 HWND g_hWnd = nullptr;
@@ -29,6 +34,10 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 	assert(g_hWnd != nullptr);
 
 	ShowWindow(g_hWnd, nCmdShow);
+
+	// TODO: Load gltf file into model and mesh objects
+	Assimp::Importer importer;
+	const aiScene* scene = importer.ReadFile("resources\\DamagedHelet.gltf", 0);
 
 	return 0;
 }

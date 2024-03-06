@@ -1,22 +1,41 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    <Filter Include="src">
+      <UniqueIdentifier>{2dcd35c7-b496-49d4-acba-7aff0fd98e1a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    <Filter Include="resources">
+      <UniqueIdentifier>{e3dba42a-c70c-4d3d-8e2c-a36e1be67fb1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>src</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="resources\albedo.jpg">
+      <Filter>resources</Filter>
+    </Image>
+    <Image Include="resources\ambient_occlusion.jpg">
+      <Filter>resources</Filter>
+    </Image>
+    <Image Include="resources\emissive.jpg">
+      <Filter>resources</Filter>
+    </Image>
+    <Image Include="resources\metal_roughness.jpg">
+      <Filter>resources</Filter>
+    </Image>
+    <Image Include="resources\normal.jpg">
+      <Filter>resources</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\DamagedHelmet.bin">
+      <Filter>resources</Filter>
+    </None>
+    <None Include="resources\DamagedHelmet.gltf">
+      <Filter>resources</Filter>
+    </None>
   </ItemGroup>
 </Project>
