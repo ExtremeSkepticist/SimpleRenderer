@@ -1,7 +1,9 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
-#include <cassert>
 #include <Windows.h>
+
+#include "Common.h"
+#include "Model.h"
 
 HINSTANCE g_hInstance = nullptr;
 HWND g_hWnd = nullptr;
@@ -35,6 +37,9 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 	// TODO: Load gltf file into model and mesh objects
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile("resources\\DamagedHelmet.gltf", 0);
+	assert(scene != nullptr);
+
+	Model model(*scene);
 
 	return 0;
 }

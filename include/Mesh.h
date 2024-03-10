@@ -1,13 +1,21 @@
 #pragma once
 
-#include <vector>
 #include <DirectXMath.h>
 
-using namespace std;
+#include "Common.h"
+
 using namespace DirectX;
+
+struct aiMesh;
+
 class Mesh
 {
+public:
+	Mesh() = delete;
+	Mesh(const aiMesh& assimpMesh);
+
 private:
 	vector<XMFLOAT3> mVertices;
+	const string mName;
 };
 
