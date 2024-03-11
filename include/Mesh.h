@@ -16,6 +16,7 @@ public:
 
 private:
 	vector<XMFLOAT3> mVertices;
+	vector<XMFLOAT2> mTexCoords;
 	const string mName;
 };
 

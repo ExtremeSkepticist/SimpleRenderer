@@ -34,11 +34,11 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 
 	ShowWindow(g_hWnd, nCmdShow);
 
-	// TODO: Load gltf file into model and mesh objects
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile("resources\\DamagedHelmet.gltf", 0);
 	assert(scene != nullptr);
 
+	// TODO: Implement recursive initialization when needed
 	Model model(*scene);
 
 	return 0;
