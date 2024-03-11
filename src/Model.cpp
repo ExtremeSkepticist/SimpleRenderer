@@ -9,6 +9,7 @@ Model::Model(const aiScene& assimpScene)
 
 	for (size_t i = 0; i < assimpScene.mNumMeshes; ++i)
 	{
+		mMeshes.emplace_back();
 		mMeshes[i] = make_unique<Mesh>(*assimpScene.mMeshes[i]);
 	}
 }
