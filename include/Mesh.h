@@ -17,6 +17,9 @@ public:
 private:
 	vector<XMFLOAT3> mVertices;
 	vector<XMFLOAT2> mTexCoords;
+	vector<XMFLOAT3> mNormals;
+	vector<unsigned int> mIndices;
+
 	const string mName;
 };
 
