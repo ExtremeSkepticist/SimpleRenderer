@@ -35,6 +35,7 @@
     <None Include="resources\DamagedHelmet.gltf">
       <Filter>resources</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">

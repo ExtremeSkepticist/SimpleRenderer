@@ -11,18 +11,14 @@ Mesh::Mesh(const aiMesh& assimpMesh)
 	assert(assimpMesh.HasFaces() == true);
 	
 	mVertices.reserve(assimpMesh.mNumVertices);
-	mTexCoords.reserve(assimpMesh.mNumVertices);
-	mNormals.reserve(assimpMesh.mNumVertices);
 	for (size_t i = 0; i < assimpMesh.mNumVertices; ++i)
 	{
-		const aiVector3D& VERTEX = assimpMesh.mVertices[i];
-		mVertices.emplace_back(VERTEX.x, VERTEX.y, VERTEX.z);
-
-		const aiVector3D& TEX_COORD = assimpMesh.mTextureCoords[0][i];
-		mTexCoords.emplace_back(TEX_COORD.x, TEX_COORD.y);
-
-		const aiVector3D& NORMAL = assimpMesh.mNormals[i];
-		mNormals.emplace_back(NORMAL.x, NORMAL.y, NORMAL.z);
+		const XMFLOAT3 POSITION(reinterpret_cast<float*>(&assimpMesh.mVertices[i]));
+		const XMFLOAT2 TEXCOORDS(reinterpret_cast<float*>(&assimpMesh.mTextureCoords[0][i]));
+		const XMFLOAT3 NORMAL(reinterpret_cast<float*>(&assimpMesh.mNormals[i]));
+		
+		const Vertex VERTEX = { POSITION, TEXCOORDS, NORMAL };
+		mVertices.emplace_back(VERTEX);
 	}
 
 	assert(assimpMesh.HasFaces() == true);

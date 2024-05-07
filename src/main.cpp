@@ -1,9 +1,9 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <d3d12.h>
+#include <d3dx12_core.h>
 #include <dxgi1_6.h>
 #include <Windows.h>
-#include <wrl.h>
 
 #include "Common.h"
 #include "Model.h"
@@ -12,6 +12,7 @@ using namespace Microsoft::WRL;
 
 HINSTANCE g_hInstance = nullptr;
 HWND g_hWnd = nullptr;
+// vector<Vertex> g_Vertices;
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 void LoadPipeline(ID3D12Device** device);
@@ -50,6 +51,18 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 	// TODO: Implement recursive initialization when needed
 	Model model(*scene);
 
+	// Create Vertex Buffer
+	{
+		auto& meshes = model.GetMeshes();
+		for (auto& mesh : meshes)
+		{
+			//device->CreateCommittedResource(
+			//	&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD)
+			//	, D3D12_HEAP_FLAG_NONE
+			//	, &CD3DX12_RESOURCE_DESC::Buffer())
+
+		}
+	}
 	return 0;
 }
 
@@ -75,6 +88,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
+// TODO: Add upload heap for uploading vertex
 void LoadPipeline(ID3D12Device** device)
 {
 	UINT dxgiFactoryFlags = 0;

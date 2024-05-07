@@ -1,6 +1,7 @@
 #pragma once
 
 #include <DirectXMath.h>
+#include <d3d12.h>
 
 #include "Common.h"
 
@@ -11,14 +12,27 @@ struct aiMesh;
 class Mesh
 {
 public:
+	typedef struct Vertex
+	{
+		XMFLOAT3 Position;
+		XMFLOAT2 TexCoords;
+		XMFLOAT3 Normal;
+	} Vertex;
+
+
 	Mesh() = delete;
 	Mesh(const aiMesh& assimpMesh);
 
+	inline ComPtr<ID3D12Resource>& GetVertexBuffer()
+	{
+		return mVertexBuffer;
+	}
+
 private:
-	vector<XMFLOAT3> mVertices;
-	vector<XMFLOAT2> mTexCoords;
-	vector<XMFLOAT3> mNormals;
-	vector<unsigned int> mIndices;
+	vector<Vertex> mVertices;
+	vector<size_t> mIndices;
+
+	ComPtr<ID3D12Resource> mVertexBuffer;
 
 	const string mName;
 };
