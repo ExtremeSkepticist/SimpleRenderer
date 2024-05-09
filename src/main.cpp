@@ -56,13 +56,36 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 		auto& meshes = model.GetMeshes();
 		for (auto& mesh : meshes)
 		{
-			//device->CreateCommittedResource(
-			//	&CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD)
-			//	, D3D12_HEAP_FLAG_NONE
-			//	, &CD3DX12_RESOURCE_DESC::Buffer())
+			// TODO: Use DEFAULT heap instead
+			const size_t VERTEX_BUFFER_SIZE = sizeof(Mesh::Vertex) * mesh->GetVerticeNum();
+			CD3DX12_HEAP_PROPERTIES heapProp(D3D12_HEAP_TYPE_UPLOAD);
+			CD3DX12_RESOURCE_DESC vertexBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(VERTEX_BUFFER_SIZE);
 
+			HRESULT IsVertexBufferCreated = device->CreateCommittedResource(
+				&heapProp
+				, D3D12_HEAP_FLAG_NONE
+				, &vertexBufferDesc
+				, D3D12_RESOURCE_STATE_GENERIC_READ
+				, nullptr
+				, IID_PPV_ARGS(&mesh->GetVertexBuffer()));
+
+			assert(SUCCEEDED(IsVertexBufferCreated));
+
+			UINT8* ptrVertexDataMapped = nullptr;
+			CD3DX12_RANGE readRange(0, 0);
+			mesh->GetVertexBuffer()->Map(0, &readRange, reinterpret_cast<void**>(&ptrVertexDataMapped));
+			{				
+				memcpy(ptrVertexDataMapped, &mesh->GetVerticeData(), sizeof(Mesh::Vertex));
+			}
+			mesh->GetVertexBuffer()->Unmap(0, nullptr);
+
+			D3D12_VERTEX_BUFFER_VIEW& vertexBufferView = mesh->GetVertexBufferView();
+			vertexBufferView.BufferLocation = mesh->GetVertexBuffer()->GetGPUVirtualAddress();
+			vertexBufferView.StrideInBytes = sizeof(Mesh::Vertex);
+			vertexBufferView.SizeInBytes = VERTEX_BUFFER_SIZE;
 		}
 	}
+
 	return 0;
 }
 

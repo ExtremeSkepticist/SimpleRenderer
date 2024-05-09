@@ -3,14 +3,18 @@
 #include "Mesh.h"
 
 Mesh::Mesh(const aiMesh& assimpMesh)
-	: mName(assimpMesh.mName.C_Str())
+	: mVerticeNum(0)
+	, mName(assimpMesh.mName.C_Str())
+	, mVertexBuffer(nullptr)
+	, mVertexBufferView()
 {
 	assert(assimpMesh.mNumVertices > 0);
 	assert(assimpMesh.GetNumUVChannels() == 1 && assimpMesh.HasTextureCoords(0) == true);
 	assert(assimpMesh.HasNormals() == true);
 	assert(assimpMesh.HasFaces() == true);
 	
-	mVertices.reserve(assimpMesh.mNumVertices);
+	mVerticeNum = assimpMesh.mNumVertices;
+	mVertices.reserve(mVerticeNum);
 	for (size_t i = 0; i < assimpMesh.mNumVertices; ++i)
 	{
 		const XMFLOAT3 POSITION(reinterpret_cast<float*>(&assimpMesh.mVertices[i]));
