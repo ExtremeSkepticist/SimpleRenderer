@@ -1,10 +1,9 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <d3d12.h>
-#include <d3dx12_core.h>
+#include <d3dx12.h>
 #include <dxgi1_6.h>
 #include <Windows.h>
-
 #include "Common.h"
 #include "Model.h"
 
@@ -12,10 +11,18 @@ using namespace Microsoft::WRL;
 
 HINSTANCE g_hInstance = nullptr;
 HWND g_hWnd = nullptr;
-// vector<Vertex> g_Vertices;
+
+// D3D12 resources
+ComPtr<ID3D12Device> g_pDevice = nullptr;
+ComPtr<ID3D12CommandAllocator> g_pCmdAllocator = nullptr;
+ComPtr<ID3D12CommandQueue> g_pCmdQueue = nullptr;
+ComPtr<ID3D12RootSignature> g_pRootSignature = nullptr;
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 void LoadPipeline(ID3D12Device** device);
+void LoadRenderResources();
+
+void Render();
 
 int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int nCmdShow)
 {
@@ -41,8 +48,7 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 
 	ShowWindow(g_hWnd, nCmdShow);
 
-	ComPtr<ID3D12Device> device = nullptr;
-	LoadPipeline(&device);
+	LoadPipeline();
 
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile("resources\\DamagedHelmet.gltf", 0);
@@ -61,7 +67,7 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 			CD3DX12_HEAP_PROPERTIES heapProp(D3D12_HEAP_TYPE_UPLOAD);
 			CD3DX12_RESOURCE_DESC vertexBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(VERTEX_BUFFER_SIZE);
 
-			HRESULT IsVertexBufferCreated = device->CreateCommittedResource(
+			HRESULT IsVertexBufferCreated = g_pDevice->CreateCommittedResource(
 				&heapProp
 				, D3D12_HEAP_FLAG_NONE
 				, &vertexBufferDesc
@@ -112,7 +118,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 }
 
 // TODO: Add upload heap for uploading vertex
-void LoadPipeline(ID3D12Device** device)
+void LoadPipeline()
 {
 	UINT dxgiFactoryFlags = 0;
 #if defined(_DEBUG)
@@ -142,11 +148,69 @@ void LoadPipeline(ID3D12Device** device)
 			continue;
 		}
 
-		if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(device))))
+		if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&g_pDevice))))
 		{
 			break;
 		}
 	}
 
-	assert(device != nullptr);
+	assert(g_pDevice != nullptr);
+
+	// Create command queue & command list
+	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
+	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+	g_pDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&g_pCmdQueue));
+	assert(g_pCmdQueue != nullptr);
+
+	g_pDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&g_pCmdAllocator));
+	assert(g_pCmdAllocator != nullptr);
+}
+
+void Render()
+{
+	HRESULT result = g_pCmdAllocator->Reset();
+	assert(SUCCEEDED(result));
+}
+
+// TODO
+void LoadRenderResources()
+{
+	D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
+	{
+		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+		, {"TEXCOORDS", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+		, {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+	};
+	
+	// Initialize Root Signature
+	const size_t DESCRIPTOR_RANGE_NUM = 1;
+	CD3DX12_DESCRIPTOR_RANGE1 descriptorRanges[DESCRIPTOR_RANGE_NUM] = {};
+	descriptorRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, DESCRIPTOR_RANGE_NUM, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
+	
+	const size_t ROOT_PARAMETER_NUM = 1;
+	CD3DX12_ROOT_PARAMETER1 rootParameters[ROOT_PARAMETER_NUM] = {};
+	rootParameters[0].InitAsDescriptorTable(ROOT_PARAMETER_NUM, &descriptorRanges[0], D3D12_SHADER_VISIBILITY_VERTEX);
+
+	D3D12_ROOT_SIGNATURE_FLAGS roFlags =
+		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
+
+	CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC roDesc = {};
+	roDesc.Init_1_1(ROOT_PARAMETER_NUM, rootParameters, 0, nullptr, roFlags);
+	
+	ComPtr<ID3DBlob> pSerializedSignature = nullptr;
+	ComPtr<ID3DBlob> pError= nullptr;
+	D3DX12SerializeVersionedRootSignature(&roDesc, D3D_ROOT_SIGNATURE_VERSION_1_1, &pSerializedSignature, &pError);
+	assert(pSerializedSignature != nullptr);
+
+	g_pDevice->CreateRootSignature(0, pSerializedSignature->GetBufferPointer(), pSerializedSignature->GetBufferSize(), IID_PPV_ARGS(&g_pRootSignature));
+	assert(g_pRootSignature != nullptr);
+
+	// Initialize PSO
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = { 0, };
+	psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) }; // TODO: make Mesh class return Vertex-struct-related data
+	psoDesc.pRootSignature = g_pRootSignature.Get();
 }
