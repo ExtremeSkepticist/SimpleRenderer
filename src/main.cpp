@@ -19,7 +19,7 @@ ComPtr<ID3D12CommandQueue> g_pCmdQueue = nullptr;
 ComPtr<ID3D12RootSignature> g_pRootSignature = nullptr;
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-void LoadPipeline(ID3D12Device** device);
+void LoadPipeline();
 void LoadRenderResources();
 
 void Render();
