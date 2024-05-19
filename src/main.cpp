@@ -1,6 +1,7 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <d3d12.h>
+#include <d3dcompiler.h>
 #include <d3dx12.h>
 #include <dxgi1_6.h>
 #include <Windows.h>
@@ -17,6 +18,7 @@ ComPtr<ID3D12Device> g_pDevice = nullptr;
 ComPtr<ID3D12CommandAllocator> g_pCmdAllocator = nullptr;
 ComPtr<ID3D12CommandQueue> g_pCmdQueue = nullptr;
 ComPtr<ID3D12RootSignature> g_pRootSignature = nullptr;
+ComPtr<ID3D12PipelineState> g_pPipelineStateObj = nullptr;
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 void LoadPipeline();
@@ -156,6 +158,8 @@ void LoadPipeline()
 
 	assert(g_pDevice != nullptr);
 
+	LoadRenderResources();
+
 	// Create command queue & command list
 	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
 	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
@@ -183,6 +187,7 @@ void LoadRenderResources()
 	};
 	
 	// Initialize Root Signature
+	// TOOD: Create CPU side const buffer
 	const size_t DESCRIPTOR_RANGE_NUM = 1;
 	CD3DX12_DESCRIPTOR_RANGE1 descriptorRanges[DESCRIPTOR_RANGE_NUM] = {};
 	descriptorRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, DESCRIPTOR_RANGE_NUM, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
@@ -209,8 +214,34 @@ void LoadRenderResources()
 	g_pDevice->CreateRootSignature(0, pSerializedSignature->GetBufferPointer(), pSerializedSignature->GetBufferSize(), IID_PPV_ARGS(&g_pRootSignature));
 	assert(g_pRootSignature != nullptr);
 
+	// Initialize Shader
+	// TODO: Use batch script instead to compile shaders
+	// TODO: Implement changing shaders upon using different effects
+	ComPtr<ID3DBlob> pVertexShader;
+	ComPtr<ID3DBlob> pPixelShader;
+
+	D3DReadFileToBlob(L"shaders\\BasicVertexShader.cso", &pVertexShader);
+	assert(pVertexShader != nullptr);
+	D3DReadFileToBlob(L"shaders\\BasicPixelShader.cso", &pPixelShader);
+	assert(pPixelShader != nullptr);
+
+	
 	// Initialize PSO
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = { 0, };
 	psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) }; // TODO: make Mesh class return Vertex-struct-related data
 	psoDesc.pRootSignature = g_pRootSignature.Get();
+	psoDesc.VS = CD3DX12_SHADER_BYTECODE(pVertexShader.Get());
+	psoDesc.PS = CD3DX12_SHADER_BYTECODE(pPixelShader.Get());
+	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	psoDesc.DepthStencilState.DepthEnable = FALSE;
+	psoDesc.DepthStencilState.StencilEnable = FALSE;
+	psoDesc.SampleMask = UINT_MAX;
+	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	psoDesc.NumRenderTargets = 1;
+	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	psoDesc.SampleDesc.Count = 1;
+
+	g_pDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&g_pPipelineStateObj));
+	assert(g_pPipelineStateObj != nullptr);
 }

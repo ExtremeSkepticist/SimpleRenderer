@@ -10,6 +10,9 @@
     <Filter Include="include">
       <UniqueIdentifier>{edfcbe41-9e8b-494b-85ff-04741d54ec5b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shaders">
+      <UniqueIdentifier>{9e547c3a-8de9-4f5b-a627-4ddec78671b4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Image Include="resources\albedo.jpg">
@@ -58,5 +61,13 @@
     <ClInclude Include="include\Common.h">
       <Filter>include</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="shaders\BasicVertexShader.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="shaders\BasicPixelShader.hlsl">
+      <Filter>shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

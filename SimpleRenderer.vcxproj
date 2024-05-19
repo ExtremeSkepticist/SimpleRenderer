@@ -124,7 +124,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>assimp-vc143-mtd.lib;d3d12.lib;dxgi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc143-mtd.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>cd assimp
@@ -136,6 +136,11 @@ xcopy bin\$(Configuration)\assimp-vc143-mtd.dll $(SolutionDir)bin\$(Configuratio
       <Command>
       </Command>
     </PostBuildEvent>
+    <FxCompile>
+      <ShaderModel>5.0</ShaderModel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <ObjectFileOutput>$(MSBuildProjectDirectory)\shaders\%(Filename).cso</ObjectFileOutput>
+    </FxCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -152,7 +157,7 @@ xcopy bin\$(Configuration)\assimp-vc143-mtd.dll $(SolutionDir)bin\$(Configuratio
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>assimp-vc143-mt.lib;d3d12.lib;dxgi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc143-mt.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>cd assimp
@@ -164,6 +169,14 @@ xcopy bin\$(Configuration)\assimp-vc143-mt.dll $(SolutionDir)bin\$(Configuration
       <Command>
       </Command>
     </PostBuildEvent>
+    <FxCompile>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <ShaderType>
+      </ShaderType>
+      <EntryPointName>main</EntryPointName>
+      <ObjectFileOutput>$(OutputPath)%(FileName).cso</ObjectFileOutput>
+      <ShaderModel>5.0</ShaderModel>
+    </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <Image Include="resources\albedo.jpg" />
@@ -186,6 +199,20 @@ xcopy bin\$(Configuration)\assimp-vc143-mt.dll $(SolutionDir)bin\$(Configuration
     <ClInclude Include="include\Common.h" />
     <ClInclude Include="include\Mesh.h" />
     <ClInclude Include="include\Model.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="shaders\BasicPixelShader.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
+    </FxCompile>
+    <FxCompile Include="shaders\BasicVertexShader.hlsl">
+      <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </EntryPointName>
+      <ObjectFileOutput Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+      </ObjectFileOutput>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Vertex</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Vertex</ShaderType>
+    </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
