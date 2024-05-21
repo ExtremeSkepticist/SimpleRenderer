@@ -14,6 +14,11 @@ HINSTANCE g_hInstance = nullptr;
 HWND g_hWnd = nullptr;
 
 // D3D12 resources
+const size_t g_FRAME_WIDTH = 800;
+const size_t g_FRAME_HEIGHT = 600;
+const size_t g_FRAME_COUNT = 2;
+size_t g_CurrentFrameIndex = 0;
+ComPtr<IDXGISwapChain3> g_pSwapChain = nullptr;
 ComPtr<ID3D12Device> g_pDevice = nullptr;
 ComPtr<ID3D12CommandAllocator> g_pCmdAllocator = nullptr;
 ComPtr<ID3D12CommandQueue> g_pCmdQueue = nullptr;
@@ -39,7 +44,7 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 	assert(result != FALSE);
 
 	g_hInstance = hInstance;
-	RECT rec = { 0, 0, 800, 600 };
+	RECT rec = { 0, 0, g_FRAME_WIDTH, g_FRAME_HEIGHT };
 	AdjustWindowRect(&rec, WS_OVERLAPPEDWINDOW, FALSE);
 
 	g_hWnd = CreateWindow(L"SimpleRenderer", nullptr
@@ -51,6 +56,7 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 	ShowWindow(g_hWnd, nCmdShow);
 
 	LoadPipeline();
+	LoadRenderResources();
 
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile("resources\\DamagedHelmet.gltf", 0);
@@ -119,7 +125,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return 0;
 }
 
-// TODO: Add upload heap for uploading vertex
 void LoadPipeline()
 {
 	UINT dxgiFactoryFlags = 0;
@@ -132,15 +137,15 @@ void LoadPipeline()
 	}
 #endif
 
-	ComPtr<IDXGIFactory6> factory;
-	HRESULT result = CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&factory));
+	ComPtr<IDXGIFactory6> pDxgiFactory;
+	HRESULT result = CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&pDxgiFactory));
 	
-	assert(factory != nullptr);
+	assert(pDxgiFactory != nullptr);
 
 	ComPtr<IDXGIAdapter1> adapter;
 	for (UINT adapterIndex = 0; ; ++adapterIndex)
 	{
-		factory->EnumAdapterByGpuPreference(adapterIndex, DXGI_GPU_PREFERENCE_UNSPECIFIED, IID_PPV_ARGS(&adapter));
+		pDxgiFactory->EnumAdapterByGpuPreference(adapterIndex, DXGI_GPU_PREFERENCE_UNSPECIFIED, IID_PPV_ARGS(&adapter));
 
 		DXGI_ADAPTER_DESC1 desc = { 0, };
 		adapter->GetDesc1(&desc);
@@ -155,19 +160,32 @@ void LoadPipeline()
 			break;
 		}
 	}
-
 	assert(g_pDevice != nullptr);
 
-	LoadRenderResources();
-
-	// Create command queue & command list
+	// Create command queue
 	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
 	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 	g_pDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&g_pCmdQueue));
 	assert(g_pCmdQueue != nullptr);
 
-	g_pDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&g_pCmdAllocator));
-	assert(g_pCmdAllocator != nullptr);
+	// TODO: Move all Window/SwapChain related things into a new class
+	// Create SwapChain
+	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = { 0, };
+	swapChainDesc.BufferCount = g_FRAME_COUNT;
+	swapChainDesc.Width = g_FRAME_WIDTH;
+	swapChainDesc.Height = g_FRAME_HEIGHT;
+	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+	swapChainDesc.SampleDesc.Count = 1;
+	
+	ComPtr<IDXGISwapChain1> pTempSwapChain = nullptr;
+	pDxgiFactory->CreateSwapChainForHwnd(g_pCmdQueue.Get(), g_hWnd, &swapChainDesc, nullptr, nullptr, &pTempSwapChain);
+	assert(pTempSwapChain != nullptr);
+
+	pDxgiFactory->MakeWindowAssociation(g_hWnd, DXGI_MWA_NO_ALT_ENTER);
+	pTempSwapChain.As(&g_pSwapChain);
+	g_CurrentFrameIndex = g_pSwapChain->GetCurrentBackBufferIndex();
 }
 
 void Render()
@@ -179,13 +197,6 @@ void Render()
 // TODO
 void LoadRenderResources()
 {
-	D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
-	{
-		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
-		, {"TEXCOORDS", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
-		, {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
-	};
-	
 	// Initialize Root Signature
 	// TOOD: Create CPU side const buffer
 	const size_t DESCRIPTOR_RANGE_NUM = 1;
@@ -225,8 +236,14 @@ void LoadRenderResources()
 	D3DReadFileToBlob(L"shaders\\BasicPixelShader.cso", &pPixelShader);
 	assert(pPixelShader != nullptr);
 
-	
 	// Initialize PSO
+	D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
+	{
+		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+		, {"TEXCOORDS", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+		, {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+	};
+
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = { 0, };
 	psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) }; // TODO: make Mesh class return Vertex-struct-related data
 	psoDesc.pRootSignature = g_pRootSignature.Get();
@@ -244,4 +261,8 @@ void LoadRenderResources()
 
 	g_pDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&g_pPipelineStateObj));
 	assert(g_pPipelineStateObj != nullptr);
+
+	// Create command allocator & command list
+	g_pDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&g_pCmdAllocator));
+	assert(g_pCmdAllocator != nullptr);
 }
