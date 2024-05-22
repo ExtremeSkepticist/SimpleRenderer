@@ -19,7 +19,10 @@ const size_t g_FRAME_HEIGHT = 600;
 const size_t g_FRAME_COUNT = 2;
 size_t g_CurrentFrameIndex = 0;
 ComPtr<IDXGISwapChain3> g_pSwapChain = nullptr;
+ComPtr<ID3D12Resource> g_pRenderTargets[g_FRAME_COUNT];
 ComPtr<ID3D12Device> g_pDevice = nullptr;
+ComPtr<ID3D12DescriptorHeap> g_pRenderTargetViewHeap = nullptr;
+ComPtr<ID3D12DescriptorHeap> g_pConstBufferViewHeap = nullptr;
 ComPtr<ID3D12CommandAllocator> g_pCmdAllocator = nullptr;
 ComPtr<ID3D12CommandQueue> g_pCmdQueue = nullptr;
 ComPtr<ID3D12RootSignature> g_pRootSignature = nullptr;
@@ -186,6 +189,32 @@ void LoadPipeline()
 	pDxgiFactory->MakeWindowAssociation(g_hWnd, DXGI_MWA_NO_ALT_ENTER);
 	pTempSwapChain.As(&g_pSwapChain);
 	g_CurrentFrameIndex = g_pSwapChain->GetCurrentBackBufferIndex();
+
+	// Create descriptor heaps
+	// Create RenderTargetView Heap
+	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
+	rtvHeapDesc.NumDescriptors = g_FRAME_COUNT;
+	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+	g_pDevice->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&g_pRenderTargetViewHeap));
+	assert(g_pRenderTargetViewHeap != nullptr);
+
+	// Bind RenderTarget Resource to descriptor heap
+	CD3DX12_CPU_DESCRIPTOR_HANDLE renderTargetHandle(g_pRenderTargetViewHeap->GetCPUDescriptorHandleForHeapStart());
+	for (size_t i = 0; i < g_FRAME_COUNT; ++i)
+	{
+		g_pSwapChain->GetBuffer(i, IID_PPV_ARGS(&g_pRenderTargets[i]));
+		g_pDevice->CreateRenderTargetView(g_pRenderTargets[i].Get(), nullptr, renderTargetHandle);
+		renderTargetHandle.Offset(1, g_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
+	}
+
+	// Create ConstBufferView Heap
+	D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
+	cbvHeapDesc.NumDescriptors = 1;
+	cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	g_pDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&g_pConstBufferViewHeap));
+	assert(g_pConstBufferViewHeap != nullptr);
 }
 
 void Render()
