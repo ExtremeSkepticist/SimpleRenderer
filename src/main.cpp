@@ -10,6 +10,13 @@
 
 using namespace Microsoft::WRL;
 
+// TODO: Fill this with transform matrix
+typedef struct
+{
+	XMFLOAT4 mOffset;
+	float padding[60];
+} ConstBuffer;
+
 HINSTANCE g_hInstance = nullptr;
 HWND g_hWnd = nullptr;
 
@@ -23,6 +30,7 @@ ComPtr<ID3D12Resource> g_pRenderTargets[g_FRAME_COUNT];
 ComPtr<ID3D12Device> g_pDevice = nullptr;
 ComPtr<ID3D12DescriptorHeap> g_pRenderTargetViewHeap = nullptr;
 ComPtr<ID3D12DescriptorHeap> g_pConstBufferViewHeap = nullptr;
+ComPtr<ID3D12Resource> g_pConstBuffer = nullptr;
 ComPtr<ID3D12CommandAllocator> g_pCmdAllocator = nullptr;
 ComPtr<ID3D12CommandQueue> g_pCmdQueue = nullptr;
 ComPtr<ID3D12RootSignature> g_pRootSignature = nullptr;
@@ -215,6 +223,23 @@ void LoadPipeline()
 	cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	g_pDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&g_pConstBufferViewHeap));
 	assert(g_pConstBufferViewHeap != nullptr);
+
+	const size_t CONST_BUFFER_SIZE = sizeof(ConstBuffer);
+	const CD3DX12_HEAP_PROPERTIES CONST_BUFFER_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	const CD3DX12_RESOURCE_DESC CONST_BUFFER_RESOURCE_DESC = CD3DX12_RESOURCE_DESC::Buffer(CONST_BUFFER_SIZE);
+	g_pDevice->CreateCommittedResource(
+		&CONST_BUFFER_HEAP_PROPERTIES
+		, D3D12_HEAP_FLAG_NONE
+		, &CONST_BUFFER_RESOURCE_DESC
+		, D3D12_RESOURCE_STATE_GENERIC_READ
+		, nullptr
+		, IID_PPV_ARGS(&g_pConstBuffer)
+	);
+
+	D3D12_CONSTANT_BUFFER_VIEW_DESC constBufferDesc = { 0, };
+	constBufferDesc.BufferLocation = g_pConstBuffer->GetGPUVirtualAddress();
+	constBufferDesc.SizeInBytes = CONST_BUFFER_SIZE;
+	g_pDevice->CreateConstantBufferView(&constBufferDesc, g_pConstBufferViewHeap->GetCPUDescriptorHandleForHeapStart());
 }
 
 void Render()
