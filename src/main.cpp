@@ -10,11 +10,13 @@
 
 using namespace Microsoft::WRL;
 
+//TODO: Texture -https://github.com/microsoft/DirectXTK12/blob/main/Src/WICTextureLoader.cpp#L642
 // TODO: Fill this with transform matrix
 typedef struct
 {
-	XMFLOAT4 mOffset;
-	float padding[60];
+	XMMATRIX mWorldMatrix;
+	XMMATRIX mViewMatrix;
+	XMMATRIX mProjectionMatrix;
 } ConstBuffer;
 
 HINSTANCE g_hInstance = nullptr;
@@ -25,6 +27,8 @@ const size_t g_FRAME_WIDTH = 800;
 const size_t g_FRAME_HEIGHT = 600;
 const size_t g_FRAME_COUNT = 2;
 size_t g_CurrentFrameIndex = 0;
+CD3DX12_VIEWPORT g_Viewport(0.0f, 0.0f, static_cast<float>(g_FRAME_WIDTH), static_cast<float>(g_FRAME_HEIGHT));
+CD3DX12_RECT g_ScissorRect(0, 0, static_cast<LONG>(g_FRAME_WIDTH), static_cast<LONG>(g_FRAME_HEIGHT));
 ComPtr<IDXGISwapChain3> g_pSwapChain = nullptr;
 ComPtr<ID3D12Resource> g_pRenderTargets[g_FRAME_COUNT];
 ComPtr<ID3D12Device> g_pDevice = nullptr;
@@ -32,9 +36,15 @@ ComPtr<ID3D12DescriptorHeap> g_pRenderTargetViewHeap = nullptr;
 ComPtr<ID3D12DescriptorHeap> g_pConstBufferViewHeap = nullptr;
 ComPtr<ID3D12Resource> g_pConstBuffer = nullptr;
 ComPtr<ID3D12CommandAllocator> g_pCmdAllocator = nullptr;
+ComPtr<ID3D12GraphicsCommandList> g_pCmdList = nullptr;
 ComPtr<ID3D12CommandQueue> g_pCmdQueue = nullptr;
 ComPtr<ID3D12RootSignature> g_pRootSignature = nullptr;
 ComPtr<ID3D12PipelineState> g_pPipelineStateObj = nullptr;
+
+Model* g_pModel = nullptr;
+
+ConstBuffer g_ConstBufferData;
+UINT8* g_pConstBufferMapped = nullptr;
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 void LoadPipeline();
@@ -44,6 +54,7 @@ void Render();
 
 int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int nCmdShow)
 {
+#pragma region Initialize Window
 	WNDCLASSEX windowClassEx = { 0, };
 	windowClassEx.cbSize = sizeof(WNDCLASSEX);
 	windowClassEx.style = CS_HREDRAW | CS_VREDRAW;
@@ -64,10 +75,11 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 		, nullptr, nullptr, hInstance, nullptr);
 	assert(g_hWnd != nullptr);
 
+#pragma endregion
+
 	ShowWindow(g_hWnd, nCmdShow);
 
 	LoadPipeline();
-	LoadRenderResources();
 
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile("resources\\DamagedHelmet.gltf", 0);
@@ -75,42 +87,10 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 
 	// TODO: Implement recursive initialization when needed
 	Model model(*scene);
+	g_pModel = &model;
 
-	// Create Vertex Buffer
-	{
-		auto& meshes = model.GetMeshes();
-		for (auto& mesh : meshes)
-		{
-			// TODO: Use DEFAULT heap instead
-			const size_t VERTEX_BUFFER_SIZE = sizeof(Mesh::Vertex) * mesh->GetVerticeNum();
-			CD3DX12_HEAP_PROPERTIES heapProp(D3D12_HEAP_TYPE_UPLOAD);
-			CD3DX12_RESOURCE_DESC vertexBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(VERTEX_BUFFER_SIZE);
-
-			HRESULT IsVertexBufferCreated = g_pDevice->CreateCommittedResource(
-				&heapProp
-				, D3D12_HEAP_FLAG_NONE
-				, &vertexBufferDesc
-				, D3D12_RESOURCE_STATE_GENERIC_READ
-				, nullptr
-				, IID_PPV_ARGS(&mesh->GetVertexBuffer()));
-
-			assert(SUCCEEDED(IsVertexBufferCreated));
-
-			UINT8* ptrVertexDataMapped = nullptr;
-			CD3DX12_RANGE readRange(0, 0);
-			mesh->GetVertexBuffer()->Map(0, &readRange, reinterpret_cast<void**>(&ptrVertexDataMapped));
-			{				
-				memcpy(ptrVertexDataMapped, &mesh->GetVerticeData(), sizeof(Mesh::Vertex));
-			}
-			mesh->GetVertexBuffer()->Unmap(0, nullptr);
-
-			D3D12_VERTEX_BUFFER_VIEW& vertexBufferView = mesh->GetVertexBufferView();
-			vertexBufferView.BufferLocation = mesh->GetVertexBuffer()->GetGPUVirtualAddress();
-			vertexBufferView.StrideInBytes = sizeof(Mesh::Vertex);
-			vertexBufferView.SizeInBytes = VERTEX_BUFFER_SIZE;
-		}
-	}
-
+	LoadRenderResources();
+	
 	return 0;
 }
 
@@ -138,6 +118,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 void LoadPipeline()
 {
+#pragma region Create Device
 	UINT dxgiFactoryFlags = 0;
 #if defined(_DEBUG)
 	ComPtr<ID3D12Debug> debugController;
@@ -173,12 +154,17 @@ void LoadPipeline()
 	}
 	assert(g_pDevice != nullptr);
 
+#pragma endregion
+
+#pragma region Create Command Queue
 	// Create command queue
 	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
 	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 	g_pDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&g_pCmdQueue));
 	assert(g_pCmdQueue != nullptr);
+#pragma endregion
 
+#pragma region Create SwapChain
 	// TODO: Move all Window/SwapChain related things into a new class
 	// Create SwapChain
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = { 0, };
@@ -197,9 +183,9 @@ void LoadPipeline()
 	pDxgiFactory->MakeWindowAssociation(g_hWnd, DXGI_MWA_NO_ALT_ENTER);
 	pTempSwapChain.As(&g_pSwapChain);
 	g_CurrentFrameIndex = g_pSwapChain->GetCurrentBackBufferIndex();
+#pragma endregion
 
-	// Create descriptor heaps
-	// Create RenderTargetView Heap
+#pragma region Create RenderTarget View
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
 	rtvHeapDesc.NumDescriptors = g_FRAME_COUNT;
 	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
@@ -215,43 +201,51 @@ void LoadPipeline()
 		g_pDevice->CreateRenderTargetView(g_pRenderTargets[i].Get(), nullptr, renderTargetHandle);
 		renderTargetHandle.Offset(1, g_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
 	}
-
-	// Create ConstBufferView Heap
-	D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
-	cbvHeapDesc.NumDescriptors = 1;
-	cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	g_pDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&g_pConstBufferViewHeap));
-	assert(g_pConstBufferViewHeap != nullptr);
-
-	const size_t CONST_BUFFER_SIZE = sizeof(ConstBuffer);
-	const CD3DX12_HEAP_PROPERTIES CONST_BUFFER_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-	const CD3DX12_RESOURCE_DESC CONST_BUFFER_RESOURCE_DESC = CD3DX12_RESOURCE_DESC::Buffer(CONST_BUFFER_SIZE);
-	g_pDevice->CreateCommittedResource(
-		&CONST_BUFFER_HEAP_PROPERTIES
-		, D3D12_HEAP_FLAG_NONE
-		, &CONST_BUFFER_RESOURCE_DESC
-		, D3D12_RESOURCE_STATE_GENERIC_READ
-		, nullptr
-		, IID_PPV_ARGS(&g_pConstBuffer)
-	);
-
-	D3D12_CONSTANT_BUFFER_VIEW_DESC constBufferDesc = { 0, };
-	constBufferDesc.BufferLocation = g_pConstBuffer->GetGPUVirtualAddress();
-	constBufferDesc.SizeInBytes = CONST_BUFFER_SIZE;
-	g_pDevice->CreateConstantBufferView(&constBufferDesc, g_pConstBufferViewHeap->GetCPUDescriptorHandleForHeapStart());
+#pragma endregion
 }
 
 void Render()
 {
 	HRESULT result = g_pCmdAllocator->Reset();
 	assert(SUCCEEDED(result));
+
+	result = g_pCmdList->Reset(g_pCmdAllocator.Get(), g_pPipelineStateObj.Get());
+	assert(SUCCEEDED(result));
+
+	g_pCmdList->SetGraphicsRootSignature(g_pRootSignature.Get());
+
+	ID3D12DescriptorHeap* pArrayDescriptorHeaps[] = { g_pConstBufferViewHeap.Get() };
+	g_pCmdList->SetDescriptorHeaps(_countof(pArrayDescriptorHeaps), pArrayDescriptorHeaps);
+
+	// TODO: Set Descriptor table with shader resources
+	// g_pCmdList->SetGraphicsRootDescriptorTable();
+	g_pCmdList->RSSetViewports(1, &g_Viewport);
+	g_pCmdList->RSSetScissorRects(1, &g_ScissorRect);
+
+
+	CD3DX12_RESOURCE_BARRIER resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(g_pRenderTargets[g_CurrentFrameIndex].Get()
+		, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+	g_pCmdList->ResourceBarrier(1, &resourceBarrier);
+	{
+		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(g_pRenderTargetViewHeap->GetCPUDescriptorHandleForHeapStart(), g_CurrentFrameIndex, g_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
+		g_pCmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+
+		const FLOAT pClearingColor[] = { 0, 0, 0, 0 };
+		g_pCmdList->ClearRenderTargetView(rtvHandle, pClearingColor, 0, nullptr);
+		g_pCmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+		// TODO: Record commands for drawing vertices
+	}
+	resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(g_pRenderTargets[g_CurrentFrameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+	g_pCmdList->ResourceBarrier(1, &resourceBarrier);
+	
+	g_pCmdList->Close();
 }
 
 // TODO
 void LoadRenderResources()
 {
-	// Initialize Root Signature
+#pragma region Initialize Root Signature
 	// TOOD: Create CPU side const buffer
 	const size_t DESCRIPTOR_RANGE_NUM = 1;
 	CD3DX12_DESCRIPTOR_RANGE1 descriptorRanges[DESCRIPTOR_RANGE_NUM] = {};
@@ -279,7 +273,9 @@ void LoadRenderResources()
 	g_pDevice->CreateRootSignature(0, pSerializedSignature->GetBufferPointer(), pSerializedSignature->GetBufferSize(), IID_PPV_ARGS(&g_pRootSignature));
 	assert(g_pRootSignature != nullptr);
 
-	// Initialize Shader
+#pragma endregion
+
+#pragma region Initialize shader
 	// TODO: Use batch script instead to compile shaders
 	// TODO: Implement changing shaders upon using different effects
 	ComPtr<ID3DBlob> pVertexShader;
@@ -289,7 +285,9 @@ void LoadRenderResources()
 	assert(pVertexShader != nullptr);
 	D3DReadFileToBlob(L"shaders\\BasicPixelShader.cso", &pPixelShader);
 	assert(pPixelShader != nullptr);
+#pragma endregion
 
+#pragma region Initialize PSO
 	// Initialize PSO
 	D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
 	{
@@ -316,7 +314,92 @@ void LoadRenderResources()
 	g_pDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&g_pPipelineStateObj));
 	assert(g_pPipelineStateObj != nullptr);
 
-	// Create command allocator & command list
+#pragma endregion
+
+#pragma region Create command allocator & command list
 	g_pDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&g_pCmdAllocator));
 	assert(g_pCmdAllocator != nullptr);
+
+	g_pDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT
+		, g_pCmdAllocator.Get(), g_pPipelineStateObj.Get(), IID_PPV_ARGS(&g_pCmdList));
+	assert(g_pCmdList != nullptr);
+	g_pCmdList->Close();
+
+#pragma endregion
+
+#pragma region Create Vertex Buffer
+	auto& meshes = g_pModel->GetMeshes();
+	for (auto& mesh : meshes)
+	{
+		// TODO: Use DEFAULT heap instead
+		const size_t VERTEX_BUFFER_SIZE = sizeof(Mesh::Vertex) * mesh->GetVerticeNum();
+		CD3DX12_HEAP_PROPERTIES heapProp(D3D12_HEAP_TYPE_UPLOAD);
+		CD3DX12_RESOURCE_DESC vertexBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(VERTEX_BUFFER_SIZE);
+
+		HRESULT IsVertexBufferCreated = g_pDevice->CreateCommittedResource(
+			&heapProp
+			, D3D12_HEAP_FLAG_NONE
+			, &vertexBufferDesc
+			, D3D12_RESOURCE_STATE_GENERIC_READ
+			, nullptr
+			, IID_PPV_ARGS(&mesh->GetVertexBuffer()));
+
+		assert(SUCCEEDED(IsVertexBufferCreated));
+
+		UINT8* ptrVertexDataMapped = nullptr;
+		CD3DX12_RANGE readRange(0, 0);
+		mesh->GetVertexBuffer()->Map(0, &readRange, reinterpret_cast<void**>(&ptrVertexDataMapped));
+		{
+			memcpy(ptrVertexDataMapped, &mesh->GetVerticeData(), sizeof(Mesh::Vertex));
+		}
+		mesh->GetVertexBuffer()->Unmap(0, nullptr);
+
+		D3D12_VERTEX_BUFFER_VIEW& vertexBufferView = mesh->GetVertexBufferView();
+		vertexBufferView.BufferLocation = mesh->GetVertexBuffer()->GetGPUVirtualAddress();
+		vertexBufferView.StrideInBytes = sizeof(Mesh::Vertex);
+		vertexBufferView.SizeInBytes = VERTEX_BUFFER_SIZE;
+		}
+#pragma endregion
+
+#pragma region Create ConstBuffer
+	// Create ConstBufferView Heap
+	D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
+	cbvHeapDesc.NumDescriptors = 1;
+	cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	g_pDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&g_pConstBufferViewHeap));
+	assert(g_pConstBufferViewHeap != nullptr);
+
+	// Create GPU resource for Const Buffer
+	const size_t CONST_BUFFER_SIZE = sizeof(ConstBuffer);
+	const CD3DX12_HEAP_PROPERTIES CONST_BUFFER_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	const CD3DX12_RESOURCE_DESC CONST_BUFFER_RESOURCE_DESC = CD3DX12_RESOURCE_DESC::Buffer(CONST_BUFFER_SIZE);
+	g_pDevice->CreateCommittedResource(
+		&CONST_BUFFER_HEAP_PROPERTIES
+		, D3D12_HEAP_FLAG_NONE
+		, &CONST_BUFFER_RESOURCE_DESC
+		, D3D12_RESOURCE_STATE_GENERIC_READ
+		, nullptr
+		, IID_PPV_ARGS(&g_pConstBuffer)
+	);
+
+	D3D12_CONSTANT_BUFFER_VIEW_DESC constBufferDesc = { 0, };
+	constBufferDesc.BufferLocation = g_pConstBuffer->GetGPUVirtualAddress();
+	constBufferDesc.SizeInBytes = CONST_BUFFER_SIZE;
+	g_pDevice->CreateConstantBufferView(&constBufferDesc, g_pConstBufferViewHeap->GetCPUDescriptorHandleForHeapStart());
+
+
+	// TODO: Fill this properly
+	g_ConstBufferData.mWorldMatrix = XMMatrixIdentity();
+	g_ConstBufferData.mViewMatrix = XMMatrixIdentity();
+	g_ConstBufferData.mProjectionMatrix = XMMatrixIdentity();
+
+	// Map and initialize the constant buffer. We don't unmap this until the
+	// app closes. Keeping things mapped for the lifetime of the resource is okay.
+	// TODO: how do map() and unmap() work?
+	CD3DX12_RANGE constBufferReadRange(0, 0);
+	g_pConstBuffer->Map(0, &constBufferReadRange, reinterpret_cast<void**>(&g_pConstBufferMapped));
+	memcpy(g_pConstBufferMapped, &g_ConstBufferData, sizeof(g_ConstBufferData));
+
+#pragma endregion
 }
