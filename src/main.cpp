@@ -12,11 +12,14 @@ using namespace Microsoft::WRL;
 
 //TODO: Texture -https://github.com/microsoft/DirectXTK12/blob/main/Src/WICTextureLoader.cpp#L642
 // TODO: Fill this with transform matrix
+
+#pragma pack(256)
 typedef struct
 {
 	XMMATRIX mWorldMatrix;
 	XMMATRIX mViewMatrix;
 	XMMATRIX mProjectionMatrix;
+	XMMATRIX mUnused;
 } ConstBuffer;
 
 HINSTANCE g_hInstance = nullptr;
@@ -396,7 +399,7 @@ void LoadRenderResources()
 
 	// Map and initialize the constant buffer. We don't unmap this until the
 	// app closes. Keeping things mapped for the lifetime of the resource is okay.
-	// TODO: how do map() and unmap() work?
+	// TODO: how do map() and unmap() work internally?
 	CD3DX12_RANGE constBufferReadRange(0, 0);
 	g_pConstBuffer->Map(0, &constBufferReadRange, reinterpret_cast<void**>(&g_pConstBufferMapped));
 	memcpy(g_pConstBufferMapped, &g_ConstBufferData, sizeof(g_ConstBufferData));
