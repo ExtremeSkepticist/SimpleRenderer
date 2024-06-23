@@ -65,6 +65,7 @@ void Render();
 
 int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int nCmdShow)
 {
+	LoadLibrary(L"C:\\Program Files\\Microsoft PIX\\2405.15.002-OneBranch_release\\WinPixGpuCapturer.dll");
 #pragma region Initialize Window
 	WNDCLASSEX windowClassEx = { 0, };
 	windowClassEx.cbSize = sizeof(WNDCLASSEX);
@@ -89,7 +90,6 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 #pragma endregion
 
 	ShowWindow(g_hWnd, nCmdShow);
-
 	LoadPipeline();
 
 	Assimp::Importer importer;
@@ -102,6 +102,9 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 
 	LoadRenderResources();
 	
+	while (true) {
+		Render();
+	}
 	return 0;
 }
 
@@ -241,23 +244,31 @@ void Render()
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(g_pRenderTargetViewHeap->GetCPUDescriptorHandleForHeapStart(), g_CurrentFrameIndex, g_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
 		g_pCmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
-		const FLOAT pClearingColor[] = { 0, 0, 0, 0 };
+		const FLOAT pClearingColor[] = { 1, 0, 0, 0 };
 		g_pCmdList->ClearRenderTargetView(rtvHandle, pClearingColor, 0, nullptr);
 		g_pCmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		// TODO: Record commands for drawing vertices
+		const size_t MESH_COUNT = g_pModel->GetMeshes().size();
+		auto& meshes = g_pModel->GetMeshes();
+		for (size_t i = 0; i < MESH_COUNT; ++i)
+		{
+			g_pCmdList->IASetVertexBuffers(0, 1, &meshes[i]->GetVertexBufferView());
+			g_pCmdList->DrawInstanced(meshes[i]->GetVerticeNum(), 1, 0, 0);
+		}
 	}
 	resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(g_pRenderTargets[g_CurrentFrameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 	g_pCmdList->ResourceBarrier(1, &resourceBarrier);
 	
 	g_pCmdList->Close();
+
+	ID3D12CommandList* cmdListArray[]  = { g_pCmdList.Get()};
+	g_pCmdQueue->ExecuteCommandLists(_countof(cmdListArray), cmdListArray);
+
 }
 
-// TODO
 void LoadRenderResources()
 {
 #pragma region Initialize Root Signature
-	// TOOD: Create CPU side const buffer
 	const size_t DESCRIPTOR_RANGE_NUM = 1;
 	CD3DX12_DESCRIPTOR_RANGE1 descriptorRanges[DESCRIPTOR_RANGE_NUM] = {};
 	descriptorRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, DESCRIPTOR_RANGE_NUM, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
@@ -399,9 +410,9 @@ void LoadRenderResources()
 	constBufferDesc.SizeInBytes = CONST_BUFFER_SIZE;
 	g_pDevice->CreateConstantBufferView(&constBufferDesc, g_pConstBufferViewHeap->GetCPUDescriptorHandleForHeapStart());
 
-	g_ConstBufferData.mWorldMatrix = XMMatrixIdentity();
-	g_ConstBufferData.mViewMatrix = XMMatrixLookToLH(XMLoadFloat3(&g_WorldCameraPosition), XMLoadFloat3(&g_WorldCameraLookToDirection), XMLoadFloat3(&g_WorldUpDirection));
-	g_ConstBufferData.mProjectionMatrix = XMMatrixPerspectiveFovLH(g_FovAngle, g_FRAME_WIDTH / g_FRAME_HEIGHT, g_NEAR_Z_COORD, g_FAR_Z_COORD);
+	g_ConstBufferData.mWorldMatrix = XMMatrixTranspose(XMMatrixIdentity());
+	g_ConstBufferData.mViewMatrix = XMMatrixTranspose(XMMatrixLookToLH(XMLoadFloat3(&g_WorldCameraPosition), XMLoadFloat3(&g_WorldCameraLookToDirection), XMLoadFloat3(&g_WorldUpDirection)));
+	g_ConstBufferData.mProjectionMatrix = XMMatrixTranspose(XMMatrixPerspectiveFovLH(g_FovAngle, g_FRAME_WIDTH / g_FRAME_HEIGHT, g_NEAR_Z_COORD, g_FAR_Z_COORD));
 
 	// Map and initialize the constant buffer. We don't unmap this until the
 	// app closes. Keeping things mapped for the lifetime of the resource is okay.
