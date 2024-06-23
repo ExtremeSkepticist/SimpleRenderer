@@ -46,6 +46,14 @@ ComPtr<ID3D12PipelineState> g_pPipelineStateObj = nullptr;
 
 Model* g_pModel = nullptr;
 
+// Camera related variables
+XMFLOAT3 g_WorldCameraPosition(0, 3, 0);
+XMFLOAT3 g_WorldCameraLookToDirection(0, 0, 1);
+XMFLOAT3 g_WorldUpDirection(0, 1, 0);
+float g_FovAngle = 45;
+const float g_NEAR_Z_COORD = 0.01;
+const float g_FAR_Z_COORD = 1;
+
 ConstBuffer g_ConstBufferData;
 UINT8* g_pConstBufferMapped = nullptr;
 
@@ -391,11 +399,9 @@ void LoadRenderResources()
 	constBufferDesc.SizeInBytes = CONST_BUFFER_SIZE;
 	g_pDevice->CreateConstantBufferView(&constBufferDesc, g_pConstBufferViewHeap->GetCPUDescriptorHandleForHeapStart());
 
-
-	// TODO: Fill this properly
 	g_ConstBufferData.mWorldMatrix = XMMatrixIdentity();
-	g_ConstBufferData.mViewMatrix = XMMatrixIdentity();
-	g_ConstBufferData.mProjectionMatrix = XMMatrixIdentity();
+	g_ConstBufferData.mViewMatrix = XMMatrixLookToLH(XMLoadFloat3(&g_WorldCameraPosition), XMLoadFloat3(&g_WorldCameraLookToDirection), XMLoadFloat3(&g_WorldUpDirection));
+	g_ConstBufferData.mProjectionMatrix = XMMatrixPerspectiveFovLH(g_FovAngle, g_FRAME_WIDTH / g_FRAME_HEIGHT, g_NEAR_Z_COORD, g_FAR_Z_COORD);
 
 	// Map and initialize the constant buffer. We don't unmap this until the
 	// app closes. Keeping things mapped for the lifetime of the resource is okay.
