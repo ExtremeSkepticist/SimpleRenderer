@@ -43,6 +43,9 @@ ComPtr<ID3D12GraphicsCommandList> g_pCmdList = nullptr;
 ComPtr<ID3D12CommandQueue> g_pCmdQueue = nullptr;
 ComPtr<ID3D12RootSignature> g_pRootSignature = nullptr;
 ComPtr<ID3D12PipelineState> g_pPipelineStateObj = nullptr;
+ComPtr<ID3D12Fence> g_pFence = nullptr;
+UINT64 g_FenceValue = 1;
+HANDLE g_FenceEvent = nullptr;
 
 Model* g_pModel = nullptr;
 
@@ -60,6 +63,7 @@ UINT8* g_pConstBufferMapped = nullptr;
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 void LoadPipeline();
 void LoadRenderResources();
+void WaitForPreviousFrame();
 
 void Render();
 
@@ -156,7 +160,7 @@ void LoadPipeline()
 		DXGI_ADAPTER_DESC1 desc = { 0, };
 		adapter->GetDesc1(&desc);
 
-		if (!(desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE))
+		if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
 		{
 			continue;
 		}
@@ -263,6 +267,10 @@ void Render()
 
 	ID3D12CommandList* cmdListArray[]  = { g_pCmdList.Get()};
 	g_pCmdQueue->ExecuteCommandLists(_countof(cmdListArray), cmdListArray);
+
+	g_pSwapChain->Present(1, 0);
+
+	WaitForPreviousFrame();
 
 }
 
@@ -422,4 +430,32 @@ void LoadRenderResources()
 	memcpy(g_pConstBufferMapped, &g_ConstBufferData, sizeof(g_ConstBufferData));
 
 #pragma endregion
+
+#pragma region Create Fence
+	g_pDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&g_pFence));
+	g_FenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+
+	// Wait for the command list to execute; we are reusing the same command 
+	// list in our main loop but for now, we just want to wait for setup to 
+	// complete before continuing.
+	WaitForPreviousFrame();
+
+#pragma endregion
+}
+
+//TODO: lOOK AT D3D12HellOFrameBuffering
+void WaitForPreviousFrame()
+{
+	const UINT CURRENT_FENCE_VALUE = g_FenceValue++;
+	g_pCmdQueue->Signal(g_pFence.Get(), CURRENT_FENCE_VALUE);
+
+	// Wait until fence-signalling command is run by command queue
+	if (g_pFence->GetCompletedValue() < CURRENT_FENCE_VALUE)
+	{
+		// Wait until fence event is run, after fence reached the specified value
+		g_pFence->SetEventOnCompletion(CURRENT_FENCE_VALUE, g_FenceEvent);
+		WaitForSingleObject(g_FenceEvent, INFINITE);
+	}
+
+	g_CurrentFrameIndex = g_pSwapChain->GetCurrentBackBufferIndex();
 }
