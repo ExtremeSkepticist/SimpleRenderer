@@ -380,7 +380,7 @@ void LoadRenderResources()
 		CD3DX12_RANGE readRange(0, 0);
 		mesh->GetVertexBuffer()->Map(0, &readRange, reinterpret_cast<void**>(&ptrVertexDataMapped));
 		{
-			memcpy(ptrVertexDataMapped, &mesh->GetVerticeData(), sizeof(Mesh::Vertex));
+			memcpy(ptrVertexDataMapped, &mesh->GetVerticeData()[0], VERTEX_BUFFER_SIZE);
 		}
 		mesh->GetVertexBuffer()->Unmap(0, nullptr);
 
@@ -389,6 +389,11 @@ void LoadRenderResources()
 		vertexBufferView.StrideInBytes = sizeof(Mesh::Vertex);
 		vertexBufferView.SizeInBytes = VERTEX_BUFFER_SIZE;
 		}
+#pragma endregion
+
+// TODO: Create Index Buffer
+#pragma region Create Index Buffer
+
 #pragma endregion
 
 #pragma region Create ConstBuffer
