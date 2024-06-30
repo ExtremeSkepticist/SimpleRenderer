@@ -257,7 +257,8 @@ void Render()
 		for (size_t i = 0; i < MESH_COUNT; ++i)
 		{
 			g_pCmdList->IASetVertexBuffers(0, 1, &meshes[i]->GetVertexBufferView());
-			g_pCmdList->DrawInstanced(meshes[i]->GetVerticeNum(), 1, 0, 0);
+			g_pCmdList->IASetIndexBuffer(&meshes[i]->GetIndexBufferView());
+			g_pCmdList->DrawIndexedInstanced(meshes[i]->GetIndexNum(), 1, 0, 0, 0);
 		}
 	}
 	resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(g_pRenderTargets[g_CurrentFrameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
@@ -357,7 +358,7 @@ void LoadRenderResources()
 
 #pragma endregion
 
-#pragma region Create Vertex Buffer
+#pragma region Create Vertex & Index Buffer
 	auto& meshes = g_pModel->GetMeshes();
 	for (auto& mesh : meshes)
 	{
@@ -366,7 +367,7 @@ void LoadRenderResources()
 		CD3DX12_HEAP_PROPERTIES heapProp(D3D12_HEAP_TYPE_UPLOAD);
 		CD3DX12_RESOURCE_DESC vertexBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(VERTEX_BUFFER_SIZE);
 
-		HRESULT IsVertexBufferCreated = g_pDevice->CreateCommittedResource(
+		HRESULT isVertexBufferCreated = g_pDevice->CreateCommittedResource(
 			&heapProp
 			, D3D12_HEAP_FLAG_NONE
 			, &vertexBufferDesc
@@ -374,7 +375,24 @@ void LoadRenderResources()
 			, nullptr
 			, IID_PPV_ARGS(&mesh->GetVertexBuffer()));
 
-		assert(SUCCEEDED(IsVertexBufferCreated));
+		assert(SUCCEEDED(isVertexBufferCreated));
+		
+		// TODO: Set every resource name
+		mesh->GetVertexBuffer()->SetName(L"Vertex buffer resource");
+
+		// TODO: Figure out how to set index size cleanly
+		const size_t INDEX_SIZE = sizeof(UINT32);
+		const size_t INDEX_BUFFER_SIZE = mesh->GetIndexNum() * INDEX_SIZE;
+		CD3DX12_RESOURCE_DESC indexBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(INDEX_BUFFER_SIZE);
+		bool isIndexBufferCreated = g_pDevice->CreateCommittedResource(
+			&heapProp
+			, D3D12_HEAP_FLAG_NONE
+			, &indexBufferDesc
+			, D3D12_RESOURCE_STATE_GENERIC_READ
+			, nullptr
+			, IID_PPV_ARGS(&mesh->GetIndexBuffer())
+		);
+		assert(SUCCEEDED(isIndexBufferCreated));
 
 		UINT8* ptrVertexDataMapped = nullptr;
 		CD3DX12_RANGE readRange(0, 0);
@@ -384,16 +402,23 @@ void LoadRenderResources()
 		}
 		mesh->GetVertexBuffer()->Unmap(0, nullptr);
 
+		UINT8* ptrIndexDataMapped = nullptr;
+		mesh->GetIndexBuffer()->Map(0, &readRange, reinterpret_cast<void**>(&ptrIndexDataMapped));
+		{
+			memcpy(ptrIndexDataMapped, &mesh->GetIndexData()[0], INDEX_BUFFER_SIZE);
+		}
+		mesh->GetIndexBuffer()->Unmap(0, nullptr);
+
 		D3D12_VERTEX_BUFFER_VIEW& vertexBufferView = mesh->GetVertexBufferView();
 		vertexBufferView.BufferLocation = mesh->GetVertexBuffer()->GetGPUVirtualAddress();
 		vertexBufferView.StrideInBytes = sizeof(Mesh::Vertex);
 		vertexBufferView.SizeInBytes = VERTEX_BUFFER_SIZE;
-		}
-#pragma endregion
 
-// TODO: Create Index Buffer
-#pragma region Create Index Buffer
-
+		D3D12_INDEX_BUFFER_VIEW& indexBufferView = mesh->GetIndexBufferView();
+		indexBufferView.BufferLocation = mesh->GetIndexBuffer()->GetGPUVirtualAddress();
+		indexBufferView.SizeInBytes = INDEX_BUFFER_SIZE;
+		indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+	}
 #pragma endregion
 
 #pragma region Create ConstBuffer

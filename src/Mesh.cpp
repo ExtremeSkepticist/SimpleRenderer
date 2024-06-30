@@ -6,7 +6,9 @@ Mesh::Mesh(const aiMesh& assimpMesh)
 	: mVerticeNum(0)
 	, mName(assimpMesh.mName.C_Str())
 	, mVertexBuffer(nullptr)
+	, mIndexBuffer(nullptr)
 	, mVertexBufferView()
+	, mIndexBufferView()
 {
 	assert(assimpMesh.mNumVertices > 0);
 	assert(assimpMesh.GetNumUVChannels() == 1 && assimpMesh.HasTextureCoords(0) == true);
@@ -26,6 +28,8 @@ Mesh::Mesh(const aiMesh& assimpMesh)
 	}
 
 	assert(assimpMesh.HasFaces() == true);
+	const size_t FACE_INDEX_COUNT = 3;
+	mIndexNum = assimpMesh.mNumFaces * FACE_INDEX_COUNT;
 	mIndices.reserve(assimpMesh.mNumFaces);
 	for (size_t i = 0; i < assimpMesh.mNumFaces; ++i)
 	{

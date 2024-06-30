@@ -27,10 +27,20 @@ public:
 	{
 		return mVertices;
 	}
+	
+	inline vector<UINT32>& GetIndexData()
+	{
+		return mIndices;
+	}
 
 	inline ComPtr<ID3D12Resource>& GetVertexBuffer()
 	{
 		return mVertexBuffer;
+	}
+	
+	inline ComPtr<ID3D12Resource>& GetIndexBuffer()
+	{
+		return mIndexBuffer;
 	}
 
 	inline D3D12_VERTEX_BUFFER_VIEW& GetVertexBufferView()
@@ -38,19 +48,32 @@ public:
 		return mVertexBufferView;
 	}
 
+	inline D3D12_INDEX_BUFFER_VIEW& GetIndexBufferView()
+	{
+		return mIndexBufferView;
+	}
+
 	inline const size_t GetVerticeNum() const
 	{
 		return mVerticeNum;
 	}
 
+	inline const size_t GetIndexNum() const
+	{
+		return mIndexNum;
+	}
+
 private:
 	vector<Vertex> mVertices;
-	vector<size_t> mIndices;
+	vector<UINT32> mIndices;
 
 	ComPtr<ID3D12Resource> mVertexBuffer;
+	ComPtr<ID3D12Resource> mIndexBuffer;
 	D3D12_VERTEX_BUFFER_VIEW mVertexBufferView;
+	D3D12_INDEX_BUFFER_VIEW mIndexBufferView;
 
 	size_t mVerticeNum;
+	size_t mIndexNum;
 	const string mName;
 };
 
