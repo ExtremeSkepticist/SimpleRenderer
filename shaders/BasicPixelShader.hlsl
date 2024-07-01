@@ -11,7 +11,7 @@ struct PS_OUTPUT
 PS_OUTPUT main(PS_INPUT input)
 {
     PS_OUTPUT output;
-    output.mColor = float4(1, 0, 0, 1);
+    output.mColor = float4(cos(input.mPosition.x), 0, 0, cos(input.mPosition.z));
 
     return output;
 }

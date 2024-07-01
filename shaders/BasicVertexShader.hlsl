@@ -9,6 +9,8 @@ cbuffer ConstBuffer
 struct VS_INPUT
 {
     float3 mPosition : POSITION;
+    float2 mTexCoords : TEXCOORDS0;
+    float3 mNormal : NORMAL0;
 };
 
 struct VS_OUTPUT

@@ -50,8 +50,9 @@ HANDLE g_FenceEvent = nullptr;
 Model* g_pModel = nullptr;
 
 // Camera related variables
-XMFLOAT3 g_WorldCameraPosition(0, 3, 0);
-XMFLOAT3 g_WorldCameraLookToDirection(0, 0, 1);
+XMFLOAT3 g_ModelCameraPosition(0, 3, 5);
+XMFLOAT3 g_WorldCameraPosition(0, 3, -10);
+XMFLOAT3 g_WorldCameraLookToDirection(0, 0, -1);
 XMFLOAT3 g_WorldUpDirection(0, 1, 0);
 float g_FovAngle = 45;
 const float g_NEAR_Z_COORD = 0.01;
@@ -248,7 +249,7 @@ void Render()
 		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(g_pRenderTargetViewHeap->GetCPUDescriptorHandleForHeapStart(), g_CurrentFrameIndex, g_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
 		g_pCmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
-		const FLOAT pClearingColor[] = { 1, 0, 0, 0 };
+		const FLOAT pClearingColor[] = { 0, 0, 0, 0 };
 		g_pCmdList->ClearRenderTargetView(rtvHandle, pClearingColor, 0, nullptr);
 		g_pCmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -442,15 +443,20 @@ void LoadRenderResources()
 		, nullptr
 		, IID_PPV_ARGS(&g_pConstBuffer)
 	);
+	g_pConstBuffer->SetName(L"Const buffer resource");
 
 	D3D12_CONSTANT_BUFFER_VIEW_DESC constBufferDesc = { 0, };
 	constBufferDesc.BufferLocation = g_pConstBuffer->GetGPUVirtualAddress();
 	constBufferDesc.SizeInBytes = CONST_BUFFER_SIZE;
 	g_pDevice->CreateConstantBufferView(&constBufferDesc, g_pConstBufferViewHeap->GetCPUDescriptorHandleForHeapStart());
 
+	// TODO: fill transform matrix properly
 	g_ConstBufferData.mWorldMatrix = XMMatrixTranspose(XMMatrixIdentity());
-	g_ConstBufferData.mViewMatrix = XMMatrixTranspose(XMMatrixLookToLH(XMLoadFloat3(&g_WorldCameraPosition), XMLoadFloat3(&g_WorldCameraLookToDirection), XMLoadFloat3(&g_WorldUpDirection)));
-	g_ConstBufferData.mProjectionMatrix = XMMatrixTranspose(XMMatrixPerspectiveFovLH(g_FovAngle, g_FRAME_WIDTH / g_FRAME_HEIGHT, g_NEAR_Z_COORD, g_FAR_Z_COORD));
+	g_ConstBufferData.mViewMatrix = XMMatrixTranspose(XMMatrixIdentity());;
+	g_ConstBufferData.mProjectionMatrix = XMMatrixTranspose(XMMatrixIdentity());;
+
+	/*g_ConstBufferData.mViewMatrix = XMMatrixTranspose(XMMatrixLookToLH(XMLoadFloat3(&g_WorldCameraPosition), XMLoadFloat3(&g_WorldCameraLookToDirection), XMLoadFloat3(&g_WorldUpDirection)));
+	g_ConstBufferData.mProjectionMatrix = XMMatrixTranspose(XMMatrixPerspectiveFovLH(g_FovAngle, g_FRAME_WIDTH / g_FRAME_HEIGHT, g_NEAR_Z_COORD, g_FAR_Z_COORD));*/
 
 	// Map and initialize the constant buffer. We don't unmap this until the
 	// app closes. Keeping things mapped for the lifetime of the resource is okay.
