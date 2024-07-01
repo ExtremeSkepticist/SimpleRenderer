@@ -236,7 +236,7 @@ void Render()
 	g_pCmdList->SetDescriptorHeaps(_countof(pArrayDescriptorHeaps), pArrayDescriptorHeaps);
 
 	// TODO: Set Descriptor table with shader resources
-	// g_pCmdList->SetGraphicsRootDescriptorTable();
+	g_pCmdList->SetGraphicsRootDescriptorTable(0, g_pConstBufferViewHeap->GetGPUDescriptorHandleForHeapStart());
 	g_pCmdList->RSSetViewports(1, &g_Viewport);
 	g_pCmdList->RSSetScissorRects(1, &g_ScissorRect);
 
