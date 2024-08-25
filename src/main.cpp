@@ -5,15 +5,17 @@
 #include <d3dx12.h>
 #include <dxgi1_6.h>
 #include <Windows.h>
+#include <DirectXMath.h>
+
+
+#include "Camera.h"
 #include "Common.h"
 #include "Model.h"
 
 using namespace Microsoft::WRL;
 
-//TODO: Texture -https://github.com/microsoft/DirectXTK12/blob/main/Src/WICTextureLoader.cpp#L642
-// TODO: Fill this with transform matrix
+// TODO: https://learn.microsoft.com/en-us/windows/win32/wic/-wic-decoder-howto-createusingstream
 
-#pragma pack(256)
 typedef struct
 {
 	XMMATRIX mWorldMatrix;
@@ -47,16 +49,17 @@ ComPtr<ID3D12Fence> g_pFence = nullptr;
 UINT64 g_FenceValue = 1;
 HANDLE g_FenceEvent = nullptr;
 
+// Model related variables
 Model* g_pModel = nullptr;
+const XMFLOAT3 g_MODEL_WORLD_POSITION(0, 4, 2);
 
 // Camera related variables
-XMFLOAT3 g_ModelCameraPosition(0, 3, 5);
-XMFLOAT3 g_WorldCameraPosition(0, 3, -10);
-XMFLOAT3 g_WorldCameraLookToDirection(0, 0, -1);
-XMFLOAT3 g_WorldUpDirection(0, 1, 0);
-float g_FovAngle = 45;
+const XMFLOAT3 g_CAMERA_WORLD_POSITION(0, 4, 0);
+const XMFLOAT3 g_WORLD_UP_DIRECITON(0, 1, 0);
+const float g_FOV_ANGLE = 45;
 const float g_NEAR_Z_COORD = 0.01;
-const float g_FAR_Z_COORD = 1;
+const float g_FAR_Z_COORD = 100;
+Camera g_Camera(g_FOV_ANGLE, g_FRAME_WIDTH / g_FRAME_HEIGHT, g_NEAR_Z_COORD, g_FAR_Z_COORD, g_CAMERA_WORLD_POSITION);
 
 ConstBuffer g_ConstBufferData;
 UINT8* g_pConstBufferMapped = nullptr;
@@ -102,7 +105,7 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 	assert(scene != nullptr);
 
 	// TODO: Implement recursive initialization when needed
-	Model model(*scene);
+	Model model(*scene, g_MODEL_WORLD_POSITION);
 	g_pModel = &model;
 
 	LoadRenderResources();
@@ -273,7 +276,6 @@ void Render()
 	g_pSwapChain->Present(1, 0);
 
 	WaitForPreviousFrame();
-
 }
 
 void LoadRenderResources()
@@ -451,11 +453,14 @@ void LoadRenderResources()
 	g_pDevice->CreateConstantBufferView(&constBufferDesc, g_pConstBufferViewHeap->GetCPUDescriptorHandleForHeapStart());
 
 	// TODO: fill transform matrix properly
-	g_ConstBufferData.mWorldMatrix = XMMatrixTranspose(XMMatrixIdentity());
-	g_ConstBufferData.mViewMatrix = XMMatrixTranspose(XMMatrixIdentity());;
-	g_ConstBufferData.mProjectionMatrix = XMMatrixTranspose(XMMatrixIdentity());;
+	
+	g_ConstBufferData.mWorldMatrix = XMMatrixMultiplyTranspose(XMMatrixScaling(0.8f, 0.8f, 0.8f)
+		, XMMatrixTranslation(g_MODEL_WORLD_POSITION.x, g_MODEL_WORLD_POSITION.y, g_MODEL_WORLD_POSITION.z));
+	
+	g_ConstBufferData.mViewMatrix = XMMatrixTranspose(g_Camera.GetViewLookAtMatrixLh(g_CAMERA_WORLD_POSITION, g_MODEL_WORLD_POSITION, g_WORLD_UP_DIRECITON));
+	g_ConstBufferData.mProjectionMatrix = XMMatrixTranspose(g_Camera.GetProjectionMatrixLh());
 
-	/*g_ConstBufferData.mViewMatrix = XMMatrixTranspose(XMMatrixLookToLH(XMLoadFloat3(&g_WorldCameraPosition), XMLoadFloat3(&g_WorldCameraLookToDirection), XMLoadFloat3(&g_WorldUpDirection)));
+	/*g_ConstBufferData.mViewMatrix = XMMatrixTranspose(XMMatrixLookToLH(XMLoadFloat3(&g_CameraWorldPosition), XMLoadFloat3(&g_WorldCameraLookToDirection), XMLoadFloat3(&g_WorldUpDirection)));
 	g_ConstBufferData.mProjectionMatrix = XMMatrixTranspose(XMMatrixPerspectiveFovLH(g_FovAngle, g_FRAME_WIDTH / g_FRAME_HEIGHT, g_NEAR_Z_COORD, g_FAR_Z_COORD));*/
 
 	// Map and initialize the constant buffer. We don't unmap this until the

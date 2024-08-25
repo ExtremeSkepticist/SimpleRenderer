@@ -19,15 +19,14 @@ Mesh::Mesh(const aiMesh& assimpMesh)
 	mVertices.reserve(mVerticeNum);
 	for (size_t i = 0; i < assimpMesh.mNumVertices; ++i)
 	{
+		// TODO: might have to change this to XMFLOAT4
 		XMFLOAT3 position(reinterpret_cast<float*>(&assimpMesh.mVertices[i]));
 		const XMFLOAT2 TEXCOORDS(reinterpret_cast<float*>(&assimpMesh.mTextureCoords[0][i]));
 		const XMFLOAT3 NORMAL(reinterpret_cast<float*>(&assimpMesh.mNormals[i]));
-		
 		// TODO: transform in shader
-		XMStoreFloat3(&position, XMVector3Transform(XMLoadFloat3(&position), XMMatrixScaling(0.5, 0.5, 0.5)));
-		XMStoreFloat3(&position, XMVector3Transform(XMLoadFloat3(&position), XMMatrixRotationX(20)));
-		XMStoreFloat3(&position, XMVector3Transform(XMLoadFloat3(&position), XMMatrixRotationY(5)));
-		XMStoreFloat3(&position, XMVector3Transform(XMLoadFloat3(&position), XMMatrixTranslation(0, 0, 1)));
+		XMStoreFloat3(&position, XMVector3Transform(XMLoadFloat3(&position), XMMatrixRotationX(30.5)));
+		XMStoreFloat3(&position, XMVector3Transform(XMLoadFloat3(&position), XMMatrixRotationY(90)));
+		//XMStoreFloat3(&position, XMVector3Transform(XMLoadFloat3(&position), XMMatrixTranslation(0, 3, 1.2)));
 
 		const Vertex VERTEX = { position, TEXCOORDS, NORMAL };
 		mVertices.emplace_back(VERTEX);
