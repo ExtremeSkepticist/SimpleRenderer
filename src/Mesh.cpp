@@ -20,15 +20,15 @@ Mesh::Mesh(const aiMesh& assimpMesh)
 	for (size_t i = 0; i < assimpMesh.mNumVertices; ++i)
 	{
 		// TODO: might have to change this to XMFLOAT4
-		XMFLOAT3 position(reinterpret_cast<float*>(&assimpMesh.mVertices[i]));
+		const XMFLOAT3 POSITION(reinterpret_cast<float*>(&assimpMesh.mVertices[i]));
+		
 		const XMFLOAT2 TEXCOORDS(reinterpret_cast<float*>(&assimpMesh.mTextureCoords[0][i]));
-		const XMFLOAT3 NORMAL(reinterpret_cast<float*>(&assimpMesh.mNormals[i]));
-		// TODO: transform in shader
-		XMStoreFloat3(&position, XMVector3Transform(XMLoadFloat3(&position), XMMatrixRotationX(30.5)));
-		XMStoreFloat3(&position, XMVector3Transform(XMLoadFloat3(&position), XMMatrixRotationY(90)));
-		//XMStoreFloat3(&position, XMVector3Transform(XMLoadFloat3(&position), XMMatrixTranslation(0, 3, 1.2)));
-
-		const Vertex VERTEX = { position, TEXCOORDS, NORMAL };
+		
+		XMFLOAT3 NORMAL(reinterpret_cast<float*>(&assimpMesh.mNormals[i]));
+		XMFLOAT3 TANGENT(reinterpret_cast<float*>(&assimpMesh.mTangents[i]));
+		XMFLOAT3 BINORMAL(reinterpret_cast<float*>(&assimpMesh.mBitangents[i]));
+		
+		const Vertex VERTEX = { POSITION, TEXCOORDS, NORMAL, TANGENT, BINORMAL };
 		mVertices.emplace_back(VERTEX);
 	}
 

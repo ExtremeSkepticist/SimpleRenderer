@@ -11,12 +11,14 @@ struct VS_INPUT
     float3 mPosition : POSITION;
     float2 mTexCoords : TEXCOORDS0;
     float3 mNormal : NORMAL0;
+    float3 mTangent : NORMAL0;
+    float3 mBiNormal : NORMAL0;
 };
 
 struct VS_OUTPUT
 {
     float4 mPosition : SV_POSITION;
-    float3 mDiffuse : TEXCOORD1;
+    float mDiffuse : TEXCOORD1;
 };
 
 // TODO: fixing calculating color
@@ -26,12 +28,18 @@ VS_OUTPUT main(VS_INPUT input)
 
     VS_OUTPUT output;
     output.mPosition = mul(vertex, mWorldMatrix);
+    
+    float3 lightPosition = float3(0, 5, -1); // TODO: update light position in main.cpp
+    float3 lightDir = normalize(float3(lightPosition - output.mPosition.xyz));
+    
     output.mPosition = mul(output.mPosition, mViewMatrix);
     output.mPosition = mul(output.mPosition, mProjectionMatrix);
 
-    float4 worldNormal = mul(normalize(float4(input.mNormal, 0)), mWorldMatrix);
-    float4 lightPosition = normalize(float4(0, 5, 2, 0)); // TODO: update light position in main.cpp
-    output.mDiffuse = dot(lightPosition, worldNormal);
+    float3x3 Tbn = float3x3(input.mTangent, input.mBiNormal, input.mNormal);
+    Tbn = transpose(Tbn);
+    float3 worldNormal = mul(Tbn, input.mNormal);
+
+    output.mDiffuse = dot(lightDir, worldNormal);
     
     return output;
 }

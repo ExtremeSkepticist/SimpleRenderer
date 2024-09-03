@@ -17,6 +17,8 @@ public:
 		XMFLOAT3 Position;
 		XMFLOAT2 TexCoords;
 		XMFLOAT3 Normal;
+		XMFLOAT3 Tangent;
+		XMFLOAT3 Binormal;
 	} Vertex;
 
 

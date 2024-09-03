@@ -1,5 +1,6 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
+#include <assimp/postprocess.h>
 #include <d3d12.h>
 #include <d3dcompiler.h>
 #include <d3dx12.h>
@@ -54,7 +55,7 @@ Model* g_pModel = nullptr;
 const XMFLOAT3 g_MODEL_WORLD_POSITION(0, 4, 2);
 
 // Camera related variables
-const XMFLOAT3 g_CAMERA_WORLD_POSITION(0, 4, 0);
+const XMFLOAT3 g_CAMERA_WORLD_POSITION(0, 5, 0.5);
 const XMFLOAT3 g_WORLD_UP_DIRECITON(0, 1, 0);
 const float g_FOV_ANGLE = 45;
 const float g_NEAR_Z_COORD = 0.01;
@@ -101,7 +102,7 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 	LoadPipeline();
 
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile("resources\\DamagedHelmet.gltf", 0);
+	const aiScene* scene = importer.ReadFile("resources\\DamagedHelmet.gltf", aiProcess_CalcTangentSpace);
 	assert(scene != nullptr);
 
 	// TODO: Implement recursive initialization when needed
@@ -328,6 +329,8 @@ void LoadRenderResources()
 		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
 		, {"TEXCOORDS", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
 		, {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+		, {"TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+		, {"BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 44, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
 	};
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = { 0, };
@@ -453,10 +456,12 @@ void LoadRenderResources()
 	g_pDevice->CreateConstantBufferView(&constBufferDesc, g_pConstBufferViewHeap->GetCPUDescriptorHandleForHeapStart());
 
 	// TODO: fill transform matrix properly
-	
-	g_ConstBufferData.mWorldMatrix = XMMatrixMultiplyTranspose(XMMatrixScaling(0.8f, 0.8f, 0.8f)
-		, XMMatrixTranslation(g_MODEL_WORLD_POSITION.x, g_MODEL_WORLD_POSITION.y, g_MODEL_WORLD_POSITION.z));
-	
+
+	XMMATRIX worldMatrix = XMMatrixMultiply(XMMatrixScaling(0.8f, 0.8f, 0.8f), XMMatrixRotationX(7.5));
+	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixRotationY(9));
+	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(g_MODEL_WORLD_POSITION.x, g_MODEL_WORLD_POSITION.y, g_MODEL_WORLD_POSITION.z));
+
+	g_ConstBufferData.mWorldMatrix = XMMatrixTranspose(worldMatrix);
 	g_ConstBufferData.mViewMatrix = XMMatrixTranspose(g_Camera.GetViewLookAtMatrixLh(g_CAMERA_WORLD_POSITION, g_MODEL_WORLD_POSITION, g_WORLD_UP_DIRECITON));
 	g_ConstBufferData.mProjectionMatrix = XMMatrixTranspose(g_Camera.GetProjectionMatrixLh());
 
