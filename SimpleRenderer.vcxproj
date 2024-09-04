@@ -130,7 +130,10 @@
       <Command>cd assimp
 cmake CmakeLists.txt
 msbuild Assimp.sln -property:Configuration=$(Configuration)
-xcopy bin\$(Configuration)\assimp-vc143-mtd.dll $(SolutionDir)bin\$(Configuration) /Y</Command>
+xcopy bin\$(Configuration)\assimp-vc143-mtd.dll $(SolutionDir)bin\$(Configuration) /Y
+
+cd ../DirectxTex/
+msbuild DirectXTex_Desktop_2022.sln -property:Configuration=$(Configuration)</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>
@@ -163,7 +166,10 @@ xcopy bin\$(Configuration)\assimp-vc143-mtd.dll $(SolutionDir)bin\$(Configuratio
       <Command>cd assimp
 cmake CmakeLists.txt
 msbuild Assimp.sln -property:Configuration=$(Configuration)
-xcopy bin\$(Configuration)\assimp-vc143-mt.dll $(SolutionDir)bin\$(Configuration) /Y</Command>
+xcopy bin\$(Configuration)\assimp-vc143-mt.dll $(SolutionDir)bin\$(Configuration) /Y
+
+cd ../DirectxTex/
+msbuild DirectXTex_Desktop_2022.sln -property:Configuration=$(Configuration)</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>
