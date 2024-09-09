@@ -8,6 +8,7 @@
 #include <Windows.h>
 #include <DirectXMath.h>
 
+#include <DirectXTex.h>
 
 #include "Camera.h"
 #include "Common.h"
@@ -74,6 +75,12 @@ void Render();
 
 int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int nCmdShow)
 {
+	HRESULT isComInitialized = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+	if (FAILED(isComInitialized)) {
+		assert(false, "Failed to initialie COM - error code: %ld", HRESULT_CODE(isComInitialized));
+		return 1;
+	}
+
 	LoadLibrary(L"C:\\Program Files\\Microsoft PIX\\2405.15.002-OneBranch_release\\WinPixGpuCapturer.dll");
 #pragma region Initialize Window
 	WNDCLASSEX windowClassEx = { 0, };

@@ -72,11 +72,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)assimp\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)assimp\lib\$(Configuration);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)assimp\include;$(SolutionDir)DirectXTex\DirectXTex;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)assimp\lib\$(Configuration);$(SolutionDir)DirectXTex\DirectXTex\Bin\Desktop_2022\x64\$(Configuration);$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)bin\$(Configuration)\</OutDir>
     <IntDir>obj\$(Configuration)\</IntDir>
     <AllProjectIncludesArePublic>true</AllProjectIncludesArePublic>
+    <SourcePath>$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(SolutionDir)assimp\include;$(IncludePath)</IncludePath>
@@ -124,7 +125,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>assimp-vc143-mtd.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc143-mtd.lib;d3d12.lib;dxgi.lib;d3dcompiler.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>cd assimp
@@ -132,8 +133,8 @@ cmake CmakeLists.txt
 msbuild Assimp.sln -property:Configuration=$(Configuration)
 xcopy bin\$(Configuration)\assimp-vc143-mtd.dll $(SolutionDir)bin\$(Configuration) /Y
 
-cd ../DirectxTex/
-msbuild DirectXTex_Desktop_2022.sln -property:Configuration=$(Configuration)</Command>
+cd ../DirectXTex
+msbuild DirectXTex_Desktop_2022.sln -target:DirectXTex -property:Configuration=$(Configuration)</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>
