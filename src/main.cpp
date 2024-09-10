@@ -16,8 +16,6 @@
 
 using namespace Microsoft::WRL;
 
-// TODO: https://learn.microsoft.com/en-us/windows/win32/wic/-wic-decoder-howto-createusingstream
-
 typedef struct
 {
 	XMMATRIX mWorldMatrix;
@@ -50,6 +48,8 @@ ComPtr<ID3D12PipelineState> g_pPipelineStateObj = nullptr;
 ComPtr<ID3D12Fence> g_pFence = nullptr;
 UINT64 g_FenceValue = 1;
 HANDLE g_FenceEvent = nullptr;
+
+ComPtr<ID3D12Resource> g_pAlbedoTexture = nullptr;
 
 // Model related variables
 Model* g_pModel = nullptr;
@@ -369,6 +369,17 @@ void LoadRenderResources()
 	assert(g_pCmdList != nullptr);
 	g_pCmdList->Close();
 
+#pragma endregion
+
+#pragma region Create Albedo Texture
+	TexMetadata imageMetadata = {};
+	ScratchImage scratchImage = {};
+	LoadFromDDSFile(L"resources\\albedo.dds", DDS_FLAGS_NONE, &imageMetadata, scratchImage);
+
+	scratchImage.Initialize(imageMetadata);
+	
+	const Image* image = scratchImage.GetImage(0, 0, 0);
+	
 #pragma endregion
 
 #pragma region Create Vertex & Index Buffer
