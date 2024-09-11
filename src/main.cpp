@@ -39,6 +39,7 @@ ComPtr<ID3D12Resource> g_pRenderTargets[g_FRAME_COUNT];
 ComPtr<ID3D12Device> g_pDevice = nullptr;
 ComPtr<ID3D12DescriptorHeap> g_pRenderTargetViewHeap = nullptr;
 ComPtr<ID3D12DescriptorHeap> g_pConstBufferViewHeap = nullptr;
+ComPtr<ID3D12DescriptorHeap> g_pSrvHeap = nullptr;
 ComPtr<ID3D12Resource> g_pConstBuffer = nullptr;
 ComPtr<ID3D12CommandAllocator> g_pCmdAllocator = nullptr;
 ComPtr<ID3D12GraphicsCommandList> g_pCmdList = nullptr;
@@ -292,17 +293,17 @@ void LoadRenderResources()
 	const size_t DESCRIPTOR_RANGE_NUM = 1;
 	CD3DX12_DESCRIPTOR_RANGE1 descriptorRanges[DESCRIPTOR_RANGE_NUM] = {};
 	descriptorRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, DESCRIPTOR_RANGE_NUM, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
-	
-	const size_t ROOT_PARAMETER_NUM = 1;
+
+	const size_t ROOT_PARAMETER_NUM = 2;
 	CD3DX12_ROOT_PARAMETER1 rootParameters[ROOT_PARAMETER_NUM] = {};
 	rootParameters[0].InitAsDescriptorTable(ROOT_PARAMETER_NUM, &descriptorRanges[0], D3D12_SHADER_VISIBILITY_VERTEX);
+	rootParameters[1].InitAsShaderResourceView(0, 0, D3D12_ROOT_DESCRIPTOR_FLAG_NONE, D3D12_SHADER_VISIBILITY_PIXEL);
 
 	D3D12_ROOT_SIGNATURE_FLAGS roFlags =
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
+		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
 
 	CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC roDesc = {};
 	roDesc.Init_1_1(ROOT_PARAMETER_NUM, rootParameters, 0, nullptr, roFlags);
@@ -310,6 +311,8 @@ void LoadRenderResources()
 	ComPtr<ID3DBlob> pSerializedSignature = nullptr;
 	ComPtr<ID3DBlob> pError= nullptr;
 	D3DX12SerializeVersionedRootSignature(&roDesc, D3D_ROOT_SIGNATURE_VERSION_1_1, &pSerializedSignature, &pError);
+	std::string error(reinterpret_cast<const char*>(pError->GetBufferPointer()));
+	
 	assert(pSerializedSignature != nullptr);
 
 	g_pDevice->CreateRootSignature(0, pSerializedSignature->GetBufferPointer(), pSerializedSignature->GetBufferSize(), IID_PPV_ARGS(&g_pRootSignature));
@@ -352,7 +355,7 @@ void LoadRenderResources()
 	psoDesc.SampleMask = UINT_MAX;
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	psoDesc.NumRenderTargets = 1;
-	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
 	psoDesc.SampleDesc.Count = 1;
 
 	g_pDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&g_pPipelineStateObj));
@@ -372,14 +375,65 @@ void LoadRenderResources()
 #pragma endregion
 
 #pragma region Create Albedo Texture
+	g_pCmdAllocator->Reset();
+	g_pCmdList->Reset(g_pCmdAllocator.Get(), nullptr);
+
 	TexMetadata imageMetadata = {};
 	ScratchImage scratchImage = {};
 	LoadFromDDSFile(L"resources\\albedo.dds", DDS_FLAGS_NONE, &imageMetadata, scratchImage);
 
 	scratchImage.Initialize(imageMetadata);
+	{
+		const Image* image = scratchImage.GetImage(0, 0, 0);
+
+		// Create default heap for albedo texture
+		CD3DX12_RESOURCE_DESC defaultHeapDesc = CD3DX12_RESOURCE_DESC::Tex2D(image->format, image->width, image->height);
+		CD3DX12_HEAP_PROPERTIES defaultHeapProps(D3D12_HEAP_TYPE_DEFAULT);
+		g_pDevice->CreateCommittedResource(
+			&defaultHeapProps, D3D12_HEAP_FLAG_NONE, &defaultHeapDesc
+			, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&g_pAlbedoTexture));
+
+		// Create upload heap for albedo texture
+		ComPtr<ID3D12Resource> pUploadHeap = nullptr;
+		CD3DX12_HEAP_PROPERTIES uploadProps(D3D12_HEAP_TYPE_UPLOAD);
+		CD3DX12_RESOURCE_DESC uploadResourceDesc = CD3DX12_RESOURCE_DESC::Buffer(GetRequiredIntermediateSize(g_pAlbedoTexture.Get(), 0, 1));
+		g_pDevice->CreateCommittedResource(
+			&uploadProps, D3D12_HEAP_FLAG_NONE, &uploadResourceDesc
+			, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&pUploadHeap));
+
+		// Copy from upload to default heap
+		D3D12_SUBRESOURCE_DATA subresourceData = {};
+		subresourceData.pData = image->pixels;
+		subresourceData.RowPitch = image->width * sizeof(uint32_t); // R8G8B8A8 format per pixel
+		subresourceData.SlicePitch = image->height * subresourceData.RowPitch;
+
+		UpdateSubresources(g_pCmdList.Get(), g_pAlbedoTexture.Get(), pUploadHeap.Get(), 0, 0, 1, &subresourceData);
+
+		auto transitionBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
+			g_pAlbedoTexture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+		g_pCmdList->ResourceBarrier(1, &transitionBarrier);
+
+		// Create SRV
+		D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
+		srvHeapDesc.NumDescriptors = 1;
+		srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		g_pDevice->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&g_pSrvHeap));
+
+		D3D12_SHADER_RESOURCE_VIEW_DESC srvViewDesc = {};
+		srvViewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		srvViewDesc.Format = image->format;
+		srvViewDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		g_pDevice->CreateShaderResourceView(g_pAlbedoTexture.Get(), &srvViewDesc, g_pSrvHeap->GetCPUDescriptorHandleForHeapStart());
+	}
+	scratchImage.Release();
+
+	g_pCmdList->Close();
 	
-	const Image* image = scratchImage.GetImage(0, 0, 0);
-	
+	ID3D12CommandList* cmdListArray[] = { g_pCmdList.Get() };
+	g_pCmdQueue->ExecuteCommandLists(_countof(cmdListArray), cmdListArray);
+
+	WaitForPreviousFrame();
 #pragma endregion
 
 #pragma region Create Vertex & Index Buffer
