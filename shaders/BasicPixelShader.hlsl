@@ -1,6 +1,7 @@
 struct PS_INPUT
 {
     float4 mPosition : SV_POSITION;
+    float2 mTexCoord : TEXCOORD0;
     float mDiffuse : TEXCOORD1;
 };
 
@@ -9,11 +10,13 @@ struct PS_OUTPUT
     float4 mColor : SV_TARGET;
 };
 
+Texture2D g_Albedo : register(t0);
+SamplerState g_Sampler : register(s0);
+
 PS_OUTPUT main(PS_INPUT input)
 {
     PS_OUTPUT output;
-    float4 color = saturate(input.mDiffuse);
-    output.mColor = color;
+    output.mColor = g_Albedo.Sample(g_Sampler, input.mTexCoord);
 
     return output;
 }

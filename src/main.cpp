@@ -38,8 +38,7 @@ ComPtr<IDXGISwapChain3> g_pSwapChain = nullptr;
 ComPtr<ID3D12Resource> g_pRenderTargets[g_FRAME_COUNT];
 ComPtr<ID3D12Device> g_pDevice = nullptr;
 ComPtr<ID3D12DescriptorHeap> g_pRenderTargetViewHeap = nullptr;
-ComPtr<ID3D12DescriptorHeap> g_pConstBufferViewHeap = nullptr;
-ComPtr<ID3D12DescriptorHeap> g_pSrvHeap = nullptr;
+ComPtr<ID3D12DescriptorHeap> g_pDescriptorHeap = nullptr;
 ComPtr<ID3D12Resource> g_pConstBuffer = nullptr;
 ComPtr<ID3D12CommandAllocator> g_pCmdAllocator = nullptr;
 ComPtr<ID3D12GraphicsCommandList> g_pCmdList = nullptr;
@@ -51,6 +50,7 @@ UINT64 g_FenceValue = 1;
 HANDLE g_FenceEvent = nullptr;
 
 ComPtr<ID3D12Resource> g_pAlbedoTexture = nullptr;
+ComPtr<ID3D12Resource> g_pAlbedoUploadHeap = nullptr;
 
 // Model related variables
 Model* g_pModel = nullptr;
@@ -245,15 +245,13 @@ void Render()
 
 	g_pCmdList->SetGraphicsRootSignature(g_pRootSignature.Get());
 
-	ID3D12DescriptorHeap* pArrayDescriptorHeaps[] = { g_pConstBufferViewHeap.Get() };
+	ID3D12DescriptorHeap* pArrayDescriptorHeaps[] = { g_pDescriptorHeap.Get() };
 	g_pCmdList->SetDescriptorHeaps(_countof(pArrayDescriptorHeaps), pArrayDescriptorHeaps);
 
-	// TODO: Set Descriptor table with shader resources
-	g_pCmdList->SetGraphicsRootDescriptorTable(0, g_pConstBufferViewHeap->GetGPUDescriptorHandleForHeapStart());
+	g_pCmdList->SetGraphicsRootDescriptorTable(0, g_pDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
 	g_pCmdList->RSSetViewports(1, &g_Viewport);
 	g_pCmdList->RSSetScissorRects(1, &g_ScissorRect);
-
-
+	
 	CD3DX12_RESOURCE_BARRIER resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(g_pRenderTargets[g_CurrentFrameIndex].Get()
 		, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	g_pCmdList->ResourceBarrier(1, &resourceBarrier);
@@ -290,14 +288,28 @@ void Render()
 void LoadRenderResources()
 {
 #pragma region Initialize Root Signature
-	const size_t DESCRIPTOR_RANGE_NUM = 1;
+	const size_t DESCRIPTOR_RANGE_NUM = 2;
 	CD3DX12_DESCRIPTOR_RANGE1 descriptorRanges[DESCRIPTOR_RANGE_NUM] = {};
-	descriptorRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, DESCRIPTOR_RANGE_NUM, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
+	descriptorRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
+	descriptorRanges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
 
-	const size_t ROOT_PARAMETER_NUM = 2;
+	const size_t ROOT_PARAMETER_NUM = 1;
 	CD3DX12_ROOT_PARAMETER1 rootParameters[ROOT_PARAMETER_NUM] = {};
-	rootParameters[0].InitAsDescriptorTable(ROOT_PARAMETER_NUM, &descriptorRanges[0], D3D12_SHADER_VISIBILITY_VERTEX);
-	rootParameters[1].InitAsShaderResourceView(0, 0, D3D12_ROOT_DESCRIPTOR_FLAG_NONE, D3D12_SHADER_VISIBILITY_PIXEL);
+	rootParameters[0].InitAsDescriptorTable(DESCRIPTOR_RANGE_NUM, descriptorRanges);
+	
+	D3D12_STATIC_SAMPLER_DESC samplerDesc = {};
+	{
+		samplerDesc.Filter = D3D12_FILTER_ANISOTROPIC;
+		samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+		samplerDesc.MaxAnisotropy = 16;
+		samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+		samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE;
+		samplerDesc.MinLOD = 0;
+		samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
+		samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	}
 
 	D3D12_ROOT_SIGNATURE_FLAGS roFlags =
 		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
@@ -306,12 +318,11 @@ void LoadRenderResources()
 		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
 
 	CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC roDesc = {};
-	roDesc.Init_1_1(ROOT_PARAMETER_NUM, rootParameters, 0, nullptr, roFlags);
+	roDesc.Init_1_1(ROOT_PARAMETER_NUM, rootParameters, 1, &samplerDesc, roFlags);
 	
 	ComPtr<ID3DBlob> pSerializedSignature = nullptr;
 	ComPtr<ID3DBlob> pError= nullptr;
 	D3DX12SerializeVersionedRootSignature(&roDesc, D3D_ROOT_SIGNATURE_VERSION_1_1, &pSerializedSignature, &pError);
-	std::string error(reinterpret_cast<const char*>(pError->GetBufferPointer()));
 	
 	assert(pSerializedSignature != nullptr);
 
@@ -355,7 +366,7 @@ void LoadRenderResources()
 	psoDesc.SampleMask = UINT_MAX;
 	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 	psoDesc.NumRenderTargets = 1;
-	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 	psoDesc.SampleDesc.Count = 1;
 
 	g_pDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&g_pPipelineStateObj));
@@ -372,6 +383,59 @@ void LoadRenderResources()
 	assert(g_pCmdList != nullptr);
 	g_pCmdList->Close();
 
+#pragma endregion
+
+#pragma region Create descriptor heap
+	D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {};
+	descriptorHeapDesc.NumDescriptors = 2;
+	descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+	descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+	g_pDevice->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&g_pDescriptorHeap));
+	assert(g_pDescriptorHeap != nullptr);
+#pragma endregion
+
+#pragma region Create Fence
+	g_pDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&g_pFence));
+	g_FenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+
+	// Wait for the command list to execute; we are reusing the same command 
+	// list in our main loop but for now, we just want to wait for setup to 
+	// complete before continuing.
+	WaitForPreviousFrame();
+#pragma endregion
+
+#pragma region Create ConstBuffer
+	const size_t CONST_BUFFER_SIZE = sizeof(ConstBuffer);
+	const CD3DX12_HEAP_PROPERTIES CONST_BUFFER_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	const CD3DX12_RESOURCE_DESC CONST_BUFFER_RESOURCE_DESC = CD3DX12_RESOURCE_DESC::Buffer(CONST_BUFFER_SIZE);
+	g_pDevice->CreateCommittedResource(
+		&CONST_BUFFER_HEAP_PROPERTIES
+		, D3D12_HEAP_FLAG_NONE
+		, &CONST_BUFFER_RESOURCE_DESC
+		, D3D12_RESOURCE_STATE_GENERIC_READ
+		, nullptr
+		, IID_PPV_ARGS(&g_pConstBuffer)
+	);
+	g_pConstBuffer->SetName(L"Const buffer resource");
+
+	D3D12_CONSTANT_BUFFER_VIEW_DESC constBufferDesc = { 0, };
+	constBufferDesc.BufferLocation = g_pConstBuffer->GetGPUVirtualAddress();
+	constBufferDesc.SizeInBytes = CONST_BUFFER_SIZE;
+	g_pDevice->CreateConstantBufferView(&constBufferDesc, g_pDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+
+	XMMATRIX worldMatrix = XMMatrixMultiply(XMMatrixScaling(0.8f, 0.8f, 0.8f), XMMatrixRotationX(7.5));
+	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixRotationY(9));
+	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(g_MODEL_WORLD_POSITION.x, g_MODEL_WORLD_POSITION.y, g_MODEL_WORLD_POSITION.z));
+
+	g_ConstBufferData.mWorldMatrix = XMMatrixTranspose(worldMatrix);
+	g_ConstBufferData.mViewMatrix = XMMatrixTranspose(g_Camera.GetViewLookAtMatrixLh(g_CAMERA_WORLD_POSITION, g_MODEL_WORLD_POSITION, g_WORLD_UP_DIRECITON));
+	g_ConstBufferData.mProjectionMatrix = XMMatrixTranspose(g_Camera.GetProjectionMatrixLh());
+
+	// Map and initialize the constant buffer. We don't unmap this until the
+	// app closes. Keeping things mapped for the lifetime of the resource is okay.
+	CD3DX12_RANGE constBufferReadRange(0, 0);
+	g_pConstBuffer->Map(0, &constBufferReadRange, reinterpret_cast<void**>(&g_pConstBufferMapped));
+	memcpy(g_pConstBufferMapped, &g_ConstBufferData, sizeof(g_ConstBufferData));
 #pragma endregion
 
 #pragma region Create Albedo Texture
@@ -392,14 +456,23 @@ void LoadRenderResources()
 		g_pDevice->CreateCommittedResource(
 			&defaultHeapProps, D3D12_HEAP_FLAG_NONE, &defaultHeapDesc
 			, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&g_pAlbedoTexture));
+		g_pAlbedoTexture->SetName(L"Albedo texture - default");
 
 		// Create upload heap for albedo texture
-		ComPtr<ID3D12Resource> pUploadHeap = nullptr;
 		CD3DX12_HEAP_PROPERTIES uploadProps(D3D12_HEAP_TYPE_UPLOAD);
 		CD3DX12_RESOURCE_DESC uploadResourceDesc = CD3DX12_RESOURCE_DESC::Buffer(GetRequiredIntermediateSize(g_pAlbedoTexture.Get(), 0, 1));
 		g_pDevice->CreateCommittedResource(
 			&uploadProps, D3D12_HEAP_FLAG_NONE, &uploadResourceDesc
-			, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&pUploadHeap));
+			, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&g_pAlbedoUploadHeap));
+		g_pAlbedoUploadHeap->SetName(L"Albedo texture - upload");
+
+		CD3DX12_RANGE uploadReadRange(0, 0);
+		uint8_t* mappedImageData = nullptr;
+		g_pAlbedoUploadHeap->Map(0, &uploadReadRange, reinterpret_cast<void**>(&mappedImageData));
+		{
+			memcpy(mappedImageData, image->pixels, image->slicePitch);
+		}
+		g_pAlbedoUploadHeap->Unmap(0, nullptr);
 
 		// Copy from upload to default heap
 		D3D12_SUBRESOURCE_DATA subresourceData = {};
@@ -407,33 +480,32 @@ void LoadRenderResources()
 		subresourceData.RowPitch = image->width * sizeof(uint32_t); // R8G8B8A8 format per pixel
 		subresourceData.SlicePitch = image->height * subresourceData.RowPitch;
 
-		UpdateSubresources(g_pCmdList.Get(), g_pAlbedoTexture.Get(), pUploadHeap.Get(), 0, 0, 1, &subresourceData);
+		UpdateSubresources(g_pCmdList.Get(), g_pAlbedoTexture.Get(), g_pAlbedoUploadHeap.Get(), 0, 0, 1, &subresourceData);
 
 		auto transitionBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
 			g_pAlbedoTexture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 		g_pCmdList->ResourceBarrier(1, &transitionBarrier);
 
 		// Create SRV
-		D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
-		srvHeapDesc.NumDescriptors = 1;
-		srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-		srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-		g_pDevice->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&g_pSrvHeap));
-
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvViewDesc = {};
+		
 		srvViewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 		srvViewDesc.Format = image->format;
 		srvViewDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		g_pDevice->CreateShaderResourceView(g_pAlbedoTexture.Get(), &srvViewDesc, g_pSrvHeap->GetCPUDescriptorHandleForHeapStart());
-	}
-	scratchImage.Release();
-
-	g_pCmdList->Close();
+		srvViewDesc.Texture2D.MipLevels = 1;
+		D3D12_CPU_DESCRIPTOR_HANDLE srvHandle = g_pDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+		srvHandle.ptr += g_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		g_pDevice->CreateShaderResourceView(g_pAlbedoTexture.Get(), &srvViewDesc, srvHandle);
 	
-	ID3D12CommandList* cmdListArray[] = { g_pCmdList.Get() };
-	g_pCmdQueue->ExecuteCommandLists(_countof(cmdListArray), cmdListArray);
+		g_pCmdList->Close();
 
-	WaitForPreviousFrame();
+		ID3D12CommandList* cmdListArray[] = { g_pCmdList.Get() };
+		g_pCmdQueue->ExecuteCommandLists(_countof(cmdListArray), cmdListArray);
+
+		WaitForPreviousFrame();
+	}
+
+	scratchImage.Release();
 #pragma endregion
 
 #pragma region Create Vertex & Index Buffer
@@ -497,67 +569,6 @@ void LoadRenderResources()
 		indexBufferView.SizeInBytes = INDEX_BUFFER_SIZE;
 		indexBufferView.Format = DXGI_FORMAT_R32_UINT;
 	}
-#pragma endregion
-
-#pragma region Create ConstBuffer
-	// Create ConstBufferView Heap
-	D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
-	cbvHeapDesc.NumDescriptors = 1;
-	cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	g_pDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&g_pConstBufferViewHeap));
-	assert(g_pConstBufferViewHeap != nullptr);
-
-	// Create GPU resource for Const Buffer
-	const size_t CONST_BUFFER_SIZE = sizeof(ConstBuffer);
-	const CD3DX12_HEAP_PROPERTIES CONST_BUFFER_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-	const CD3DX12_RESOURCE_DESC CONST_BUFFER_RESOURCE_DESC = CD3DX12_RESOURCE_DESC::Buffer(CONST_BUFFER_SIZE);
-	g_pDevice->CreateCommittedResource(
-		&CONST_BUFFER_HEAP_PROPERTIES
-		, D3D12_HEAP_FLAG_NONE
-		, &CONST_BUFFER_RESOURCE_DESC
-		, D3D12_RESOURCE_STATE_GENERIC_READ
-		, nullptr
-		, IID_PPV_ARGS(&g_pConstBuffer)
-	);
-	g_pConstBuffer->SetName(L"Const buffer resource");
-
-	D3D12_CONSTANT_BUFFER_VIEW_DESC constBufferDesc = { 0, };
-	constBufferDesc.BufferLocation = g_pConstBuffer->GetGPUVirtualAddress();
-	constBufferDesc.SizeInBytes = CONST_BUFFER_SIZE;
-	g_pDevice->CreateConstantBufferView(&constBufferDesc, g_pConstBufferViewHeap->GetCPUDescriptorHandleForHeapStart());
-
-	// TODO: fill transform matrix properly
-
-	XMMATRIX worldMatrix = XMMatrixMultiply(XMMatrixScaling(0.8f, 0.8f, 0.8f), XMMatrixRotationX(7.5));
-	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixRotationY(9));
-	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(g_MODEL_WORLD_POSITION.x, g_MODEL_WORLD_POSITION.y, g_MODEL_WORLD_POSITION.z));
-
-	g_ConstBufferData.mWorldMatrix = XMMatrixTranspose(worldMatrix);
-	g_ConstBufferData.mViewMatrix = XMMatrixTranspose(g_Camera.GetViewLookAtMatrixLh(g_CAMERA_WORLD_POSITION, g_MODEL_WORLD_POSITION, g_WORLD_UP_DIRECITON));
-	g_ConstBufferData.mProjectionMatrix = XMMatrixTranspose(g_Camera.GetProjectionMatrixLh());
-
-	/*g_ConstBufferData.mViewMatrix = XMMatrixTranspose(XMMatrixLookToLH(XMLoadFloat3(&g_CameraWorldPosition), XMLoadFloat3(&g_WorldCameraLookToDirection), XMLoadFloat3(&g_WorldUpDirection)));
-	g_ConstBufferData.mProjectionMatrix = XMMatrixTranspose(XMMatrixPerspectiveFovLH(g_FovAngle, g_FRAME_WIDTH / g_FRAME_HEIGHT, g_NEAR_Z_COORD, g_FAR_Z_COORD));*/
-
-	// Map and initialize the constant buffer. We don't unmap this until the
-	// app closes. Keeping things mapped for the lifetime of the resource is okay.
-	// TODO: how do map() and unmap() work internally?
-	CD3DX12_RANGE constBufferReadRange(0, 0);
-	g_pConstBuffer->Map(0, &constBufferReadRange, reinterpret_cast<void**>(&g_pConstBufferMapped));
-	memcpy(g_pConstBufferMapped, &g_ConstBufferData, sizeof(g_ConstBufferData));
-
-#pragma endregion
-
-#pragma region Create Fence
-	g_pDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&g_pFence));
-	g_FenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-
-	// Wait for the command list to execute; we are reusing the same command 
-	// list in our main loop but for now, we just want to wait for setup to 
-	// complete before continuing.
-	WaitForPreviousFrame();
-
 #pragma endregion
 }
 

@@ -18,6 +18,7 @@ struct VS_INPUT
 struct VS_OUTPUT
 {
     float4 mPosition : SV_POSITION;
+    float2 mTexCoords : TEXCOORD0;
     float mDiffuse : TEXCOORD1;
 };
 
@@ -39,6 +40,7 @@ VS_OUTPUT main(VS_INPUT input)
     Tbn = transpose(Tbn);
     float3 worldNormal = mul(Tbn, input.mNormal);
 
+    output.mTexCoords = input.mTexCoords;
     output.mDiffuse = dot(lightDir, worldNormal);
     
     return output;
