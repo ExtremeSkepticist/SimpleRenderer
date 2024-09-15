@@ -17,7 +17,7 @@ PS_OUTPUT main(PS_INPUT input)
 {
     PS_OUTPUT output;
     output.mColor = g_Albedo.Sample(g_Sampler, input.mTexCoord);
-
+   // output.mColor = float4(1.0f, 0.0f, 0.0f, 1.0f);
     return output;
 }
 

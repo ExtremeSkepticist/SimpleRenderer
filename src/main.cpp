@@ -57,7 +57,7 @@ Model* g_pModel = nullptr;
 const XMFLOAT3 g_MODEL_WORLD_POSITION(0, 4, 2);
 
 // Camera related variables
-const XMFLOAT3 g_CAMERA_WORLD_POSITION(0, 5, 0.5);
+const XMFLOAT3 g_CAMERA_WORLD_POSITION(0, 6, 0);
 const XMFLOAT3 g_WORLD_UP_DIRECITON(0, 1, 0);
 const float g_FOV_ANGLE = 45;
 const float g_NEAR_Z_COORD = 0.01;
@@ -110,7 +110,7 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 	LoadPipeline();
 
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile("resources\\DamagedHelmet.gltf", aiProcess_CalcTangentSpace);
+	const aiScene* scene = importer.ReadFile("resources\\DamagedHelmet.gltf", aiProcess_ConvertToLeftHanded | aiProcess_CalcTangentSpace);
 	assert(scene != nullptr);
 
 	// TODO: Implement recursive initialization when needed
@@ -122,6 +122,7 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 	while (true) {
 		Render();
 	}
+
 	return 0;
 }
 
@@ -404,7 +405,7 @@ void LoadRenderResources()
 	WaitForPreviousFrame();
 #pragma endregion
 
-#pragma region Create ConstBuffer
+#pragma region Create Const Buffer
 	const size_t CONST_BUFFER_SIZE = sizeof(ConstBuffer);
 	const CD3DX12_HEAP_PROPERTIES CONST_BUFFER_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	const CD3DX12_RESOURCE_DESC CONST_BUFFER_RESOURCE_DESC = CD3DX12_RESOURCE_DESC::Buffer(CONST_BUFFER_SIZE);
@@ -423,8 +424,8 @@ void LoadRenderResources()
 	constBufferDesc.SizeInBytes = CONST_BUFFER_SIZE;
 	g_pDevice->CreateConstantBufferView(&constBufferDesc, g_pDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 
-	XMMATRIX worldMatrix = XMMatrixMultiply(XMMatrixScaling(0.8f, 0.8f, 0.8f), XMMatrixRotationX(7.5));
-	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixRotationY(9));
+	XMMATRIX worldMatrix = XMMatrixMultiply(XMMatrixScaling(0.8f, 0.8f, 0.8f), XMMatrixRotationX(-0.8));
+	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixRotationY(-0.1));
 	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(g_MODEL_WORLD_POSITION.x, g_MODEL_WORLD_POSITION.y, g_MODEL_WORLD_POSITION.z));
 
 	g_ConstBufferData.mWorldMatrix = XMMatrixTranspose(worldMatrix);
@@ -436,6 +437,7 @@ void LoadRenderResources()
 	CD3DX12_RANGE constBufferReadRange(0, 0);
 	g_pConstBuffer->Map(0, &constBufferReadRange, reinterpret_cast<void**>(&g_pConstBufferMapped));
 	memcpy(g_pConstBufferMapped, &g_ConstBufferData, sizeof(g_ConstBufferData));
+
 #pragma endregion
 
 #pragma region Create Albedo Texture
@@ -444,9 +446,7 @@ void LoadRenderResources()
 
 	TexMetadata imageMetadata = {};
 	ScratchImage scratchImage = {};
-	LoadFromDDSFile(L"resources\\albedo.dds", DDS_FLAGS_NONE, &imageMetadata, scratchImage);
-
-	scratchImage.Initialize(imageMetadata);
+	HRESULT hasLoaded = LoadFromDDSFile(L"resources\\albedo.dds", DDS_FLAGS_NONE, &imageMetadata, scratchImage);
 	{
 		const Image* image = scratchImage.GetImage(0, 0, 0);
 
@@ -488,7 +488,6 @@ void LoadRenderResources()
 
 		// Create SRV
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvViewDesc = {};
-		
 		srvViewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 		srvViewDesc.Format = image->format;
 		srvViewDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
