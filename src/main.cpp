@@ -26,8 +26,7 @@ typedef struct
 	XMMATRIX mUnused;
 } ConstBuffer;
 
-HINSTANCE g_hInstance = nullptr;
-HWND g_hWnd = nullptr;
+HWND g_hWnd = nullptr; //TODO: should be removed and replaced with getter from PlatformWindow
 
 // D3D12 resources
 const size_t g_FRAME_WIDTH = 800;
@@ -87,31 +86,19 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 	LoadLibrary(L"C:\\Program Files\\Microsoft PIX\\2405.15.002-OneBranch_release\\WinPixGpuCapturer.dll");
 #pragma region Initialize Window
 	constexpr uint16_t frameWidth = 800;
-	PlatformWindow platformWindow();
+	constexpr uint16_t frameHeight = 600;
+	SR::Platform::PlatformWindow platformWindow(frameWidth, frameHeight, L"SimpleRenderer", hInstance);
+	const bool isWindowInitialized = platformWindow.Initialize();
+	assert(isWindowInitialized, "Failed to initialize platform window: error code: %d", GetLastError());
+	if (!isWindowInitialized)
+	{
+		return 1;
+	}
 
-	WNDCLASSEX windowClassEx = { 0, };
-	windowClassEx.cbSize = sizeof(WNDCLASSEX);
-	windowClassEx.style = CS_HREDRAW | CS_VREDRAW;
-	windowClassEx.lpfnWndProc = WndProc;
-	windowClassEx.hInstance = hInstance;
-	windowClassEx.lpszClassName = L"SimpleRenderer";
-	
-	ATOM result = RegisterClassEx(&windowClassEx);
-	assert(result != FALSE);
-
-	g_hInstance = hInstance;
-	RECT rec = { 0, 0, g_FRAME_WIDTH, g_FRAME_HEIGHT };
-	AdjustWindowRect(&rec, WS_OVERLAPPEDWINDOW, FALSE);
-
-	g_hWnd = CreateWindow(L"SimpleRenderer", nullptr
-		, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX
-		, CW_USEDEFAULT, CW_USEDEFAULT, rec.right - rec.left, rec.bottom - rec.top
-		, nullptr, nullptr, hInstance, nullptr);
-	assert(g_hWnd != nullptr);
-
+	g_hWnd = platformWindow.GetHwnd(); // TODO: should be removed and replaced
+	platformWindow.DisplayWindow(nCmdShow);
 #pragma endregion
 
-	ShowWindow(g_hWnd, nCmdShow);
 	LoadPipeline();
 
 	Assimp::Importer importer;

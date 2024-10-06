@@ -53,6 +53,9 @@
     <ClCompile Include="src\Camera.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\PlatformWindow.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Mesh.h">
@@ -65,6 +68,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Camera.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\PlatformWindow.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
