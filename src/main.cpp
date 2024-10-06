@@ -8,6 +8,8 @@
 #include <Windows.h>
 #include <DirectXMath.h>
 
+#include "PlatformWindow.h"
+
 #include <DirectXTex.h>
 
 #include "Camera.h"
@@ -84,6 +86,9 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 
 	LoadLibrary(L"C:\\Program Files\\Microsoft PIX\\2405.15.002-OneBranch_release\\WinPixGpuCapturer.dll");
 #pragma region Initialize Window
+	constexpr uint16_t frameWidth = 800;
+	PlatformWindow platformWindow();
+
 	WNDCLASSEX windowClassEx = { 0, };
 	windowClassEx.cbSize = sizeof(WNDCLASSEX);
 	windowClassEx.style = CS_HREDRAW | CS_VREDRAW;
@@ -121,28 +126,6 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 	
 	while (true) {
 		Render();
-	}
-
-	return 0;
-}
-
-LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	PAINTSTRUCT paintStruct = { 0, };
-	HDC hDevice = { 0, };
-
-	switch (message)
-	{
-	case WM_PAINT:
-		hDevice = BeginPaint(hWnd, &paintStruct);
-		EndPaint(hWnd, &paintStruct);
-		break;
-	case WM_DESTROY:
-		PostQuitMessage(0);
-		break;
-	default:
-		return DefWindowProc(hWnd, message, wParam, lParam);
-		break;
 	}
 
 	return 0;

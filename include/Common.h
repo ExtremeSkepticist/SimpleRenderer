@@ -2,6 +2,8 @@
 
 using namespace std;
 
+#include <gsl/gsl>
+#include <cstdint>
 #include <cassert>
 #include <memory>
 #include <string>
