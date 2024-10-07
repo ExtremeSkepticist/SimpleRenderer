@@ -2,9 +2,9 @@
 
 #include "Common.h"
 
-namespace SR
+namespace sr
 {
-	namespace Platform
+	namespace platform
 	{
 		class PlatformWindow
 		{

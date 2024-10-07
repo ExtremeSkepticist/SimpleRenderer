@@ -68,36 +68,21 @@ Camera g_Camera(g_FOV_ANGLE, g_FRAME_WIDTH / g_FRAME_HEIGHT, g_NEAR_Z_COORD, g_F
 ConstBuffer g_ConstBufferData;
 UINT8* g_pConstBufferMapped = nullptr;
 
-LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 void LoadPipeline();
 void LoadRenderResources();
 void WaitForPreviousFrame();
 
+bool Init(HINSTANCE hInstance, int nCmdShow);
+void Update();
 void Render();
 
 int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int nCmdShow)
 {
-	HRESULT isComInitialized = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
-	if (FAILED(isComInitialized)) {
-		assert(false, "Failed to initialie COM - error code: %ld", HRESULT_CODE(isComInitialized));
-		return 1;
-	}
-
-	LoadLibrary(L"C:\\Program Files\\Microsoft PIX\\2405.15.002-OneBranch_release\\WinPixGpuCapturer.dll");
-#pragma region Initialize Window
-	constexpr uint16_t frameWidth = 800;
-	constexpr uint16_t frameHeight = 600;
-	SR::Platform::PlatformWindow platformWindow(frameWidth, frameHeight, L"SimpleRenderer", hInstance);
-	const bool isWindowInitialized = platformWindow.Initialize();
-	assert(isWindowInitialized, "Failed to initialize platform window: error code: %d", GetLastError());
-	if (!isWindowInitialized)
+	const bool isInited = Init(hInstance, nCmdShow);
+	if (!isInited)
 	{
 		return 1;
 	}
-
-	g_hWnd = platformWindow.GetHwnd(); // TODO: should be removed and replaced
-	platformWindow.DisplayWindow(nCmdShow);
-#pragma endregion
 
 	LoadPipeline();
 
@@ -118,43 +103,93 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 	return 0;
 }
 
+bool Init(HINSTANCE hInstance, int nCmdShow)
+{
+	Expects(hInstance != nullptr);
+
+#pragma region Init Platform
+	LoadLibrary(L"C:\\Program Files\\Microsoft PIX\\2405.15.002-OneBranch_release\\WinPixGpuCapturer.dll");
+
+	const HRESULT isComInitialized = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+	if (FAILED(isComInitialized)) {
+		return false;
+	}
+
+	constexpr uint16_t frameWidth = 800;
+	constexpr uint16_t frameHeight = 600;
+	sr::platform::PlatformWindow platformWindow(frameWidth, frameHeight, L"SimpleRenderer", hInstance);
+
+	if (!platformWindow.Initialize())
+	{
+		return false;
+	}
+	if (!platformWindow.DisplayWindow(nCmdShow))
+	{
+		return false;
+	}
+
+	g_hWnd = platformWindow.GetHwnd(); // TODO: should be removed and replaced
+
+#pragma endregion
+
+#pragma region Init Rendering Pipeline
+#pragma endregion
+
+	Ensures(g_hWnd != nullptr);
+
+	return true;
+}
+
 void LoadPipeline()
 {
 #pragma region Create Device
-	UINT dxgiFactoryFlags = 0;
 #if defined(_DEBUG)
+	UINT dxgiFactoryFlags = 0;
 	ComPtr<ID3D12Debug> debugController;
 	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
 	{
 		debugController->EnableDebugLayer();
 		dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
 	}
+#else
+	constexpr UINT dxgiFactoryFlags = 0;
 #endif
 
-	ComPtr<IDXGIFactory6> pDxgiFactory;
-	HRESULT result = CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&pDxgiFactory));
-	
-	assert(pDxgiFactory != nullptr);
-
-	ComPtr<IDXGIAdapter1> adapter;
-	for (UINT adapterIndex = 0; ; ++adapterIndex)
+	ComPtr<IDXGIFactory6> dxgiFactory = nullptr;
+	if (FAILED(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&dxgiFactory))))
 	{
-		pDxgiFactory->EnumAdapterByGpuPreference(adapterIndex, DXGI_GPU_PREFERENCE_UNSPECIFIED, IID_PPV_ARGS(&adapter));
-
-		DXGI_ADAPTER_DESC1 desc = { 0, };
-		adapter->GetDesc1(&desc);
-
-		if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
-		{
-			continue;
-		}
-
-		if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&g_pDevice))))
+		return;
+	}
+	
+	ComPtr<IDXGIAdapter1> adapter = nullptr;
+	uint32_t adapterIndex = 0;
+	while (true)
+	{
+		HRESULT hasFoundAdapter = dxgiFactory->EnumAdapterByGpuPreference(adapterIndex, DXGI_GPU_PREFERENCE_UNSPECIFIED, IID_PPV_ARGS(&adapter));
+		if (FAILED(hasFoundAdapter))
 		{
 			break;
 		}
+
+		DXGI_ADAPTER_DESC1 adapterDesc = { 0, };
+		adapter->GetDesc1(&adapterDesc);
+
+		if (adapterDesc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
+		{
+			continue;
+		}
+		else if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&g_pDevice))))
+		{
+			break;
+		}
+
+		++adapterIndex;
 	}
-	assert(g_pDevice != nullptr);
+
+	if (g_pDevice == nullptr)
+	{
+		return;
+	}
 
 #pragma endregion
 
@@ -179,10 +214,10 @@ void LoadPipeline()
 	swapChainDesc.SampleDesc.Count = 1;
 	
 	ComPtr<IDXGISwapChain1> pTempSwapChain = nullptr;
-	pDxgiFactory->CreateSwapChainForHwnd(g_pCmdQueue.Get(), g_hWnd, &swapChainDesc, nullptr, nullptr, &pTempSwapChain);
+	dxgiFactory->CreateSwapChainForHwnd(g_pCmdQueue.Get(), g_hWnd, &swapChainDesc, nullptr, nullptr, &pTempSwapChain);
 	assert(pTempSwapChain != nullptr);
 
-	pDxgiFactory->MakeWindowAssociation(g_hWnd, DXGI_MWA_NO_ALT_ENTER);
+	dxgiFactory->MakeWindowAssociation(g_hWnd, DXGI_MWA_NO_ALT_ENTER);
 	pTempSwapChain.As(&g_pSwapChain);
 	g_CurrentFrameIndex = g_pSwapChain->GetCurrentBackBufferIndex();
 #pragma endregion
