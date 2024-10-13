@@ -6,26 +6,44 @@ namespace sr
 {
 	namespace platform
 	{
+		static constexpr uint16_t minFrameWidth = 800;
+		static constexpr uint16_t minFrameHeight = 600;
+		static constexpr double aspectRatio = 4.0f / 3;
+
+		static_assert(static_cast<double>(minFrameWidth) / minFrameHeight - aspectRatio <= std::numeric_limits<double>::epsilon()
+			, "Aspect ratio should remain 4:3. Did you change min frame width/height?");
+
 		class PlatformWindow
 		{
 		public:
 			PlatformWindow() = delete;
 			PlatformWindow(const uint16_t frameWidth, const uint16_t frameHeight
-				, const gsl::not_null<gsl::cwzstring> className, const gsl::not_null<HINSTANCE> hInstance) noexcept;
+				, const gsl::not_null<gsl::cwzstring> className, const gsl::not_null<HINSTANCE> hInstance
+				, int nCmdShow) noexcept;
 			PlatformWindow(const PlatformWindow&) = delete;
-			PlatformWindow(const PlatformWindow&&) = delete;
+			PlatformWindow(PlatformWindow&&) = delete;
 			PlatformWindow& operator=(const PlatformWindow&) = delete;
-			PlatformWindow& operator=(const PlatformWindow&&) = delete;
+			PlatformWindow& operator=(PlatformWindow&&) = delete;
 			~PlatformWindow() = default;
 
-			bool Initialize();
-			bool DisplayWindow(const int32_t nCmdShow) const noexcept;
+			inline uint16_t GetFrameWidth() const noexcept
+			{
+				return mFrameWidth;
+			}
 
-			const HWND& GetHwnd() const noexcept;
+			inline uint16_t GetFrameHeight() const noexcept
+			{
+				return mFrameHeight;
+			}
+
+			inline HWND GetWindowHandle() const noexcept
+			{
+				return mHwnd;
+			}
 
 		private:
-			uint16_t mFrameWidth;
-			uint16_t mFrameHeight;
+			uint16_t mFrameWidth = minFrameWidth;
+			uint16_t mFrameHeight = minFrameHeight;
 			gsl::not_null<gsl::cwzstring> mClassName;
 			HWND mHwnd;
 			gsl::not_null<HINSTANCE> mHinstance;

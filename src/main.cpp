@@ -5,10 +5,13 @@
 #include <d3dcompiler.h>
 #include <d3dx12.h>
 #include <dxgi1_6.h>
-#include <Windows.h>
 #include <DirectXMath.h>
 
 #include "PlatformWindow.h"
+#include "SwapChain.h"
+#include "GraphicsCommandQueue.h"
+#include "GraphicsInfrastructure.h"
+#include "GraphicsDevice.h"
 
 #include <DirectXTex.h>
 
@@ -84,8 +87,9 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 		return 1;
 	}
 
+	
 	LoadPipeline();
-
+	
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile("resources\\DamagedHelmet.gltf", aiProcess_ConvertToLeftHanded | aiProcess_CalcTangentSpace);
 	assert(scene != nullptr);
@@ -103,6 +107,7 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 	return 0;
 }
 
+// TODO: Encapsulate all directx 12, WinApi logic inside a wrapper class
 bool Init(HINSTANCE hInstance, int nCmdShow)
 {
 	Expects(hInstance != nullptr);
@@ -117,111 +122,46 @@ bool Init(HINSTANCE hInstance, int nCmdShow)
 
 	constexpr uint16_t frameWidth = 800;
 	constexpr uint16_t frameHeight = 600;
-	sr::platform::PlatformWindow platformWindow(frameWidth, frameHeight, L"SimpleRenderer", hInstance);
-
-	if (!platformWindow.Initialize())
-	{
-		return false;
-	}
-	if (!platformWindow.DisplayWindow(nCmdShow))
-	{
-		return false;
-	}
-
-	g_hWnd = platformWindow.GetHwnd(); // TODO: should be removed and replaced
+	sr::platform::PlatformWindow platformWindow(frameWidth, frameHeight, L"SimpleRenderer", hInstance, nCmdShow);
+	
+	g_hWnd = platformWindow.GetWindowHandle(); // TODO: should be removed and replaced
 
 #pragma endregion
 
 #pragma region Init Rendering Pipeline
-#pragma endregion
 
-	Ensures(g_hWnd != nullptr);
+	// TODO: Rendering Pipeline Class that contains below
+	const UINT infrastructureFlag = 0;
+	sr::rendering::GraphicsInfrastructure graphicsInfrastructure(infrastructureFlag);
+	sr::rendering::GraphicsDevice graphicsDevice(graphicsInfrastructure);
+	{
+		// TODO: to be removed
+		g_pDevice = graphicsDevice.GetDevice();
+		assert(g_pDevice != nullptr);
+	}
+
+	sr::rendering::GraphicsCommandQueue graphicsCommandQueue(sr::rendering::GraphicsCommandQueueType::Graphics);
+	graphicsDevice.CreateCommandQueue(graphicsCommandQueue, graphicsInfrastructure);
+	{
+		// TODO: to be removed
+		g_pCmdQueue = graphicsCommandQueue.GetD3d12CommandQueue();
+		assert(g_pCmdQueue != nullptr);
+	}
+
+	// Create SwapChain
+	constexpr uint8_t bufferCount = 2;
+	sr::rendering::SwapChain swapChain(bufferCount, platformWindow, graphicsCommandQueue, graphicsInfrastructure);
+	{
+		g_pSwapChain = swapChain.GetDxgiSwapChain(); // TODO: to be replaced later
+		assert(g_pSwapChain != nullptr);
+	}
+#pragma endregion
 
 	return true;
 }
 
 void LoadPipeline()
 {
-#pragma region Create Device
-#if defined(_DEBUG)
-	UINT dxgiFactoryFlags = 0;
-	ComPtr<ID3D12Debug> debugController;
-	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
-	{
-		debugController->EnableDebugLayer();
-		dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
-	}
-#else
-	constexpr UINT dxgiFactoryFlags = 0;
-#endif
-
-	ComPtr<IDXGIFactory6> dxgiFactory = nullptr;
-	if (FAILED(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&dxgiFactory))))
-	{
-		return;
-	}
-	
-	ComPtr<IDXGIAdapter1> adapter = nullptr;
-	uint32_t adapterIndex = 0;
-	while (true)
-	{
-		HRESULT hasFoundAdapter = dxgiFactory->EnumAdapterByGpuPreference(adapterIndex, DXGI_GPU_PREFERENCE_UNSPECIFIED, IID_PPV_ARGS(&adapter));
-		if (FAILED(hasFoundAdapter))
-		{
-			break;
-		}
-
-		DXGI_ADAPTER_DESC1 adapterDesc = { 0, };
-		adapter->GetDesc1(&adapterDesc);
-
-		if (adapterDesc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
-		{
-			continue;
-		}
-		else if (SUCCEEDED(D3D12CreateDevice(adapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&g_pDevice))))
-		{
-			break;
-		}
-
-		++adapterIndex;
-	}
-
-	if (g_pDevice == nullptr)
-	{
-		return;
-	}
-
-#pragma endregion
-
-#pragma region Create Command Queue
-	// Create command queue
-	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
-	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
-	g_pDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&g_pCmdQueue));
-	assert(g_pCmdQueue != nullptr);
-#pragma endregion
-
-#pragma region Create SwapChain
-	// TODO: Move all Window/SwapChain related things into a new class
-	// Create SwapChain
-	DXGI_SWAP_CHAIN_DESC1 swapChainDesc = { 0, };
-	swapChainDesc.BufferCount = g_FRAME_COUNT;
-	swapChainDesc.Width = g_FRAME_WIDTH;
-	swapChainDesc.Height = g_FRAME_HEIGHT;
-	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-	swapChainDesc.SampleDesc.Count = 1;
-	
-	ComPtr<IDXGISwapChain1> pTempSwapChain = nullptr;
-	dxgiFactory->CreateSwapChainForHwnd(g_pCmdQueue.Get(), g_hWnd, &swapChainDesc, nullptr, nullptr, &pTempSwapChain);
-	assert(pTempSwapChain != nullptr);
-
-	dxgiFactory->MakeWindowAssociation(g_hWnd, DXGI_MWA_NO_ALT_ENTER);
-	pTempSwapChain.As(&g_pSwapChain);
-	g_CurrentFrameIndex = g_pSwapChain->GetCurrentBackBufferIndex();
-#pragma endregion
-
 #pragma region Create RenderTarget View
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
 	rtvHeapDesc.NumDescriptors = g_FRAME_COUNT;

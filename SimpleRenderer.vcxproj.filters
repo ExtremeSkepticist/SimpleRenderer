@@ -56,6 +56,18 @@
     <ClCompile Include="src\PlatformWindow.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\SwapChain.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GraphicsDevice.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GraphicsInfrastructure.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GraphicsCommandQueue.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Mesh.h">
@@ -71,6 +83,18 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\PlatformWindow.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SwapChain.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\GraphicsDevice.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\GraphicsInfrastructure.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\GraphicsCommandQueue.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>

@@ -9,66 +9,38 @@ namespace sr
 {
 	namespace platform
 	{
-		static constexpr uint16_t minFrameWidth = 800;
-		static constexpr uint16_t minFrameHeight = 600;
-		static constexpr double aspectRatio = 4.0f / 3;
-
-		static_assert(static_cast<double>(minFrameWidth) / minFrameHeight - aspectRatio <= std::numeric_limits<double>::epsilon()
-			, "Aspect ratio should remain 4:3. Did you change min frame width/height?");
-
 		PlatformWindow::PlatformWindow(const uint16_t frameWidth, const uint16_t frameHeight
-			, const gsl::not_null<gsl::cwzstring> className, const gsl::not_null<HINSTANCE> hInstance) noexcept
-			: mFrameWidth(0)
-			, mFrameHeight(0)
+			, const gsl::not_null<gsl::cwzstring> className, const gsl::not_null<HINSTANCE> hInstance, int nCmdShow) noexcept
+			: mFrameWidth(minFrameWidth)
+			, mFrameHeight(minFrameHeight)
 			, mClassName(className)
 			, mHwnd(nullptr)
 			, mHinstance(hInstance)
 		{
+			Expects(mHwnd == nullptr);
 			Expects(frameWidth >= minFrameWidth && frameHeight >= minFrameHeight);
 
 			mFrameWidth = frameWidth;
 			mFrameHeight = frameHeight;
-
-			Ensures(mFrameWidth == frameWidth && mFrameHeight == frameHeight);
-		}
-
-		bool PlatformWindow::Initialize()
-		{
-			Expects(mHwnd == nullptr);
-			Expects(mFrameWidth >= minFrameWidth && mFrameHeight >= minFrameHeight);
-
+			
 			const WNDCLASSEX windowClassEx = { sizeof(WNDCLASSEX), CS_HREDRAW | CS_VREDRAW
 				, WndProc, 0, 0, mHinstance, nullptr, nullptr, nullptr, mClassName, mClassName };
 			const ATOM registeredFlag = RegisterClassEx(&windowClassEx);
-			if (registeredFlag != 0)
-			{
-				return false;
-			}
+			assert(registeredFlag != 0);
 
 			RECT rec = { 0, 0, mFrameWidth, mFrameHeight };
-			if (!AdjustWindowRect(&rec, WS_OVERLAPPEDWINDOW, FALSE))
-			{
-				return false;
-			}
+			const BOOL isRectAdjusted = AdjustWindowRect(&rec, WS_OVERLAPPEDWINDOW, FALSE);
+			assert(isRectAdjusted);
 
 			mHwnd = CreateWindow(mClassName, nullptr
 				, WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX
 				, CW_USEDEFAULT, CW_USEDEFAULT, rec.right - rec.left, rec.bottom - rec.top
 				, nullptr, nullptr, mHinstance, nullptr);
-
-			return mHwnd != nullptr;
-		}
-
-		bool PlatformWindow::DisplayWindow(const int32_t nCmdShow) const noexcept
-		{
-			Expects(mHwnd != nullptr);
-
-			return ShowWindow(mHwnd, nCmdShow);
-		}
-
-		const HWND& PlatformWindow::GetHwnd() const noexcept
-		{
-			return mHwnd;
+			
+			Ensures(mHwnd != nullptr);
+			Ensures(mFrameWidth >= minFrameWidth && mFrameHeight >= minFrameHeight);
+		
+			ShowWindow(mHwnd, nCmdShow);
 		}
 	}
 }
