@@ -26,7 +26,7 @@ namespace sr
 			void CreateCommandQueue(GraphicsCommandQueue& commandQueue, const GraphicsInfrastructure& graphicsInfrastructure);
 
 			// TODO: to be removed; D3D12Device should not be exposed
-			inline ID3D12Device* GetDevice() const noexcept
+			inline ID3D12Device* GetD3d12Device() const noexcept
 			{
 				return mD3d12Device.Get();
 			}

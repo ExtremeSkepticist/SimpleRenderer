@@ -75,17 +75,13 @@ void LoadPipeline();
 void LoadRenderResources();
 void WaitForPreviousFrame();
 
-bool Init(HINSTANCE hInstance, int nCmdShow);
+void Init(HINSTANCE hInstance, int nCmdShow);
 void Update();
 void Render();
 
 int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int nCmdShow)
 {
-	const bool isInited = Init(hInstance, nCmdShow);
-	if (!isInited)
-	{
-		return 1;
-	}
+	Init(hInstance, nCmdShow);
 
 	
 	LoadPipeline();
@@ -108,7 +104,7 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 }
 
 // TODO: Encapsulate all directx 12, WinApi logic inside a wrapper class
-bool Init(HINSTANCE hInstance, int nCmdShow)
+void Init(HINSTANCE hInstance, int nCmdShow)
 {
 	Expects(hInstance != nullptr);
 
@@ -116,27 +112,24 @@ bool Init(HINSTANCE hInstance, int nCmdShow)
 	LoadLibrary(L"C:\\Program Files\\Microsoft PIX\\2405.15.002-OneBranch_release\\WinPixGpuCapturer.dll");
 
 	const HRESULT isComInitialized = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
-	if (FAILED(isComInitialized)) {
-		return false;
-	}
+	FAILED(isComInitialized);
 
 	constexpr uint16_t frameWidth = 800;
 	constexpr uint16_t frameHeight = 600;
 	sr::platform::PlatformWindow platformWindow(frameWidth, frameHeight, L"SimpleRenderer", hInstance, nCmdShow);
-	
-	g_hWnd = platformWindow.GetWindowHandle(); // TODO: should be removed and replaced
-
+	{
+		g_hWnd = platformWindow.GetWindowHandle(); // TODO: should be removed and replaced
+	}
 #pragma endregion
 
 #pragma region Init Rendering Pipeline
-
 	// TODO: Rendering Pipeline Class that contains below
-	const UINT infrastructureFlag = 0;
+	constexpr UINT infrastructureFlag = 0;
 	sr::rendering::GraphicsInfrastructure graphicsInfrastructure(infrastructureFlag);
 	sr::rendering::GraphicsDevice graphicsDevice(graphicsInfrastructure);
 	{
 		// TODO: to be removed
-		g_pDevice = graphicsDevice.GetDevice();
+		g_pDevice = graphicsDevice.GetD3d12Device();
 		assert(g_pDevice != nullptr);
 	}
 
@@ -156,8 +149,6 @@ bool Init(HINSTANCE hInstance, int nCmdShow)
 		assert(g_pSwapChain != nullptr);
 	}
 #pragma endregion
-
-	return true;
 }
 
 void LoadPipeline()
