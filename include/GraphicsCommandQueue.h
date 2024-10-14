@@ -6,7 +6,7 @@ namespace sr
 {
 	namespace rendering
 	{
-		enum class GraphicsCommandQueueType : uint32_t
+		enum class GraphicsCommandQueueType
 		{
 			Graphics,
 			Compute,
@@ -19,7 +19,7 @@ namespace sr
 		public:
 			GraphicsCommandQueue(GraphicsCommandQueueType commandQueueType) noexcept;
 
-			inline const D3D12_COMMAND_QUEUE_DESC& GetCommandQueueDescription() noexcept
+			inline D3D12_COMMAND_QUEUE_DESC& GetCommandQueueDescription() noexcept
 			{
 				return mCommandQueueDesc;
 			}

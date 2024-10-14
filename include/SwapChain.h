@@ -27,6 +27,11 @@ namespace sr
 			SwapChain& operator=(SwapChain&&) = delete;
 			~SwapChain() = default;
 
+			inline uint8_t GetBufferCount() const noexcept
+			{
+				return mBufferCount;
+			}
+
 			inline IDXGISwapChain3* GetDxgiSwapChain() const noexcept
 			{
 				return mDxgiSwapChain.Get();

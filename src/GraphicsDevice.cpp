@@ -1,4 +1,5 @@
 
+#include "DescriptorHeap.h"
 #include "GraphicsCommandQueue.h"
 #include "GraphicsDevice.h"
 #include "GraphicsInfrastructure.h"
@@ -7,9 +8,6 @@ namespace sr
 {
 	namespace rendering
 	{
-// Note: failure from EnumAdapterByGpuReference() and DXGI_ADAPTER_DESC1::GetDesc1() are unrecoverable
-#pragma warning(push)
-#pragma warning(disable : 26447)
 		GraphicsDevice::GraphicsDevice(const GraphicsInfrastructure& graphicsInfrastructure) noexcept
 			: mD3d12Device(nullptr)
 		{
@@ -39,16 +37,28 @@ namespace sr
 
 			Ensures(mD3d12Device != nullptr);
 		}
-#pragma warning(pop)
 
-		void GraphicsDevice::CreateCommandQueue(GraphicsCommandQueue& commandQueue, const GraphicsInfrastructure& graphicsInfrastructure)
+		void GraphicsDevice::CreateCommandQueue(GraphicsCommandQueue& commandQueue, const GraphicsInfrastructure& graphicsInfrastructure) noexcept
 		{
-			const D3D12_COMMAND_QUEUE_DESC& description = commandQueue.GetCommandQueueDescription();
 			ComPtr<ID3D12CommandQueue>& commandQueueOwnerShip = commandQueue.GetCommandQueueOwnership();
 
-			mD3d12Device->CreateCommandQueue(&description, IID_PPV_ARGS(&commandQueueOwnerShip));
+			Expects(commandQueueOwnerShip == nullptr);
+
+			mD3d12Device->CreateCommandQueue(&commandQueue.GetCommandQueueDescription()
+				, IID_PPV_ARGS(&commandQueueOwnerShip));
 			
 			Ensures(commandQueueOwnerShip != nullptr);
+		}
+
+		void GraphicsDevice::CreateDescriptorHeap(gsl::not_null<DescriptorHeap*> descriptorHeap) noexcept
+		{
+			ComPtr<ID3D12DescriptorHeap>& ownership = descriptorHeap->GetDescriptorHeapOwnership();
+			
+			Expects(ownership == nullptr);
+			
+			mD3d12Device->CreateDescriptorHeap(&descriptorHeap->GetDescription(), IID_PPV_ARGS(&ownership));
+
+			Ensures(ownership != nullptr);
 		}
 
 	}

@@ -7,11 +7,13 @@
 #include <dxgi1_6.h>
 #include <DirectXMath.h>
 
-#include "PlatformWindow.h"
-#include "SwapChain.h"
+#include "RenderTargetDescriptorHeap.h"
 #include "GraphicsCommandQueue.h"
 #include "GraphicsInfrastructure.h"
 #include "GraphicsDevice.h"
+#include "PlatformWindow.h"
+#include "SwapChain.h"
+
 
 #include <DirectXTex.h>
 
@@ -112,7 +114,7 @@ void Init(HINSTANCE hInstance, int nCmdShow)
 	LoadLibrary(L"C:\\Program Files\\Microsoft PIX\\2405.15.002-OneBranch_release\\WinPixGpuCapturer.dll");
 
 	const HRESULT isComInitialized = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
-	FAILED(isComInitialized);
+	assert(SUCCEEDED(isComInitialized));
 
 	constexpr uint16_t frameWidth = 800;
 	constexpr uint16_t frameHeight = 600;
@@ -131,8 +133,8 @@ void Init(HINSTANCE hInstance, int nCmdShow)
 		// TODO: to be removed
 		g_pDevice = graphicsDevice.GetD3d12Device();
 		assert(g_pDevice != nullptr);
-	}
-
+	}	
+	
 	sr::rendering::GraphicsCommandQueue graphicsCommandQueue(sr::rendering::GraphicsCommandQueueType::Graphics);
 	graphicsDevice.CreateCommandQueue(graphicsCommandQueue, graphicsInfrastructure);
 	{
@@ -142,25 +144,27 @@ void Init(HINSTANCE hInstance, int nCmdShow)
 	}
 
 	// Create SwapChain
-	constexpr uint8_t bufferCount = 2;
-	sr::rendering::SwapChain swapChain(bufferCount, platformWindow, graphicsCommandQueue, graphicsInfrastructure);
+	constexpr uint8_t swapChainBufferCount = 2;
+	sr::rendering::SwapChain swapChain(swapChainBufferCount, platformWindow, graphicsCommandQueue, graphicsInfrastructure);
 	{
 		g_pSwapChain = swapChain.GetDxgiSwapChain(); // TODO: to be replaced later
 		assert(g_pSwapChain != nullptr);
 	}
+
+	// Create RenderTargetHeap
+	sr::rendering::RenderTargetDescriptorHeap renderTargetDescriptorHeap(swapChainBufferCount);
+	graphicsDevice.CreateDescriptorHeap(&renderTargetDescriptorHeap);
+	{
+		// TODO: to be removed
+		g_pRenderTargetViewHeap = renderTargetDescriptorHeap.GetDescriptorHeapOwnership();
+		assert(g_pRenderTargetViewHeap != nullptr);
+	}
+
 #pragma endregion
-}
 
-void LoadPipeline()
-{
 #pragma region Create RenderTarget View
-	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-	rtvHeapDesc.NumDescriptors = g_FRAME_COUNT;
-	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	g_pDevice->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&g_pRenderTargetViewHeap));
-	assert(g_pRenderTargetViewHeap != nullptr);
-
+	// TODO: encapsulate binding part
+	// TODO: Add ShaderResourceDescriptorHeap
 	// Bind RenderTarget Resource to descriptor heap
 	CD3DX12_CPU_DESCRIPTOR_HANDLE renderTargetHandle(g_pRenderTargetViewHeap->GetCPUDescriptorHandleForHeapStart());
 	for (size_t i = 0; i < g_FRAME_COUNT; ++i)
@@ -170,6 +174,11 @@ void LoadPipeline()
 		renderTargetHandle.Offset(1, g_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
 	}
 #pragma endregion
+}
+
+void LoadPipeline()
+{
+
 }
 
 void Render()

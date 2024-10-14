@@ -68,6 +68,12 @@
     <ClCompile Include="src\GraphicsCommandQueue.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\DescriptorHeap.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\RenderTargetDescriptorHeap.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Mesh.h">
@@ -95,6 +101,12 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\GraphicsCommandQueue.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\DescriptorHeap.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\RenderTargetDescriptorHeap.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>

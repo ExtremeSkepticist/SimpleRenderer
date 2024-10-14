@@ -8,6 +8,7 @@ namespace sr
 {
 	namespace rendering
 	{
+		class DescriptorHeap;
 		class GraphicsInfrastructure;
 		class GraphicsCommandQueue;
 
@@ -23,7 +24,8 @@ namespace sr
 			GraphicsDevice& operator=(GraphicsDevice&&) = delete;
 			~GraphicsDevice() = default;
 
-			void CreateCommandQueue(GraphicsCommandQueue& commandQueue, const GraphicsInfrastructure& graphicsInfrastructure);
+			void CreateCommandQueue(GraphicsCommandQueue& commandQueue, const GraphicsInfrastructure& graphicsInfrastructure) noexcept;
+			void CreateDescriptorHeap(gsl::not_null<DescriptorHeap*> descriptorHeap) noexcept;
 
 			// TODO: to be removed; D3D12Device should not be exposed
 			inline ID3D12Device* GetD3d12Device() const noexcept
