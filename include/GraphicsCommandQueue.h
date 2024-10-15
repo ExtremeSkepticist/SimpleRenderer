@@ -29,7 +29,7 @@ namespace sr
 				return mD3d12CommandQueue;
 			}
 
-			inline ID3D12CommandQueue* GetD3d12CommandQueue() const noexcept
+			inline ID3D12CommandQueue* const GetD3d12CommandQueue() const noexcept
 			{
 				return mD3d12CommandQueue.Get();
 			}

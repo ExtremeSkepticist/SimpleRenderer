@@ -7,8 +7,11 @@
 
 namespace sr
 {
-	class platform::PlatformWindow;
-
+	namespace platform
+	{
+		class PlatformWindow;
+	};
+	
 	namespace rendering
 	{
 		class GraphicsInfrastructure;
@@ -32,7 +35,17 @@ namespace sr
 				return mBufferCount;
 			}
 
-			inline IDXGISwapChain3* GetDxgiSwapChain() const noexcept
+			inline uint16_t GetBufferWidth() const noexcept
+			{
+				return mBufferWidth;
+			}
+			
+			inline uint16_t GetBufferHeight() const noexcept
+			{
+				return mBufferHeight;
+			}
+
+			inline IDXGISwapChain3* const GetDxgiSwapChain() const noexcept
 			{
 				return mDxgiSwapChain.Get();
 			}

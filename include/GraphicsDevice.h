@@ -9,6 +9,7 @@ namespace sr
 	namespace rendering
 	{
 		class DescriptorHeap;
+		class RenderTargetDescriptorHeap;
 		class GraphicsInfrastructure;
 		class GraphicsCommandQueue;
 
@@ -24,15 +25,22 @@ namespace sr
 			GraphicsDevice& operator=(GraphicsDevice&&) = delete;
 			~GraphicsDevice() = default;
 
-			void CreateCommandQueue(GraphicsCommandQueue& commandQueue, const GraphicsInfrastructure& graphicsInfrastructure) noexcept;
-			void CreateDescriptorHeap(gsl::not_null<DescriptorHeap*> descriptorHeap) noexcept;
+			void CreateCommandQueue(GraphicsCommandQueue& commandQueue, const GraphicsInfrastructure& graphicsInfrastructure) const noexcept;
+			void CreateDescriptorHeap(DescriptorHeap& descriptorHeap) const noexcept;
+			void CreateRenderTargetView(RenderTargetDescriptorHeap& renderTargetHeap, gsl::index heapIndex) const noexcept;
+
+			inline uint32_t GetRenderTargetHeapHandleIncrementSize() const noexcept
+			{
+				return mD3d12Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+			}
 
 			// TODO: to be removed; D3D12Device should not be exposed
-			inline ID3D12Device* GetD3d12Device() const noexcept
+			inline ID3D12Device* const GetD3d12Device() const noexcept
 			{
 				return mD3d12Device.Get();
 			}
 
+			
 		private:
 			ComPtr<ID3D12Device> mD3d12Device = nullptr;
 		};

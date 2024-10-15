@@ -1,8 +1,10 @@
 
 #include "DescriptorHeap.h"
+#include "GpuResource.h"
 #include "GraphicsCommandQueue.h"
 #include "GraphicsDevice.h"
 #include "GraphicsInfrastructure.h"
+#include "RenderTargetDescriptorHeap.h"
 
 namespace sr
 {
@@ -12,7 +14,7 @@ namespace sr
 			: mD3d12Device(nullptr)
 		{
 			const gsl::not_null<IDXGIFactory6*> dxgiFactory = graphicsInfrastructure.GetDxgiFactory();
-			
+
 			ComPtr<IDXGIAdapter1> adapter = nullptr;
 			gsl::index adapterIndex = 0;
 			while (true)
@@ -38,7 +40,7 @@ namespace sr
 			Ensures(mD3d12Device != nullptr);
 		}
 
-		void GraphicsDevice::CreateCommandQueue(GraphicsCommandQueue& commandQueue, const GraphicsInfrastructure& graphicsInfrastructure) noexcept
+		void GraphicsDevice::CreateCommandQueue(GraphicsCommandQueue& commandQueue, const GraphicsInfrastructure& graphicsInfrastructure) const noexcept
 		{
 			ComPtr<ID3D12CommandQueue>& commandQueueOwnerShip = commandQueue.GetCommandQueueOwnership();
 
@@ -46,20 +48,32 @@ namespace sr
 
 			mD3d12Device->CreateCommandQueue(&commandQueue.GetCommandQueueDescription()
 				, IID_PPV_ARGS(&commandQueueOwnerShip));
-			
+
 			Ensures(commandQueueOwnerShip != nullptr);
 		}
 
-		void GraphicsDevice::CreateDescriptorHeap(gsl::not_null<DescriptorHeap*> descriptorHeap) noexcept
+		void GraphicsDevice::CreateDescriptorHeap(DescriptorHeap& descriptorHeap) const noexcept
 		{
-			ComPtr<ID3D12DescriptorHeap>& ownership = descriptorHeap->GetDescriptorHeapOwnership();
-			
+			ComPtr<ID3D12DescriptorHeap>& ownership = descriptorHeap.GetDescriptorHeapOwnership();
+
 			Expects(ownership == nullptr);
-			
-			mD3d12Device->CreateDescriptorHeap(&descriptorHeap->GetDescription(), IID_PPV_ARGS(&ownership));
+
+			mD3d12Device->CreateDescriptorHeap(&descriptorHeap.GetDescription(), IID_PPV_ARGS(&ownership));
 
 			Ensures(ownership != nullptr);
 		}
 
+		void GraphicsDevice::CreateRenderTargetView(RenderTargetDescriptorHeap& renderTargetHeap, gsl::index heapIndex) const noexcept
+		{
+			std::vector<GpuResource>& gpuResources = renderTargetHeap.GetGpuResources();
+			Expects(heapIndex < gpuResources.size());
+
+			const ComPtr<ID3D12Resource>& renderTargetResourceOwner = gsl::at(gpuResources, heapIndex).GetD3d12ResourceOwner();
+			
+			D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandle = renderTargetHeap.GetHeapStartHandle();
+			descriptorHandle.ptr += GetRenderTargetHeapHandleIncrementSize() * heapIndex;
+
+			mD3d12Device->CreateRenderTargetView(renderTargetResourceOwner.Get(), nullptr, descriptorHandle);
+		}
 	}
 }

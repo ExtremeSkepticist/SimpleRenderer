@@ -4,12 +4,14 @@ namespace sr
 {
 	namespace rendering
 	{
-		DescriptorHeap::DescriptorHeap(uint32_t numDescriptors) noexcept
-			: mNumAllocatedDescriptors(0)
-			, mD3d12DescriptorHeap(nullptr)
+		DescriptorHeap::DescriptorHeap(const uint32_t numDescriptors) noexcept
+			: mD3d12DescriptorHeap(nullptr)
+			, mGpuResources(numDescriptors)
 		{
 			mDescriptorHeapDescription.NumDescriptors = numDescriptors;
 			mDescriptorHeapDescription.NodeMask = 0;
+
+			assert(mGpuResources.size() == numDescriptors);
 
 			/*switch (descriptorHeapType)
 			{

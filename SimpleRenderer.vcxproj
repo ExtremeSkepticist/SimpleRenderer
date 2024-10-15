@@ -73,6 +73,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnablePREfast>true</EnablePREfast>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -110,6 +111,7 @@ msbuild DirectXTex_Desktop_2022.sln -property:Configuration=$(Configuration)</Co
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnablePREfast>true</EnablePREfast>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -157,6 +159,7 @@ msbuild DirectXTex_Desktop_2022.sln -property:Configuration=$(Configuration)</Co
   <ItemGroup>
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\DescriptorHeap.cpp" />
+    <ClCompile Include="src\GpuResource.cpp" />
     <ClCompile Include="src\GraphicsCommandQueue.cpp" />
     <ClCompile Include="src\GraphicsDevice.cpp" />
     <ClCompile Include="src\GraphicsInfrastructure.cpp" />
@@ -171,6 +174,7 @@ msbuild DirectXTex_Desktop_2022.sln -property:Configuration=$(Configuration)</Co
     <ClInclude Include="include\Camera.h" />
     <ClInclude Include="include\Common.h" />
     <ClInclude Include="include\DescriptorHeap.h" />
+    <ClInclude Include="include\GpuResource.h" />
     <ClInclude Include="include\GraphicsCommandQueue.h" />
     <ClInclude Include="include\GraphicsDevice.h" />
     <ClInclude Include="include\GraphicsInfrastructure.h" />

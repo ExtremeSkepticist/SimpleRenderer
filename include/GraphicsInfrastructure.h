@@ -23,7 +23,7 @@ namespace sr
 			GraphicsInfrastructure& operator=(GraphicsInfrastructure&&) = delete;
 			~GraphicsInfrastructure() = default;
 
-			inline IDXGIFactory6* GetDxgiFactory() const noexcept
+			inline IDXGIFactory6* const GetDxgiFactory() const noexcept
 			{
 				return mDxgiFactory.Get();
 			}

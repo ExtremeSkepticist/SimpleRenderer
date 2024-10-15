@@ -1,17 +1,20 @@
+#pragma once
+
 #include <d3d12.h>
 
 #include "Common.h"
+#include "GpuResource.h"
 
 namespace sr
 {
 	namespace rendering
 	{
 		class GraphicsDevice;
-
+		
 		class DescriptorHeap
 		{
 		public:
-			DescriptorHeap(uint32_t numDescriptors) noexcept;
+			DescriptorHeap(const uint32_t numDescriptors) noexcept;
 			
 			DescriptorHeap() = delete;
 			DescriptorHeap(DescriptorHeap&&) = delete;
@@ -27,15 +30,25 @@ namespace sr
 				return mDescriptorHeapDescription;
 			}
 
+			inline ID3D12DescriptorHeap* const GetDescriptorHeap() const noexcept
+			{
+				return mD3d12DescriptorHeap.Get();
+			}
+
 			inline ComPtr<ID3D12DescriptorHeap>& GetDescriptorHeapOwnership() noexcept
 			{
 				return mD3d12DescriptorHeap;
 			}
 
+			inline std::vector<GpuResource>& GetGpuResources() noexcept
+			{
+				return mGpuResources;
+			}
+
 		private:
-			uint32_t mNumAllocatedDescriptors = 0;
 			D3D12_DESCRIPTOR_HEAP_DESC mDescriptorHeapDescription = {};
 			ComPtr<ID3D12DescriptorHeap> mD3d12DescriptorHeap = nullptr;
+			std::vector<GpuResource> mGpuResources = {};
 		};
 	}
 }

@@ -11,9 +11,9 @@
 #include "GraphicsCommandQueue.h"
 #include "GraphicsInfrastructure.h"
 #include "GraphicsDevice.h"
+#include "GpuResource.h"
 #include "PlatformWindow.h"
 #include "SwapChain.h"
-
 
 #include <DirectXTex.h>
 
@@ -65,15 +65,14 @@ const XMFLOAT3 g_MODEL_WORLD_POSITION(0, 4, 2);
 // Camera related variables
 const XMFLOAT3 g_CAMERA_WORLD_POSITION(0, 6, 0);
 const XMFLOAT3 g_WORLD_UP_DIRECITON(0, 1, 0);
-const float g_FOV_ANGLE = 45;
-const float g_NEAR_Z_COORD = 0.01;
-const float g_FAR_Z_COORD = 100;
+constexpr float g_FOV_ANGLE = 45.0f;
+constexpr float g_NEAR_Z_COORD = 0.01f;
+constexpr float g_FAR_Z_COORD = 100.0f;
 Camera g_Camera(g_FOV_ANGLE, g_FRAME_WIDTH / g_FRAME_HEIGHT, g_NEAR_Z_COORD, g_FAR_Z_COORD, g_CAMERA_WORLD_POSITION);
 
 ConstBuffer g_ConstBufferData;
 UINT8* g_pConstBufferMapped = nullptr;
 
-void LoadPipeline();
 void LoadRenderResources();
 void WaitForPreviousFrame();
 
@@ -85,9 +84,6 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 {
 	Init(hInstance, nCmdShow);
 
-	
-	LoadPipeline();
-	
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile("resources\\DamagedHelmet.gltf", aiProcess_ConvertToLeftHanded | aiProcess_CalcTangentSpace);
 	assert(scene != nullptr);
@@ -144,41 +140,27 @@ void Init(HINSTANCE hInstance, int nCmdShow)
 	}
 
 	// Create SwapChain
-	constexpr uint8_t swapChainBufferCount = 2;
+	constexpr uint32_t swapChainBufferCount = 2;
 	sr::rendering::SwapChain swapChain(swapChainBufferCount, platformWindow, graphicsCommandQueue, graphicsInfrastructure);
 	{
-		g_pSwapChain = swapChain.GetDxgiSwapChain(); // TODO: to be replaced later
+		// TODO: to be removed
+		g_pSwapChain = swapChain.GetDxgiSwapChain();
 		assert(g_pSwapChain != nullptr);
 	}
 
 	// Create RenderTargetHeap
-	sr::rendering::RenderTargetDescriptorHeap renderTargetDescriptorHeap(swapChainBufferCount);
-	graphicsDevice.CreateDescriptorHeap(&renderTargetDescriptorHeap);
+	sr::rendering::RenderTargetDescriptorHeap renderTargetDescriptorHeap(swapChainBufferCount, swapChain, graphicsDevice);
 	{
 		// TODO: to be removed
 		g_pRenderTargetViewHeap = renderTargetDescriptorHeap.GetDescriptorHeapOwnership();
+		g_pRenderTargets[0] = gsl::at(renderTargetDescriptorHeap.GetGpuResources(), 0).GetD3d12ResourceOwner();
+		g_pRenderTargets[1] = gsl::at(renderTargetDescriptorHeap.GetGpuResources(), 1).GetD3d12ResourceOwner();
+
 		assert(g_pRenderTargetViewHeap != nullptr);
-	}
-
-#pragma endregion
-
-#pragma region Create RenderTarget View
-	// TODO: encapsulate binding part
-	// TODO: Add ShaderResourceDescriptorHeap
-	// Bind RenderTarget Resource to descriptor heap
-	CD3DX12_CPU_DESCRIPTOR_HANDLE renderTargetHandle(g_pRenderTargetViewHeap->GetCPUDescriptorHandleForHeapStart());
-	for (size_t i = 0; i < g_FRAME_COUNT; ++i)
-	{
-		g_pSwapChain->GetBuffer(i, IID_PPV_ARGS(&g_pRenderTargets[i]));
-		g_pDevice->CreateRenderTargetView(g_pRenderTargets[i].Get(), nullptr, renderTargetHandle);
-		renderTargetHandle.Offset(1, g_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
+		assert(g_pRenderTargets[0] != nullptr);
+		assert(g_pRenderTargets[1] != nullptr);
 	}
 #pragma endregion
-}
-
-void LoadPipeline()
-{
-
 }
 
 void Render()
@@ -431,6 +413,8 @@ void LoadRenderResources()
 			g_pAlbedoTexture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 		g_pCmdList->ResourceBarrier(1, &transitionBarrier);
 
+
+		// TODO: Add ShaderResourceDescriptorHeap
 		// Create SRV
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvViewDesc = {};
 		srvViewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
