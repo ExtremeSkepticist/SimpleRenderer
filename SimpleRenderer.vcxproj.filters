@@ -77,6 +77,9 @@
     <ClCompile Include="src\GpuResource.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\InputElementLayout.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Mesh.h">
@@ -113,6 +116,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\GpuResource.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\InputElementLayout.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
