@@ -14,6 +14,7 @@
 #include "GpuResource.h"
 #include "PlatformWindow.h"
 #include "SwapChain.h"
+#include "InputElementLayout.h"
 
 #include <DirectXTex.h>
 
@@ -273,17 +274,19 @@ void LoadRenderResources()
 
 #pragma region Initialize PSO
 	// Initialize PSO
-	D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
-	{
-		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
-		, {"TEXCOORDS", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
-		, {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
-		, {"TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
-		, {"BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 44, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
-	};
+	constexpr uint32_t inputSlot = 0;
+	sr::rendering::InputElementLayout inputElementLayout(inputSlot);
+	inputElementLayout.AddLayout("POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT);
+	inputElementLayout.AddLayout("TEXCOORDS", 0, DXGI_FORMAT_R32G32_FLOAT);
+	inputElementLayout.AddLayout("NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT);
+	inputElementLayout.AddLayout("TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT);
+	inputElementLayout.AddLayout("BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT);
+
+	std::vector<D3D12_INPUT_ELEMENT_DESC>& inputElementDescsOwner = inputElementLayout.GetInputElementDescOwner();
+	const uint32_t numInputElements = inputElementDescsOwner.size();
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = { 0, };
-	psoDesc.InputLayout = { inputElementDescs, _countof(inputElementDescs) }; // TODO: make Mesh class return Vertex-struct-related data
+	psoDesc.InputLayout = { &gsl::at(inputElementDescsOwner, 0), numInputElements }; // TODO: make Mesh class return Vertex-struct-related data
 	psoDesc.pRootSignature = g_pRootSignature.Get();
 	psoDesc.VS = CD3DX12_SHADER_BYTECODE(pVertexShader.Get());
 	psoDesc.PS = CD3DX12_SHADER_BYTECODE(pPixelShader.Get());
