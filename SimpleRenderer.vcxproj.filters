@@ -77,6 +77,15 @@
     <ClCompile Include="src\GpuResource.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\RootSignature.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DescriptorRange.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\RootParameter.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Mesh.h">
@@ -113,6 +122,15 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\GpuResource.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\RootSignature.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\DescriptorRange.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\RootParameter.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>

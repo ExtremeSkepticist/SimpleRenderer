@@ -120,8 +120,8 @@ void Init(HINSTANCE hInstance, int nCmdShow)
 	}
 #pragma endregion
 
+// TODO: Rendering Pipeline Class that contains below
 #pragma region Init Rendering Pipeline
-	// TODO: Rendering Pipeline Class that contains below
 	constexpr UINT infrastructureFlag = 0;
 	sr::rendering::GraphicsInfrastructure graphicsInfrastructure(infrastructureFlag);
 	sr::rendering::GraphicsDevice graphicsDevice(graphicsInfrastructure);
@@ -223,7 +223,7 @@ void LoadRenderResources()
 
 	const size_t ROOT_PARAMETER_NUM = 1;
 	CD3DX12_ROOT_PARAMETER1 rootParameters[ROOT_PARAMETER_NUM] = {};
-	rootParameters[0].InitAsDescriptorTable(DESCRIPTOR_RANGE_NUM, descriptorRanges);
+	rootParameters[0].InitAsDescriptorTable(DESCRIPTOR_RANGE_NUM, descriptorRanges); //TODO: in RootParameter class
 	
 	D3D12_STATIC_SAMPLER_DESC samplerDesc = {};
 	{
@@ -310,7 +310,6 @@ void LoadRenderResources()
 		, g_pCmdAllocator.Get(), g_pPipelineStateObj.Get(), IID_PPV_ARGS(&g_pCmdList));
 	assert(g_pCmdList != nullptr);
 	g_pCmdList->Close();
-
 #pragma endregion
 
 #pragma region Create descriptor heap
