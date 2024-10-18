@@ -4,36 +4,44 @@ namespace sr
 {
 	namespace rendering
 	{
-		RootSignature::RootSignature(const uint32_t rootParameterNum, const uint32_t descriptorRangeNum)
-			: mRootSignatureFlags(D3D12_ROOT_SIGNATURE_FLAGS::D3D12_ROOT_SIGNATURE_FLAG_NONE)
-			, mSamplerDesc({})
-			, mRootParameters()
-			, mDescriptorRanges()
-			, mRootSignature(nullptr)
+		RootSignature::RootSignature(const gsl::span<RootParameter> rootParameters) noexcept
+			: mD3dx12RootParameters({})
+			, mSerializedRootSignature(nullptr)
+			, mD3d12RootSignature(nullptr)
 		{
-			mRootParameters.reserve(rootParameterNum);
-			mDescriptorRanges.reserve(descriptorRangeNum);
+			D3D12_STATIC_SAMPLER_DESC samplerDesc = {};
+			{
+				samplerDesc.Filter = D3D12_FILTER_ANISOTROPIC;
+				samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+				samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+				samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+				samplerDesc.MaxAnisotropy = 16;
+				samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
+				samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE;
+				samplerDesc.MinLOD = 0;
+				samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
+				samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+			}
+
+			constexpr D3D12_ROOT_SIGNATURE_FLAGS rootSignautureFlags =
+				D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
+				D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
+				D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
+				D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
+
+			const size_t numRootParameters = rootParameters.size();
+			mD3dx12RootParameters.reserve(numRootParameters);
+			for (gsl::index i = 0; i < numRootParameters; ++i)
+			{
+				mD3dx12RootParameters.emplace_back(rootParameters[i].GetD3dx12RootParameter());
+			}
+
+			CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
+			rootSignatureDesc.Init_1_1(numRootParameters, &gsl::at(mD3dx12RootParameters, 0), 1, &samplerDesc, rootSignautureFlags);
+
+			D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1_1, &mSerializedRootSignature, nullptr);
+
+			assert(mSerializedRootSignature!= nullptr);
 		}
-
-		//void RootSignature::AddDescriptorRange(const RootSignatureDescriptorType descriptorType, const uint32_t numDescriptors) noexcept
-		//{
-		//	const gsl::index rangeIndex = mDescriptorRanges.size();
-		//	mDescriptorRanges.emplace_back();
-
-		//	D3D12_DESCRIPTOR_RANGE_TYPE d3d12DescriptorRangeType;
-		//	switch (descriptorType)
-		//	{
-		//	case RootSignatureDescriptorType::ConstBuffer:
-		//		d3d12DescriptorRangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-		//		break;
-		//	case RootSignatureDescriptorType::ShaderResourceBuffer:
-		//		d3d12DescriptorRangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		//		break;
-		//	default:
-		//		assert(false);
-		//	}
-
-		//	mDescriptorRanges[rangeIndex].Init(d3d12DescriptorRangeType, numDescriptors, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
-		//}
 	}
 }

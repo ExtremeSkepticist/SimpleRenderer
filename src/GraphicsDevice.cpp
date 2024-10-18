@@ -5,6 +5,7 @@
 #include "GraphicsDevice.h"
 #include "GraphicsInfrastructure.h"
 #include "RenderTargetDescriptorHeap.h"
+#include "RootSignature.h"
 
 namespace sr
 {
@@ -74,6 +75,16 @@ namespace sr
 			descriptorHandle.ptr += GetRenderTargetHeapHandleIncrementSize() * heapIndex;
 
 			mD3d12Device->CreateRenderTargetView(renderTargetResourceOwner.Get(), nullptr, descriptorHandle);
+		}
+
+		void GraphicsDevice::CreateRootSignature(RootSignature& rootSignature) const noexcept
+		{
+			ComPtr<ID3D12RootSignature>& rootSignatureOwner = rootSignature.GetD3d12RootSignatureOwner();
+			gsl::not_null<ID3DBlob*> serializedRootSignature = rootSignature.GetSerializedRootSignature();
+			mD3d12Device->CreateRootSignature(0, serializedRootSignature->GetBufferPointer()
+				, serializedRootSignature->GetBufferSize(), IID_PPV_ARGS(&rootSignatureOwner));
+
+			Ensures(rootSignatureOwner != nullptr);
 		}
 	}
 }

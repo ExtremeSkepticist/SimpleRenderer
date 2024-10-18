@@ -7,14 +7,17 @@
 #include <dxgi1_6.h>
 #include <DirectXMath.h>
 
-#include "RenderTargetDescriptorHeap.h"
+#include "DescriptorRange.h"
 #include "GraphicsCommandQueue.h"
 #include "GraphicsInfrastructure.h"
 #include "GraphicsDevice.h"
 #include "GpuResource.h"
-#include "PlatformWindow.h"
-#include "SwapChain.h"
 #include "InputElementLayout.h"
+#include "PlatformWindow.h"
+#include "RenderTargetDescriptorHeap.h"
+#include "RootParameter.h"
+#include "RootSignature.h"
+#include "SwapChain.h"
 
 #include <DirectXTex.h>
 
@@ -161,6 +164,26 @@ void Init(HINSTANCE hInstance, int nCmdShow)
 		assert(g_pRenderTargets[0] != nullptr);
 		assert(g_pRenderTargets[1] != nullptr);
 	}
+
+	// Initialize RootSignature
+	constexpr size_t numDescriptorRanges = 2;
+	sr::rendering::DescriptorRange descriptorRanges[numDescriptorRanges] = {
+		{ sr::rendering::DescriptorRange::RangeType::ConstBuffer, 1 }
+		, { sr::rendering::DescriptorRange::RangeType::ShaderResourceBuffer, 1 }
+	};
+
+	constexpr size_t numRootParameters = 1;
+	sr::rendering::RootParameter rootParameters[numRootParameters] = {
+		{ descriptorRanges }
+	};
+
+	sr::rendering::RootSignature rootSignature(rootParameters);
+	graphicsDevice.CreateRootSignature(rootSignature);
+	{
+		// TODO: to be removed
+		g_pRootSignature = rootSignature.GetD3d12RootSignatureOwner();
+		assert(g_pRootSignature != nullptr);
+	}
 #pragma endregion
 }
 
@@ -216,50 +239,6 @@ void Render()
 
 void LoadRenderResources()
 {
-#pragma region Initialize Root Signature
-	const size_t DESCRIPTOR_RANGE_NUM = 2;
-	CD3DX12_DESCRIPTOR_RANGE1 descriptorRanges[DESCRIPTOR_RANGE_NUM] = {};
-	descriptorRanges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
-	descriptorRanges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
-
-	const size_t ROOT_PARAMETER_NUM = 1;
-	CD3DX12_ROOT_PARAMETER1 rootParameters[ROOT_PARAMETER_NUM] = {};
-	rootParameters[0].InitAsDescriptorTable(DESCRIPTOR_RANGE_NUM, descriptorRanges); //TODO: in RootParameter class
-	
-	D3D12_STATIC_SAMPLER_DESC samplerDesc = {};
-	{
-		samplerDesc.Filter = D3D12_FILTER_ANISOTROPIC;
-		samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-		samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-		samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-		samplerDesc.MaxAnisotropy = 16;
-		samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
-		samplerDesc.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE;
-		samplerDesc.MinLOD = 0;
-		samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
-		samplerDesc.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-	}
-
-	D3D12_ROOT_SIGNATURE_FLAGS roFlags =
-		D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
-		D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
-
-	CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC roDesc = {};
-	roDesc.Init_1_1(ROOT_PARAMETER_NUM, rootParameters, 1, &samplerDesc, roFlags);
-	
-	ComPtr<ID3DBlob> pSerializedSignature = nullptr;
-	ComPtr<ID3DBlob> pError= nullptr;
-	D3DX12SerializeVersionedRootSignature(&roDesc, D3D_ROOT_SIGNATURE_VERSION_1_1, &pSerializedSignature, &pError);
-	
-	assert(pSerializedSignature != nullptr);
-
-	g_pDevice->CreateRootSignature(0, pSerializedSignature->GetBufferPointer(), pSerializedSignature->GetBufferSize(), IID_PPV_ARGS(&g_pRootSignature));
-	assert(g_pRootSignature != nullptr);
-
-#pragma endregion
-
 #pragma region Initialize shader
 	// TODO: Use batch script instead to compile shaders
 	// TODO: Implement changing shaders upon using different effects

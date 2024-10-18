@@ -12,6 +12,7 @@ namespace sr
 		class RenderTargetDescriptorHeap;
 		class GraphicsInfrastructure;
 		class GraphicsCommandQueue;
+		class RootSignature;
 
 		class GraphicsDevice
 		{
@@ -28,6 +29,7 @@ namespace sr
 			void CreateCommandQueue(GraphicsCommandQueue& commandQueue, const GraphicsInfrastructure& graphicsInfrastructure) const noexcept;
 			void CreateDescriptorHeap(DescriptorHeap& descriptorHeap) const noexcept;
 			void CreateRenderTargetView(RenderTargetDescriptorHeap& renderTargetHeap, gsl::index heapIndex) const noexcept;
+			void CreateRootSignature(RootSignature& rootSignature) const noexcept;
 
 			inline uint32_t GetRenderTargetHeapHandleIncrementSize() const noexcept
 			{
