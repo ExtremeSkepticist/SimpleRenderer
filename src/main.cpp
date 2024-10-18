@@ -17,6 +17,7 @@
 #include "RenderTargetDescriptorHeap.h"
 #include "RootParameter.h"
 #include "RootSignature.h"
+#include "Shader.h"
 #include "SwapChain.h"
 
 #include <DirectXTex.h>
@@ -84,6 +85,8 @@ void Init(HINSTANCE hInstance, int nCmdShow);
 void Update();
 void Render();
 
+
+// TODO: deprecate d3dx12 and implement its own initialization
 int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int nCmdShow)
 {
 	Init(hInstance, nCmdShow);
@@ -242,13 +245,10 @@ void LoadRenderResources()
 #pragma region Initialize shader
 	// TODO: Use batch script instead to compile shaders
 	// TODO: Implement changing shaders upon using different effects
-	ComPtr<ID3DBlob> pVertexShader;
-	ComPtr<ID3DBlob> pPixelShader;
-
-	D3DReadFileToBlob(L"shaders\\BasicVertexShader.cso", &pVertexShader);
-	assert(pVertexShader != nullptr);
-	D3DReadFileToBlob(L"shaders\\BasicPixelShader.cso", &pPixelShader);
-	assert(pPixelShader != nullptr);
+	constexpr gsl::cwzstring vertexShaderPath = L"shaders\\BasicVertexShader.cso";
+	const sr::rendering::Shader vertexShader(vertexShaderPath);
+	constexpr gsl::cwzstring pixelShaderPath = L"shaders\\BasicPixelShader.cso";
+	const sr::rendering::Shader pixelShader(pixelShaderPath);
 #pragma endregion
 
 #pragma region Initialize PSO
@@ -267,8 +267,8 @@ void LoadRenderResources()
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = { 0, };
 	psoDesc.InputLayout = { &gsl::at(inputElementDescsOwner, 0), numInputElements }; // TODO: make Mesh class return Vertex-struct-related data
 	psoDesc.pRootSignature = g_pRootSignature.Get();
-	psoDesc.VS = CD3DX12_SHADER_BYTECODE(pVertexShader.Get());
-	psoDesc.PS = CD3DX12_SHADER_BYTECODE(pPixelShader.Get());
+	psoDesc.VS = vertexShader.GetShaderByteCode();
+	psoDesc.PS = pixelShader.GetShaderByteCode();
 	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
 	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 	psoDesc.DepthStencilState.DepthEnable = FALSE;
@@ -301,16 +301,6 @@ void LoadRenderResources()
 	descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	g_pDevice->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&g_pDescriptorHeap));
 	assert(g_pDescriptorHeap != nullptr);
-#pragma endregion
-
-#pragma region Create Fence
-	g_pDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&g_pFence));
-	g_FenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-
-	// Wait for the command list to execute; we are reusing the same command 
-	// list in our main loop but for now, we just want to wait for setup to 
-	// complete before continuing.
-	WaitForPreviousFrame();
 #pragma endregion
 
 #pragma region Create Const Buffer

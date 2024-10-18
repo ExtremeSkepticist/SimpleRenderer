@@ -172,6 +172,9 @@ msbuild DirectXTex_Desktop_2022.sln -property:Configuration=$(Configuration)</Co
     <ClCompile Include="src\RenderTargetDescriptorHeap.cpp" />
     <ClCompile Include="src\RootParameter.cpp" />
     <ClCompile Include="src\RootSignature.cpp" />
+    <ClCompile Include="src\Shader.cpp">
+      <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</PreprocessToFile>
+    </ClCompile>
     <ClCompile Include="src\SwapChain.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -190,6 +193,7 @@ msbuild DirectXTex_Desktop_2022.sln -property:Configuration=$(Configuration)</Co
     <ClInclude Include="include\RenderTargetDescriptorHeap.h" />
     <ClInclude Include="include\RootParameter.h" />
     <ClInclude Include="include\RootSignature.h" />
+    <ClInclude Include="include\Shader.h" />
     <ClInclude Include="include\SwapChain.h" />
   </ItemGroup>
   <ItemGroup>
