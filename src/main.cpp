@@ -138,13 +138,21 @@ void Init(HINSTANCE hInstance, int nCmdShow)
 		assert(g_pDevice != nullptr);
 	}	
 	
-	sr::rendering::GraphicsCommandQueue graphicsCommandQueue(sr::rendering::GraphicsCommandQueueType::Graphics);
-	graphicsDevice.CreateCommandQueue(graphicsCommandQueue, graphicsInfrastructure);
+	sr::rendering::GraphicsCommandQueue graphicsCommandQueue(sr::rendering::GraphicsCommandQueueType::Graphics, graphicsDevice);
 	{
 		// TODO: to be removed
 		g_pCmdQueue = graphicsCommandQueue.GetD3d12CommandQueue();
 		assert(g_pCmdQueue != nullptr);
 	}
+
+	// Create command allocator & command list
+	g_pDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&g_pCmdAllocator));
+	assert(g_pCmdAllocator != nullptr);
+
+	g_pDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT
+		, g_pCmdAllocator.Get(), nullptr, IID_PPV_ARGS(&g_pCmdList));
+	assert(g_pCmdList != nullptr);
+	g_pCmdList->Close();
 
 	// Create SwapChain
 	constexpr uint32_t swapChainBufferCount = 2;
@@ -170,9 +178,11 @@ void Init(HINSTANCE hInstance, int nCmdShow)
 
 	// Initialize RootSignature
 	constexpr size_t numDescriptorRanges = 2;
+	constexpr size_t numConstBufferDescriptors = 1;
+	constexpr size_t numShaderResourceBufferDescriptors = 1;
 	sr::rendering::DescriptorRange descriptorRanges[numDescriptorRanges] = {
-		{ sr::rendering::DescriptorRange::RangeType::ConstBuffer, 1 }
-		, { sr::rendering::DescriptorRange::RangeType::ShaderResourceBuffer, 1 }
+		{ sr::rendering::DescriptorRange::RangeType::ConstBuffer, numConstBufferDescriptors }
+		, { sr::rendering::DescriptorRange::RangeType::ShaderResourceBuffer, numShaderResourceBufferDescriptors }
 	};
 
 	constexpr size_t numRootParameters = 1;
@@ -180,8 +190,7 @@ void Init(HINSTANCE hInstance, int nCmdShow)
 		{ descriptorRanges }
 	};
 
-	sr::rendering::RootSignature rootSignature(rootParameters);
-	graphicsDevice.CreateRootSignature(rootSignature);
+	sr::rendering::RootSignature rootSignature(rootParameters, graphicsDevice);
 	{
 		// TODO: to be removed
 		g_pRootSignature = rootSignature.GetD3d12RootSignatureOwner();
@@ -198,6 +207,7 @@ void Render()
 	result = g_pCmdList->Reset(g_pCmdAllocator.Get(), g_pPipelineStateObj.Get());
 	assert(SUCCEEDED(result));
 
+	g_pCmdList->SetPipelineState(g_pPipelineStateObj.Get());
 	g_pCmdList->SetGraphicsRootSignature(g_pRootSignature.Get());
 
 	ID3D12DescriptorHeap* pArrayDescriptorHeaps[] = { g_pDescriptorHeap.Get() };
@@ -264,7 +274,7 @@ void LoadRenderResources()
 	std::vector<D3D12_INPUT_ELEMENT_DESC>& inputElementDescsOwner = inputElementLayout.GetInputElementDescOwner();
 	const uint32_t numInputElements = inputElementDescsOwner.size();
 
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = { 0, };
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = { nullptr, };
 	psoDesc.InputLayout = { &gsl::at(inputElementDescsOwner, 0), numInputElements }; // TODO: make Mesh class return Vertex-struct-related data
 	psoDesc.pRootSignature = g_pRootSignature.Get();
 	psoDesc.VS = vertexShader.GetShaderByteCode();
@@ -284,24 +294,22 @@ void LoadRenderResources()
 
 #pragma endregion
 
-#pragma region Create command allocator & command list
-	g_pDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&g_pCmdAllocator));
-	assert(g_pCmdAllocator != nullptr);
-
-	g_pDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT
-		, g_pCmdAllocator.Get(), g_pPipelineStateObj.Get(), IID_PPV_ARGS(&g_pCmdList));
-	assert(g_pCmdList != nullptr);
-	g_pCmdList->Close();
-#pragma endregion
-
-#pragma region Create descriptor heap
+	// Create Descriptor heap (required for creating const buffer and textures)
 	D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {};
 	descriptorHeapDesc.NumDescriptors = 2;
 	descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	g_pDevice->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&g_pDescriptorHeap));
 	assert(g_pDescriptorHeap != nullptr);
-#pragma endregion
+
+	// Create fence
+	g_pDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&g_pFence));
+	g_FenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+
+	// Wait for the command list to execute; we are reusing the same command 
+	// list in our main loop but for now, we just want to wait for setup to 
+	// complete before continuing.
+	WaitForPreviousFrame();
 
 #pragma region Create Const Buffer
 	const size_t CONST_BUFFER_SIZE = sizeof(ConstBuffer);

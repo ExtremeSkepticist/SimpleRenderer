@@ -5,7 +5,7 @@ namespace sr
 {
 	namespace rendering
 	{
-		GraphicsCommandQueue::GraphicsCommandQueue(GraphicsCommandQueueType commandQueueType) noexcept
+		GraphicsCommandQueue::GraphicsCommandQueue(GraphicsCommandQueueType commandQueueType, const GraphicsDevice& graphicsDevice) noexcept
 			: mCommandQueueDesc({})
 			, mD3d12CommandQueue(nullptr)
 		{
@@ -24,6 +24,10 @@ namespace sr
 					assert(false);
 					break;
 			}
+
+			graphicsDevice.CreateCommandQueue(*this);
+
+			Ensures(mD3d12CommandQueue != nullptr);
 		}
 	}
 }

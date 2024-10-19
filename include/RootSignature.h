@@ -15,7 +15,7 @@ namespace sr
 		class RootSignature
 		{
 		public:
-			RootSignature(const gsl::span<RootParameter> rootParameters) noexcept;
+			RootSignature(const gsl::span<RootParameter> rootParameters, const GraphicsDevice& graphicsDevice) noexcept;
 			~RootSignature() = default;
 			RootSignature() = delete;
 

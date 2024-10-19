@@ -1,10 +1,11 @@
+#include "GraphicsDevice.h"
 #include "RootSignature.h"
 
 namespace sr
 {
 	namespace rendering
 	{
-		RootSignature::RootSignature(const gsl::span<RootParameter> rootParameters) noexcept
+		RootSignature::RootSignature(const gsl::span<RootParameter> rootParameters, const GraphicsDevice& graphicsDevice) noexcept
 			: mD3dx12RootParameters({})
 			, mSerializedRootSignature(nullptr)
 			, mD3d12RootSignature(nullptr)
@@ -40,8 +41,10 @@ namespace sr
 			rootSignatureDesc.Init_1_1(numRootParameters, &gsl::at(mD3dx12RootParameters, 0), 1, &samplerDesc, rootSignautureFlags);
 
 			D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1_1, &mSerializedRootSignature, nullptr);
-
 			assert(mSerializedRootSignature!= nullptr);
+
+			graphicsDevice.CreateRootSignature(*this);
+			Ensures(mD3d12RootSignature != nullptr);
 		}
 	}
 }

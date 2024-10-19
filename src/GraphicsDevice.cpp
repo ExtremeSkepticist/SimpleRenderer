@@ -41,7 +41,7 @@ namespace sr
 			Ensures(mD3d12Device != nullptr);
 		}
 
-		void GraphicsDevice::CreateCommandQueue(GraphicsCommandQueue& commandQueue, const GraphicsInfrastructure& graphicsInfrastructure) const noexcept
+		void GraphicsDevice::CreateCommandQueue(GraphicsCommandQueue& commandQueue) const noexcept
 		{
 			ComPtr<ID3D12CommandQueue>& commandQueueOwnerShip = commandQueue.GetCommandQueueOwnership();
 
@@ -80,7 +80,7 @@ namespace sr
 		void GraphicsDevice::CreateRootSignature(RootSignature& rootSignature) const noexcept
 		{
 			ComPtr<ID3D12RootSignature>& rootSignatureOwner = rootSignature.GetD3d12RootSignatureOwner();
-			gsl::not_null<ID3DBlob*> serializedRootSignature = rootSignature.GetSerializedRootSignature();
+			const gsl::not_null<ID3DBlob*> serializedRootSignature = rootSignature.GetSerializedRootSignature();
 			mD3d12Device->CreateRootSignature(0, serializedRootSignature->GetBufferPointer()
 				, serializedRootSignature->GetBufferSize(), IID_PPV_ARGS(&rootSignatureOwner));
 
