@@ -92,6 +92,9 @@
     <ClCompile Include="src\Shader.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\GraphicsCommandList.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Mesh.h">
@@ -143,6 +146,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Shader.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\GraphicsCommandList.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>

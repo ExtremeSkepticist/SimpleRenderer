@@ -1,6 +1,6 @@
-
 #include "DescriptorHeap.h"
 #include "GpuResource.h"
+#include "GraphicsCommandList.h"
 #include "GraphicsCommandQueue.h"
 #include "GraphicsDevice.h"
 #include "GraphicsInfrastructure.h"
@@ -85,6 +85,28 @@ namespace sr
 				, serializedRootSignature->GetBufferSize(), IID_PPV_ARGS(&rootSignatureOwner));
 
 			Ensures(rootSignatureOwner != nullptr);
+		}
+
+		void GraphicsDevice::CreateCommandList(GraphicsCommandList& graphicsCommandList) const noexcept
+		{
+			ComPtr<ID3D12CommandAllocator>& d3d12CommandAllocatorOwner = graphicsCommandList.GetD3d12CommandAllocatorOwner();
+			Expects(d3d12CommandAllocatorOwner == nullptr);
+
+			constexpr D3D12_COMMAND_LIST_TYPE d3d12GraphicsCommandListType = D3D12_COMMAND_LIST_TYPE_DIRECT;
+			mD3d12Device->CreateCommandAllocator(d3d12GraphicsCommandListType, IID_PPV_ARGS(&d3d12CommandAllocatorOwner));
+			assert(d3d12CommandAllocatorOwner != nullptr);
+
+			ComPtr<ID3D12GraphicsCommandList>& d3d12CommandListOwner = graphicsCommandList.GetD3d12GraphicsCommandListOwner();
+			Expects(d3d12CommandListOwner == nullptr);
+			
+			constexpr uint32_t nodeMask = 0;
+			ID3D12PipelineState* initialPipelineState = nullptr;
+			mD3d12Device->CreateCommandList(nodeMask, d3d12GraphicsCommandListType
+				, d3d12CommandAllocatorOwner.Get(), initialPipelineState, IID_PPV_ARGS(&d3d12CommandListOwner));
+
+			Ensures(d3d12CommandListOwner != nullptr);
+
+			d3d12CommandListOwner->Close();
 		}
 	}
 }

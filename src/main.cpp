@@ -8,6 +8,7 @@
 #include <DirectXMath.h>
 
 #include "DescriptorRange.h"
+#include "GraphicsCommandList.h"
 #include "GraphicsCommandQueue.h"
 #include "GraphicsInfrastructure.h"
 #include "GraphicsDevice.h"
@@ -145,14 +146,14 @@ void Init(HINSTANCE hInstance, int nCmdShow)
 		assert(g_pCmdQueue != nullptr);
 	}
 
-	// Create command allocator & command list
-	g_pDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&g_pCmdAllocator));
-	assert(g_pCmdAllocator != nullptr);
-
-	g_pDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT
-		, g_pCmdAllocator.Get(), nullptr, IID_PPV_ARGS(&g_pCmdList));
-	assert(g_pCmdList != nullptr);
-	g_pCmdList->Close();
+	sr::rendering::GraphicsCommandList graphicsCommandList(graphicsDevice);
+	{
+		g_pCmdAllocator = graphicsCommandList.GetD3d12CommandAllocatorOwner();
+		assert(g_pCmdAllocator != nullptr);
+		
+		g_pCmdList = graphicsCommandList.GetD3d12GraphicsCommandListOwner();
+		assert(g_pCmdList != nullptr);
+	}
 
 	// Create SwapChain
 	constexpr uint32_t swapChainBufferCount = 2;
