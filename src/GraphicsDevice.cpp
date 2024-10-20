@@ -4,6 +4,7 @@
 #include "GraphicsCommandQueue.h"
 #include "GraphicsDevice.h"
 #include "GraphicsInfrastructure.h"
+#include "GraphicsPipelineState.h"
 #include "RenderTargetDescriptorHeap.h"
 #include "RootSignature.h"
 
@@ -108,5 +109,18 @@ namespace sr
 
 			d3d12CommandListOwner->Close();
 		}
+
+		void GraphicsDevice::CreateGraphicsPipelineState(GraphicsPipelineState& graphicsPipelineState) const noexcept
+		{
+			ComPtr<ID3D12PipelineState>& d3d12PipelineStateOwner = graphicsPipelineState.GetPipelineStateOwner();
+			Expects(d3d12PipelineStateOwner == nullptr);
+
+			const D3D12_GRAPHICS_PIPELINE_STATE_DESC& d3d12GraphicsPipelineStateDescriptionOwner 
+				= graphicsPipelineState.GetGraphicsPipelineStateDescriptionOwner();
+			
+			mD3d12Device->CreateGraphicsPipelineState(&d3d12GraphicsPipelineStateDescriptionOwner, IID_PPV_ARGS(&d3d12PipelineStateOwner));
+			Ensures(d3d12PipelineStateOwner != nullptr);
+		}
+
 	}
 }

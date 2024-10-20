@@ -20,6 +20,7 @@
 #include "RootSignature.h"
 #include "Shader.h"
 #include "SwapChain.h"
+#include "GraphicsPipelineState.h"
 
 #include <DirectXTex.h>
 
@@ -198,6 +199,34 @@ void Init(HINSTANCE hInstance, int nCmdShow)
 		assert(g_pRootSignature != nullptr);
 	}
 #pragma endregion
+
+#pragma region Loading Graphics Resources
+
+	// Initialize Shader
+	//	- TODO: Use batch script instead to compile shaders
+	//	- TODO: Implement changing shaders upon using different effects
+	constexpr gsl::cwzstring vertexShaderPath = L"shaders\\BasicVertexShader.cso";
+	const sr::rendering::Shader vertexShader(vertexShaderPath);
+	constexpr gsl::cwzstring pixelShaderPath = L"shaders\\BasicPixelShader.cso";
+	const sr::rendering::Shader pixelShader(pixelShaderPath);
+
+	// Initialize input element layout
+	//	- TODO: Could this be moved into mesh class or somewhere else?
+	constexpr uint32_t inputSlot = 0;
+	sr::rendering::InputElementLayout inputElementLayout(inputSlot);
+	inputElementLayout.AddLayout("POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT);
+	inputElementLayout.AddLayout("TEXCOORDS", 0, DXGI_FORMAT_R32G32_FLOAT);
+	inputElementLayout.AddLayout("NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT);
+	inputElementLayout.AddLayout("TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT);
+	inputElementLayout.AddLayout("BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT);
+
+	sr::rendering::GraphicsPipelineState graphicsPipelineState(rootSignature, inputElementLayout, vertexShader, pixelShader, graphicsDevice);
+	{
+		// Todo: To be removed
+		g_pPipelineStateObj = graphicsPipelineState.GetPipelineStateOwner();
+		assert(g_pPipelineStateObj != nullptr);
+	}
+#pragma endregion
 }
 
 void Render()
@@ -253,48 +282,6 @@ void Render()
 
 void LoadRenderResources()
 {
-#pragma region Initialize shader
-	// TODO: Use batch script instead to compile shaders
-	// TODO: Implement changing shaders upon using different effects
-	constexpr gsl::cwzstring vertexShaderPath = L"shaders\\BasicVertexShader.cso";
-	const sr::rendering::Shader vertexShader(vertexShaderPath);
-	constexpr gsl::cwzstring pixelShaderPath = L"shaders\\BasicPixelShader.cso";
-	const sr::rendering::Shader pixelShader(pixelShaderPath);
-#pragma endregion
-
-#pragma region Initialize PSO
-	// Initialize PSO
-	constexpr uint32_t inputSlot = 0;
-	sr::rendering::InputElementLayout inputElementLayout(inputSlot);
-	inputElementLayout.AddLayout("POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT);
-	inputElementLayout.AddLayout("TEXCOORDS", 0, DXGI_FORMAT_R32G32_FLOAT);
-	inputElementLayout.AddLayout("NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT);
-	inputElementLayout.AddLayout("TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT);
-	inputElementLayout.AddLayout("BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT);
-
-	std::vector<D3D12_INPUT_ELEMENT_DESC>& inputElementDescsOwner = inputElementLayout.GetInputElementDescOwner();
-	const uint32_t numInputElements = inputElementDescsOwner.size();
-
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = { nullptr, };
-	psoDesc.InputLayout = { &gsl::at(inputElementDescsOwner, 0), numInputElements }; // TODO: make Mesh class return Vertex-struct-related data
-	psoDesc.pRootSignature = g_pRootSignature.Get();
-	psoDesc.VS = vertexShader.GetShaderByteCode();
-	psoDesc.PS = pixelShader.GetShaderByteCode();
-	psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-	psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-	psoDesc.DepthStencilState.DepthEnable = FALSE;
-	psoDesc.DepthStencilState.StencilEnable = FALSE;
-	psoDesc.SampleMask = UINT_MAX;
-	psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	psoDesc.NumRenderTargets = 1;
-	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-	psoDesc.SampleDesc.Count = 1;
-
-	g_pDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&g_pPipelineStateObj));
-	assert(g_pPipelineStateObj != nullptr);
-
-#pragma endregion
-
 	// Create Descriptor heap (required for creating const buffer and textures)
 	D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {};
 	descriptorHeapDesc.NumDescriptors = 2;
@@ -313,7 +300,7 @@ void LoadRenderResources()
 	WaitForPreviousFrame();
 
 #pragma region Create Const Buffer
-	const size_t CONST_BUFFER_SIZE = sizeof(ConstBuffer);
+	constexpr size_t CONST_BUFFER_SIZE = sizeof(ConstBuffer);
 	const CD3DX12_HEAP_PROPERTIES CONST_BUFFER_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 	const CD3DX12_RESOURCE_DESC CONST_BUFFER_RESOURCE_DESC = CD3DX12_RESOURCE_DESC::Buffer(CONST_BUFFER_SIZE);
 	g_pDevice->CreateCommittedResource(

@@ -8,11 +8,12 @@ namespace sr
 {
 	namespace rendering
 	{
-		class GraphicsCommandList;
 		class DescriptorHeap;
-		class RenderTargetDescriptorHeap;
-		class GraphicsInfrastructure;
+		class GraphicsCommandList;
 		class GraphicsCommandQueue;
+		class GraphicsInfrastructure;
+		class GraphicsPipelineState;
+		class RenderTargetDescriptorHeap;
 		class RootSignature;
 
 		class GraphicsDevice
@@ -32,6 +33,7 @@ namespace sr
 			void CreateRenderTargetView(RenderTargetDescriptorHeap& renderTargetHeap, gsl::index heapIndex) const noexcept;
 			void CreateRootSignature(RootSignature& rootSignature) const noexcept;
 			void CreateCommandList(GraphicsCommandList& graphicsCommandList) const noexcept;
+			void CreateGraphicsPipelineState(GraphicsPipelineState& graphicsPipelineState) const noexcept;
 
 			inline uint32_t GetRenderTargetHeapHandleIncrementSize() const noexcept
 			{

@@ -24,6 +24,11 @@ namespace sr
 				return mSerializedRootSignature.Get();
 			}
 
+			inline ID3D12RootSignature* GetD3d12RootSignature() const noexcept
+			{
+				return mD3d12RootSignature.Get();
+			}
+
 			inline ComPtr<ID3D12RootSignature>& GetD3d12RootSignatureOwner() noexcept
 			{
 				return mD3d12RootSignature;
