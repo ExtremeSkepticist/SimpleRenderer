@@ -1,3 +1,4 @@
+#include "Fence.h"
 #include "GraphicsCommandQueue.h"
 #include "GraphicsDevice.h"
 
@@ -29,5 +30,12 @@ namespace sr
 
 			Ensures(mD3d12CommandQueue != nullptr);
 		}
+
+		void GraphicsCommandQueue::QueueSetFenceValueCommand(const Fence& fence, const uint64_t value) const noexcept
+		{
+			ID3D12Fence* d3d12Fence = fence.GetD3d12Fence();
+			mD3d12CommandQueue->Signal(d3d12Fence, value);
+		}
+	
 	}
 }

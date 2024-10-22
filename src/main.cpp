@@ -13,6 +13,7 @@
 #include "GraphicsInfrastructure.h"
 #include "GraphicsDevice.h"
 #include "GpuResource.h"
+#include "Fence.h"
 #include "InputElementLayout.h"
 #include "PlatformWindow.h"
 #include "RenderTargetDescriptorHeap.h"
@@ -235,6 +236,16 @@ void Init(HINSTANCE hInstance, int nCmdShow)
 		g_pDescriptorHeap = shaderResourceDescriptorHeap.GetDescriptorHeap();
 		assert(g_pDescriptorHeap != nullptr);
 	}
+
+	// Create fence
+	sr::rendering::Fence fence(graphicsDevice);
+	{
+		g_pFence = fence.GetD3d12Fence();
+		g_FenceEvent = fence.GetFenceEventOwner();
+
+		assert(g_pFence != nullptr);
+		assert(g_FenceEvent != nullptr);
+	}
 #pragma endregion
 }
 
@@ -291,10 +302,6 @@ void Render()
 
 void LoadRenderResources()
 {
-	// Create fence
-	g_pDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&g_pFence));
-	g_FenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-
 	// Wait for the command list to execute; we are reusing the same command 
 	// list in our main loop but for now, we just want to wait for setup to 
 	// complete before continuing.

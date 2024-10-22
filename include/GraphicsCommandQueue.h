@@ -7,6 +7,7 @@ namespace sr
 	namespace rendering
 	{
 		class GraphicsDevice;
+		class Fence;
 
 		enum class GraphicsCommandQueueType
 		{
@@ -20,6 +21,8 @@ namespace sr
 		{
 		public:
 			GraphicsCommandQueue(GraphicsCommandQueueType commandQueueType, const GraphicsDevice& graphicsDevice) noexcept;
+
+			void QueueSetFenceValueCommand(const Fence& fence, const uint64_t value) const noexcept;
 
 			inline D3D12_COMMAND_QUEUE_DESC& GetCommandQueueDescription() noexcept
 			{

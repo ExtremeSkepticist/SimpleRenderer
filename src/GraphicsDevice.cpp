@@ -1,4 +1,5 @@
 #include "DescriptorHeap.h"
+#include "Fence.h"
 #include "GpuResource.h"
 #include "GraphicsCommandList.h"
 #include "GraphicsCommandQueue.h"
@@ -122,5 +123,15 @@ namespace sr
 			Ensures(d3d12PipelineStateOwner != nullptr);
 		}
 
+		void GraphicsDevice::CreateFence(Fence& fence) const noexcept
+		{
+			ComPtr<ID3D12Fence>& d3d12FenceOwner = fence.GetD3d12FenceOwner();
+
+			Expects(d3d12FenceOwner == nullptr);
+
+			mD3d12Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&d3d12FenceOwner));
+		
+			Ensures(d3d12FenceOwner != nullptr);
+		}
 	}
 }

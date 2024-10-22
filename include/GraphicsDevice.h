@@ -9,6 +9,7 @@ namespace sr
 	namespace rendering
 	{
 		class DescriptorHeap;
+		class Fence;
 		class GraphicsCommandList;
 		class GraphicsCommandQueue;
 		class GraphicsInfrastructure;
@@ -34,6 +35,7 @@ namespace sr
 			void CreateRootSignature(RootSignature& rootSignature) const noexcept;
 			void CreateCommandList(GraphicsCommandList& graphicsCommandList) const noexcept;
 			void CreateGraphicsPipelineState(GraphicsPipelineState& graphicsPipelineState) const noexcept;
+			void CreateFence(Fence& fence) const noexcept;
 
 			inline uint32_t GetRenderTargetHeapHandleIncrementSize() const noexcept
 			{
