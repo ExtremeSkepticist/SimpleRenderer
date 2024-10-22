@@ -18,6 +18,7 @@
 #include "RenderTargetDescriptorHeap.h"
 #include "RootParameter.h"
 #include "RootSignature.h"
+#include "ShaderResourceDescriptorHeap.h"
 #include "Shader.h"
 #include "SwapChain.h"
 #include "GraphicsPipelineState.h"
@@ -226,6 +227,14 @@ void Init(HINSTANCE hInstance, int nCmdShow)
 		g_pPipelineStateObj = graphicsPipelineState.GetPipelineStateOwner();
 		assert(g_pPipelineStateObj != nullptr);
 	}
+
+	// Create Shader Resource descriptor heap
+	constexpr uint32_t numDescriptors = 2;
+	const sr::rendering::ShaderResourceDescriptorHeap shaderResourceDescriptorHeap(numDescriptors, graphicsDevice);
+	{
+		g_pDescriptorHeap = shaderResourceDescriptorHeap.GetDescriptorHeap();
+		assert(g_pDescriptorHeap != nullptr);
+	}
 #pragma endregion
 }
 
@@ -282,14 +291,6 @@ void Render()
 
 void LoadRenderResources()
 {
-	// Create Descriptor heap (required for creating const buffer and textures)
-	D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {};
-	descriptorHeapDesc.NumDescriptors = 2;
-	descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	g_pDevice->CreateDescriptorHeap(&descriptorHeapDesc, IID_PPV_ARGS(&g_pDescriptorHeap));
-	assert(g_pDescriptorHeap != nullptr);
-
 	// Create fence
 	g_pDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&g_pFence));
 	g_FenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);

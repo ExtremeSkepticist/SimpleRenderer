@@ -45,6 +45,16 @@ namespace sr
 				return mGpuResources;
 			}
 
+			inline D3D12_CPU_DESCRIPTOR_HANDLE GetCpuHeapStartHandle() const noexcept
+			{
+				return mD3d12DescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+			}
+
+			inline D3D12_GPU_DESCRIPTOR_HANDLE GetGpuHeapStartHandle() const noexcept
+			{
+				return mD3d12DescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+			}
+
 		private:
 			D3D12_DESCRIPTOR_HEAP_DESC mDescriptorHeapDescription = {};
 			ComPtr<ID3D12DescriptorHeap> mD3d12DescriptorHeap = nullptr;

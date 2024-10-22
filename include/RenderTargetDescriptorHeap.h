@@ -19,12 +19,6 @@ namespace sr
 			RenderTargetDescriptorHeap& operator=(RenderTargetDescriptorHeap&&) = delete;
 			~RenderTargetDescriptorHeap() = default;
 
-			inline D3D12_CPU_DESCRIPTOR_HANDLE GetHeapStartHandle() const noexcept
-			{
-				return GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
-			}
-
-
 			void BindResource(GraphicsDevice& graphicsDevice) override final
 			{
 			}

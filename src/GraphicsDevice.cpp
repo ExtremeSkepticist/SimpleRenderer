@@ -72,7 +72,7 @@ namespace sr
 
 			const ComPtr<ID3D12Resource>& renderTargetResourceOwner = gsl::at(gpuResources, heapIndex).GetD3d12ResourceOwner();
 			
-			D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandle = renderTargetHeap.GetHeapStartHandle();
+			D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandle = renderTargetHeap.GetCpuHeapStartHandle();
 			descriptorHandle.ptr += GetRenderTargetHeapHandleIncrementSize() * heapIndex;
 
 			mD3d12Device->CreateRenderTargetView(renderTargetResourceOwner.Get(), nullptr, descriptorHandle);

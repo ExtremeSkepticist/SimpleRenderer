@@ -98,6 +98,9 @@
     <ClCompile Include="src\GraphicsPipelineState.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\ShaderResourceDescriptorHeap.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Mesh.h">
@@ -155,6 +158,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\GraphicsPipelineState.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ShaderResourceDescriptorHeap.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
