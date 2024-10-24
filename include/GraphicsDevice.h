@@ -8,6 +8,7 @@ namespace sr
 {
 	namespace rendering
 	{
+		class ConstBuffer;
 		class DescriptorHeap;
 		class Fence;
 		class GraphicsCommandList;
@@ -36,6 +37,7 @@ namespace sr
 			void CreateCommandList(GraphicsCommandList& graphicsCommandList) const noexcept;
 			void CreateGraphicsPipelineState(GraphicsPipelineState& graphicsPipelineState) const noexcept;
 			void CreateFence(Fence& fence) const noexcept;
+			void CreateConstBuffer(ConstBuffer& constBuffer) const noexcept;
 
 			inline uint32_t GetRenderTargetHeapHandleIncrementSize() const noexcept
 			{

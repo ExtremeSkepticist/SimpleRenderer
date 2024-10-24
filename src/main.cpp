@@ -7,6 +7,7 @@
 #include <dxgi1_6.h>
 #include <DirectXMath.h>
 
+#include "ConstBuffer.h"
 #include "DescriptorRange.h"
 #include "GraphicsCommandList.h"
 #include "GraphicsCommandQueue.h"
@@ -237,6 +238,27 @@ void Init(HINSTANCE hInstance, int nCmdShow)
 		assert(g_pDescriptorHeap != nullptr);
 	}
 
+	// Create const buffer
+	XMMATRIX worldMatrix = XMMatrixMultiply(XMMatrixScaling(0.8f, 0.8f, 0.8f), XMMatrixRotationX(-0.8));
+	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixRotationY(-0.1));
+	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(g_MODEL_WORLD_POSITION.x, g_MODEL_WORLD_POSITION.y, g_MODEL_WORLD_POSITION.z));
+
+	const XMMATRIX viewMatrix = XMMatrixTranspose(g_Camera.GetViewLookAtMatrixLh(g_CAMERA_WORLD_POSITION, g_MODEL_WORLD_POSITION, g_WORLD_UP_DIRECITON));
+	const XMMATRIX projectionMatrix = XMMatrixTranspose(g_Camera.GetProjectionMatrixLh());
+	const XMMATRIX unused = {};
+
+	const sr::rendering::MappableConstBuffer mappableConstBuffer{ worldMatrix, viewMatrix, projectionMatrix, unused };
+	sr::rendering::ConstBuffer constBuffer(mappableConstBuffer, graphicsDevice);
+	{
+		g_pConstBuffer = constBuffer.GetGpuResource().GetD3d12ResourceOwner();
+		assert(g_pConstBuffer != nullptr);
+
+		D3D12_CONSTANT_BUFFER_VIEW_DESC constBufferDesc = { 0, };
+		constBufferDesc.BufferLocation = g_pConstBuffer->GetGPUVirtualAddress();
+		constBufferDesc.SizeInBytes = constBuffer.GetMappableConstBufferSize();
+		g_pDevice->CreateConstantBufferView(&constBufferDesc, g_pDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+	}
+
 	// Create fence
 	sr::rendering::Fence fence(graphicsDevice);
 	{
@@ -246,6 +268,7 @@ void Init(HINSTANCE hInstance, int nCmdShow)
 		assert(g_pFence != nullptr);
 		assert(g_FenceEvent != nullptr);
 	}
+
 #pragma endregion
 }
 
@@ -308,37 +331,33 @@ void LoadRenderResources()
 	WaitForPreviousFrame();
 
 #pragma region Create Const Buffer
-	constexpr size_t CONST_BUFFER_SIZE = sizeof(ConstBuffer);
-	const CD3DX12_HEAP_PROPERTIES CONST_BUFFER_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-	const CD3DX12_RESOURCE_DESC CONST_BUFFER_RESOURCE_DESC = CD3DX12_RESOURCE_DESC::Buffer(CONST_BUFFER_SIZE);
-	g_pDevice->CreateCommittedResource(
-		&CONST_BUFFER_HEAP_PROPERTIES
-		, D3D12_HEAP_FLAG_NONE
-		, &CONST_BUFFER_RESOURCE_DESC
-		, D3D12_RESOURCE_STATE_GENERIC_READ
-		, nullptr
-		, IID_PPV_ARGS(&g_pConstBuffer)
-	);
-	g_pConstBuffer->SetName(L"Const buffer resource");
 
-	D3D12_CONSTANT_BUFFER_VIEW_DESC constBufferDesc = { 0, };
-	constBufferDesc.BufferLocation = g_pConstBuffer->GetGPUVirtualAddress();
-	constBufferDesc.SizeInBytes = CONST_BUFFER_SIZE;
-	g_pDevice->CreateConstantBufferView(&constBufferDesc, g_pDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+	//constexpr size_t CONST_BUFFER_SIZE = sizeof(ConstBuffer);
+	//const CD3DX12_HEAP_PROPERTIES CONST_BUFFER_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+	//const CD3DX12_RESOURCE_DESC CONST_BUFFER_RESOURCE_DESC = CD3DX12_RESOURCE_DESC::Buffer(CONST_BUFFER_SIZE);
+	//g_pDevice->CreateCommittedResource(
+	//	&CONST_BUFFER_HEAP_PROPERTIES
+	//	, D3D12_HEAP_FLAG_NONE
+	//	, &CONST_BUFFER_RESOURCE_DESC
+	//	, D3D12_RESOURCE_STATE_GENERIC_READ
+	//	, nullptr
+	//	, IID_PPV_ARGS(&g_pConstBuffer)
+	//);
+	//g_pConstBuffer->SetName(L"Const buffer resource");
 
-	XMMATRIX worldMatrix = XMMatrixMultiply(XMMatrixScaling(0.8f, 0.8f, 0.8f), XMMatrixRotationX(-0.8));
-	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixRotationY(-0.1));
-	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(g_MODEL_WORLD_POSITION.x, g_MODEL_WORLD_POSITION.y, g_MODEL_WORLD_POSITION.z));
+	//XMMATRIX worldMatrix = XMMatrixMultiply(XMMatrixScaling(0.8f, 0.8f, 0.8f), XMMatrixRotationX(-0.8));
+	//worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixRotationY(-0.1));
+	//worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(g_MODEL_WORLD_POSITION.x, g_MODEL_WORLD_POSITION.y, g_MODEL_WORLD_POSITION.z));
 
-	g_ConstBufferData.mWorldMatrix = XMMatrixTranspose(worldMatrix);
-	g_ConstBufferData.mViewMatrix = XMMatrixTranspose(g_Camera.GetViewLookAtMatrixLh(g_CAMERA_WORLD_POSITION, g_MODEL_WORLD_POSITION, g_WORLD_UP_DIRECITON));
-	g_ConstBufferData.mProjectionMatrix = XMMatrixTranspose(g_Camera.GetProjectionMatrixLh());
+	//g_ConstBufferData.mWorldMatrix = XMMatrixTranspose(worldMatrix);
+	//g_ConstBufferData.mViewMatrix = XMMatrixTranspose(g_Camera.GetViewLookAtMatrixLh(g_CAMERA_WORLD_POSITION, g_MODEL_WORLD_POSITION, g_WORLD_UP_DIRECITON));
+	//g_ConstBufferData.mProjectionMatrix = XMMatrixTranspose(g_Camera.GetProjectionMatrixLh());
 
-	// Map and initialize the constant buffer. We don't unmap this until the
-	// app closes. Keeping things mapped for the lifetime of the resource is okay.
-	CD3DX12_RANGE constBufferReadRange(0, 0);
-	g_pConstBuffer->Map(0, &constBufferReadRange, reinterpret_cast<void**>(&g_pConstBufferMapped));
-	memcpy(g_pConstBufferMapped, &g_ConstBufferData, sizeof(g_ConstBufferData));
+	//// Map and initialize the constant buffer. We don't unmap this until the
+	//// app closes. Keeping things mapped for the lifetime of the resource is okay.
+	//CD3DX12_RANGE constBufferReadRange(0, 0);
+	//g_pConstBuffer->Map(0, &constBufferReadRange, reinterpret_cast<void**>(&g_pConstBufferMapped));
+	//memcpy(g_pConstBufferMapped, &g_ConstBufferData, sizeof(g_ConstBufferData));
 
 #pragma endregion
 

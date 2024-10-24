@@ -1,3 +1,4 @@
+#include "ConstBuffer.h"
 #include "DescriptorHeap.h"
 #include "Fence.h"
 #include "GpuResource.h"
@@ -133,5 +134,28 @@ namespace sr
 		
 			Ensures(d3d12FenceOwner != nullptr);
 		}
+
+		void GraphicsDevice::CreateConstBuffer(ConstBuffer& constBuffer) const noexcept
+		{
+			ComPtr<ID3D12Resource>& d3d12ConstBufferResourceOwner = constBuffer.GetGpuResource().GetD3d12ResourceOwner();
+			Expects(d3d12ConstBufferResourceOwner == nullptr);
+			
+			const size_t mappableConstBufferSize = constBuffer.GetMappableConstBufferSize();
+			const CD3DX12_HEAP_PROPERTIES d3dx12HeapProperties(D3D12_HEAP_TYPE_UPLOAD);
+			const CD3DX12_RESOURCE_DESC d3dx12ResourceDesc = CD3DX12_RESOURCE_DESC::Buffer(mappableConstBufferSize);
+			mD3d12Device->CreateCommittedResource(
+				&d3dx12HeapProperties
+				, D3D12_HEAP_FLAG_NONE
+				, &d3dx12ResourceDesc
+				, D3D12_RESOURCE_STATE_GENERIC_READ
+				, nullptr
+				, IID_PPV_ARGS(&d3d12ConstBufferResourceOwner)
+			);
+
+			Ensures(d3d12ConstBufferResourceOwner != nullptr);
+
+			d3d12ConstBufferResourceOwner->SetName(L"Const buffer resource");
+		}
+
 	}
 }
