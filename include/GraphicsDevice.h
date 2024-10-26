@@ -17,6 +17,7 @@ namespace sr
 		class GraphicsPipelineState;
 		class RenderTargetDescriptorHeap;
 		class RootSignature;
+		class ShaderResourceDescriptorHeap;
 
 		class GraphicsDevice
 		{
@@ -38,10 +39,17 @@ namespace sr
 			void CreateGraphicsPipelineState(GraphicsPipelineState& graphicsPipelineState) const noexcept;
 			void CreateFence(Fence& fence) const noexcept;
 			void CreateConstBuffer(ConstBuffer& constBuffer) const noexcept;
+			void CreateConstBufferView(ConstBuffer& constBuffer, 
+				ShaderResourceDescriptorHeap& shaderResourceDescriptorHeap, const gsl::index heapIndex) const noexcept;
 
 			inline uint32_t GetRenderTargetHeapHandleIncrementSize() const noexcept
 			{
 				return mD3d12Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+			}
+
+			inline uint32_t GetShaderResourceDescriptorHeapHandleIncrementSize() const noexcept
+			{
+				return mD3d12Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 			}
 
 			// TODO: to be removed; D3D12Device should not be exposed

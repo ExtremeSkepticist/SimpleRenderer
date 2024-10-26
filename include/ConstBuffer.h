@@ -19,26 +19,26 @@ namespace sr
 			DirectX::XMMATRIX mViewMatrix;
 			DirectX::XMMATRIX mProjectionMatrix;
 			DirectX::XMMATRIX mUnused;
-		} MappableConstBuffer;
+		} CpuConstBufferData;
 
 		class ConstBuffer
 		{	
 		public:
-			ConstBuffer(const MappableConstBuffer& mappableConstBuffer, const GraphicsDevice& graphicsDevice) noexcept;
+			ConstBuffer(const CpuConstBufferData& cpuConstBufferData, const GraphicsDevice& graphicsDevice) noexcept;
 
 			inline GpuResource& GetGpuResource() noexcept
 			{
 				return mGpuResource;
 			}
 
-			inline constexpr size_t GetMappableConstBufferSize() const noexcept
+			inline constexpr size_t GetCpuConstBufferDataSize() const noexcept
 			{
-				return sizeof(MappableConstBuffer);
+				return sizeof(CpuConstBufferData);
 			}
 
 		private:
-			uint8_t* mMappedCpuMemoryForConstBuffer = nullptr;
-			MappableConstBuffer mMappableConstBuffer = {};
+			uint8_t* mMappedMemoryForCpuConstBufferData = nullptr;
+			CpuConstBufferData mCpuConstBufferData = {};
 			GpuResource mGpuResource = GpuResource();
 		};
 	}

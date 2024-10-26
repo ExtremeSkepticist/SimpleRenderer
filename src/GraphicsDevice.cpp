@@ -9,6 +9,7 @@
 #include "GraphicsPipelineState.h"
 #include "RenderTargetDescriptorHeap.h"
 #include "RootSignature.h"
+#include "ShaderResourceDescriptorHeap.h"
 
 namespace sr
 {
@@ -140,7 +141,7 @@ namespace sr
 			ComPtr<ID3D12Resource>& d3d12ConstBufferResourceOwner = constBuffer.GetGpuResource().GetD3d12ResourceOwner();
 			Expects(d3d12ConstBufferResourceOwner == nullptr);
 			
-			const size_t mappableConstBufferSize = constBuffer.GetMappableConstBufferSize();
+			const size_t mappableConstBufferSize = constBuffer.GetCpuConstBufferDataSize();
 			const CD3DX12_HEAP_PROPERTIES d3dx12HeapProperties(D3D12_HEAP_TYPE_UPLOAD);
 			const CD3DX12_RESOURCE_DESC d3dx12ResourceDesc = CD3DX12_RESOURCE_DESC::Buffer(mappableConstBufferSize);
 			mD3d12Device->CreateCommittedResource(
@@ -157,5 +158,18 @@ namespace sr
 			d3d12ConstBufferResourceOwner->SetName(L"Const buffer resource");
 		}
 
+		void GraphicsDevice::CreateConstBufferView(ConstBuffer& constBuffer, ShaderResourceDescriptorHeap& shaderResourceDescriptorHeap
+			, const gsl::index heapIndex) const noexcept
+		{
+			ID3D12Resource* const d3d12ResourceForConstBuffer = constBuffer.GetGpuResource().GetD3d12Resource();
+			D3D12_CONSTANT_BUFFER_VIEW_DESC constBufferDesc = { 0, };
+			constBufferDesc.BufferLocation = d3d12ResourceForConstBuffer->GetGPUVirtualAddress();
+			constBufferDesc.SizeInBytes = constBuffer.GetCpuConstBufferDataSize();
+
+			D3D12_CPU_DESCRIPTOR_HANDLE d3d12DescriptorHandle = shaderResourceDescriptorHeap.GetCpuHeapStartHandle();
+			d3d12DescriptorHandle.ptr += GetShaderResourceDescriptorHeapHandleIncrementSize() * heapIndex;
+
+			mD3d12Device->CreateConstantBufferView(&constBufferDesc, d3d12DescriptorHandle);
+		}
 	}
 }

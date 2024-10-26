@@ -18,6 +18,11 @@ namespace sr
 				return mD3d12Resource;
 			}
 
+			inline ID3D12Resource* GetD3d12Resource() const noexcept
+			{
+				return mD3d12Resource.Get();
+			}
+
 		private:
 			ComPtr<ID3D12Resource> mD3d12Resource = nullptr;
 		};
