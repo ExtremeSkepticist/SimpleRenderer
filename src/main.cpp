@@ -64,14 +64,6 @@ ComPtr<ID3D12Resource> g_pAlbedoUploadHeap = nullptr;
 Model* g_pModel = nullptr;
 const XMFLOAT3 g_MODEL_WORLD_POSITION(0, 4, 2);
 
-// Camera related variables
-const XMFLOAT3 g_CAMERA_WORLD_POSITION(0, 6, 0);
-const XMFLOAT3 g_WORLD_UP_DIRECITON(0, 1, 0);
-constexpr float g_FOV_ANGLE = 45.0f;
-constexpr float g_NEAR_Z_COORD = 0.01f;
-constexpr float g_FAR_Z_COORD = 100.0f;
-Camera g_Camera(g_FOV_ANGLE, g_FRAME_WIDTH / g_FRAME_HEIGHT, g_NEAR_Z_COORD, g_FAR_Z_COORD, g_CAMERA_WORLD_POSITION);
-
 void LoadRenderResources();
 void WaitForPreviousFrame();
 
@@ -227,14 +219,22 @@ void Init(HINSTANCE hInstance, int nCmdShow)
 		assert(g_pDescriptorHeap != nullptr);
 	}
 
+	// Create Scene Camera
+	constexpr XMFLOAT3 cameraWorldPosition(0, 6, 0);
+	constexpr XMFLOAT3 worldUpDirection(0, 1, 0);
+	constexpr float fovAngle = 45.0f;
+	constexpr float nearZcoordinate = 0.01f;
+	constexpr float farZcoordinate = 100.0f;
+	const Camera sceneCamera(fovAngle, sr::platform::aspectRatio, nearZcoordinate, farZcoordinate, cameraWorldPosition);
+
 	// Create const buffer
 	XMMATRIX worldMatrix = XMMatrixMultiply(XMMatrixScaling(0.8f, 0.8f, 0.8f), XMMatrixRotationX(-0.8));
 	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixRotationY(-0.1));
 	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(g_MODEL_WORLD_POSITION.x, g_MODEL_WORLD_POSITION.y, g_MODEL_WORLD_POSITION.z));
 	worldMatrix = XMMatrixTranspose(worldMatrix);
 
-	const XMMATRIX viewMatrix = XMMatrixTranspose(g_Camera.GetViewLookAtMatrixLh(g_CAMERA_WORLD_POSITION, g_MODEL_WORLD_POSITION, g_WORLD_UP_DIRECITON));
-	const XMMATRIX projectionMatrix = XMMatrixTranspose(g_Camera.GetProjectionMatrixLh());
+	const XMMATRIX viewMatrix = XMMatrixTranspose(sceneCamera.GetViewLookAtMatrixLh(cameraWorldPosition, g_MODEL_WORLD_POSITION, worldUpDirection));
+	const XMMATRIX projectionMatrix = XMMatrixTranspose(sceneCamera.GetProjectionMatrixLh());
 	const XMMATRIX unused = {};
 
 	const sr::rendering::CpuConstBufferData mappableConstBuffer{ worldMatrix, viewMatrix, projectionMatrix, unused };

@@ -1,6 +1,6 @@
 #include "Camera.h"
 
-Camera::Camera(float fovAngle, float aspectRatio, float nearZCoords, float farZCoords, const XMFLOAT3& worldCoords)
+Camera::Camera(float fovAngle, float aspectRatio, float nearZCoords, float farZCoords, const XMFLOAT3& worldCoords) noexcept
 	: mFovAngle(fovAngle)
 	, mAspectRatio(aspectRatio)
 	, mNearZCoords(nearZCoords)
