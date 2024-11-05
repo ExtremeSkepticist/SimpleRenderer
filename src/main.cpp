@@ -321,6 +321,13 @@ void LoadRenderResources()
 	g_pCmdAllocator->Reset();
 	g_pCmdList->Reset(g_pCmdAllocator.Get(), nullptr);
 
+	// TODO:
+	// In GPUTexture class:
+	// 1. Load dds file into memory
+	// 2. Initialize DirectXTex variables
+	// 2. Create upload heap
+	// 3. map the memory and memcpy loaded image
+	// 4. create default heap
 	TexMetadata imageMetadata = {};
 	ScratchImage scratchImage = {};
 	HRESULT hasLoaded = LoadFromDDSFile(L"resources\\albedo.dds", DDS_FLAGS_NONE, &imageMetadata, scratchImage);
@@ -357,7 +364,7 @@ void LoadRenderResources()
 		subresourceData.RowPitch = image->width * sizeof(uint32_t); // R8G8B8A8 format per pixel
 		subresourceData.SlicePitch = image->height * subresourceData.RowPitch;
 
-		UpdateSubresources(g_pCmdList.Get(), g_pAlbedoTexture.Get(), g_pAlbedoUploadHeap.Get(), 0, 0, 1, &subresourceData);
+		UpdateSubresources(g_pCmdList.Get(), g_pAlbedoTexture.Get(), g_pAlbedoUploadHeap.Get(), 0, 0, 1, &subresourceData); // GraphicsDevice
 
 		auto transitionBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
 			g_pAlbedoTexture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);

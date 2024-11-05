@@ -107,6 +107,9 @@
     <ClCompile Include="src\ConstBuffer.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\Texture.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Mesh.h">
@@ -173,6 +176,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\ConstBuffer.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Texture.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
