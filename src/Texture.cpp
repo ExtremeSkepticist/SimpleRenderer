@@ -8,18 +8,16 @@ namespace sr
 	{
 		// TODO: Load image outside and pass into this, then initialize GpuResource
 		// Texture should be just a container for texture-related data
-		Texture::Texture(const DirectX::Image* image) noexcept
+		// TODO: How to pass ownership to this?
+		// 1. Sharing ownership with local ScratchIamge, using shared_ptr
+		Texture::Texture(const gsl::not_null<DirectX::Image*>) noexcept
 			: mTextureMetadata({ 0, })
 			, mScratchImage({})
 			, mDefaultHeap()
 			, mUploadHeap()
 			, mMappedMemoryForUploadHeap(nullptr)
 		{
-			// The only supported texture format is currently .dds
-			assert(SUCCEEDED(hasLoadedTextureIntoMemory));
-
-			const DirectX::Image* image = mScratchImage.GetImage(0, 0, 0);
-
+			
 			// TODO
 			// 1. Put resrouce desc & heap props into GpuResource
 			// 2. Pass GraphicsDevice into GpuResource constructor

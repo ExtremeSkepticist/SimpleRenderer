@@ -14,7 +14,7 @@ namespace sr
 		class Texture
 		{
 		public:
-			Texture(const DirectX::Image* image) noexcept;
+			Texture(const gsl::not_null<DirectX::Image*> image) noexcept;
 			~Texture() = default;
 
 		private:

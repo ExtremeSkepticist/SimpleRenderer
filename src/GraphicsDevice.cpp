@@ -171,5 +171,34 @@ namespace sr
 
 			mD3d12Device->CreateConstantBufferView(&constBufferDesc, d3d12DescriptorHandle);
 		}
+
+		void GraphicsDevice::CreateGpuResource(GpuResource& gpuResource) const noexcept
+		{
+			const CD3DX12_RESOURCE_DESC resourceDesc = gpuResource.GetResourceDescription();
+			const CD3DX12_HEAP_PROPERTIES resourceHeapProps = gpuResource.GetResourceHeapProperties();
+			const ResourceState resourceState = gpuResource.GetResourceState();
+
+			D3D12_RESOURCE_STATES d3d12ResourceState;
+			switch (resourceState)
+			{
+			case ResourceState::GenericRead:
+				d3d12ResourceState = D3D12_RESOURCE_STATE_GENERIC_READ;
+				break;
+			case ResourceState::CopyDestination:
+				d3d12ResourceState = D3D12_RESOURCE_STATE_COPY_DEST;
+				break;
+			}
+
+			ComPtr<ID3D12Resource>& d3d12ResourceOwner = gpuResource.GetD3d12ResourceOwner();
+			mD3d12Device->CreateCommittedResource(
+				&resourceHeapProps, D3D12_HEAP_FLAG_NONE, &resourceDesc
+				, d3d12ResourceState, nullptr, IID_PPV_ARGS(&d3d12ResourceOwner));
+
+			assert(d3d12ResourceOwner != nullptr);
+
+			d3d12ResourceOwner->SetName(gpuResource.GetResourceName());
+		}
+
+
 	}
 }

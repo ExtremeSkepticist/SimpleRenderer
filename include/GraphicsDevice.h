@@ -11,6 +11,7 @@ namespace sr
 		class ConstBuffer;
 		class DescriptorHeap;
 		class Fence;
+		class GpuResource;
 		class GraphicsCommandList;
 		class GraphicsCommandQueue;
 		class GraphicsInfrastructure;
@@ -39,8 +40,9 @@ namespace sr
 			void CreateGraphicsPipelineState(GraphicsPipelineState& graphicsPipelineState) const noexcept;
 			void CreateFence(Fence& fence) const noexcept;
 			void CreateConstBuffer(ConstBuffer& constBuffer) const noexcept;
-			void CreateConstBufferView(ConstBuffer& constBuffer, 
-				ShaderResourceDescriptorHeap& shaderResourceDescriptorHeap, const gsl::index heapIndex) const noexcept;
+			void CreateConstBufferView(ConstBuffer& constBuffer, ShaderResourceDescriptorHeap& shaderResourceDescriptorHeap
+				, const gsl::index heapIndex) const noexcept;
+			void CreateGpuResource(GpuResource& gpuResource) const noexcept;
 
 			inline uint32_t GetRenderTargetHeapHandleIncrementSize() const noexcept
 			{
