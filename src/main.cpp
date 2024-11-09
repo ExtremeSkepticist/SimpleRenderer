@@ -11,8 +11,9 @@
 #include "DescriptorRange.h"
 #include "GraphicsCommandList.h"
 #include "GraphicsCommandQueue.h"
-#include "GraphicsInfrastructure.h"
 #include "GraphicsDevice.h"
+#include "GraphicsInfrastructure.h"
+#include "GraphicsPipelineState.h"
 #include "GpuResource.h"
 #include "Fence.h"
 #include "InputElementLayout.h"
@@ -23,7 +24,7 @@
 #include "ShaderResourceDescriptorHeap.h"
 #include "Shader.h"
 #include "SwapChain.h"
-#include "GraphicsPipelineState.h"
+#include "Texture.h"
 
 #include <DirectXTex.h>
 
@@ -71,6 +72,9 @@ void Init(HINSTANCE hInstance, int nCmdShow);
 void Update();
 void Render();
 
+// TODO: To be removed
+sr::rendering::GraphicsDevice* g_graphicsDevicePtr = nullptr;
+sr::rendering::GraphicsCommandList* g_graphicsCommandListPtr = nullptr;
 
 // TODO: deprecate d3dx12 and implement its own initialization
 int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int nCmdShow)
@@ -122,6 +126,8 @@ void Init(HINSTANCE hInstance, int nCmdShow)
 		// TODO: to be removed
 		g_pDevice = graphicsDevice.GetD3d12Device();
 		assert(g_pDevice != nullptr);
+
+		g_graphicsDevicePtr = &graphicsDevice;
 	}	
 	
 	sr::rendering::GraphicsCommandQueue graphicsCommandQueue(sr::rendering::GraphicsCommandQueueType::Graphics, graphicsDevice);
@@ -138,6 +144,8 @@ void Init(HINSTANCE hInstance, int nCmdShow)
 		
 		g_pCmdList = graphicsCommandList.GetD3d12GraphicsCommandListOwner();
 		assert(g_pCmdList != nullptr);
+
+		g_graphicsCommandListPtr = &graphicsCommandList;
 	}
 
 	// Create SwapChain
@@ -318,57 +326,25 @@ void LoadRenderResources()
 	WaitForPreviousFrame();
 
 #pragma region Create Albedo Texture
-	g_pCmdAllocator->Reset();
-	g_pCmdList->Reset(g_pCmdAllocator.Get(), nullptr);
+	//g_pCmdAllocator->Reset();
+	//g_pCmdList->Reset(g_pCmdAllocator.Get(), nullptr);
 
-	// TODO:
-	// In GPUTexture class:
-	// 1. Load dds file into memory
-	// 2. Initialize DirectXTex variables
-	// 2. Create upload heap
-	// 3. map the memory and memcpy loaded image
-	// 4. create default heap
+	g_graphicsCommandListPtr->ResetCommandList();
+
 	TexMetadata imageMetadata = {};
 	ScratchImage scratchImage = {};
 	HRESULT hasLoaded = LoadFromDDSFile(L"resources\\albedo.dds", DDS_FLAGS_NONE, &imageMetadata, scratchImage);
 	{
 		const Image* image = scratchImage.GetImage(0, 0, 0);
 
-		// Create default heap for albedo texture
-		CD3DX12_RESOURCE_DESC defaultHeapDesc = CD3DX12_RESOURCE_DESC::Tex2D(image->format, image->width, image->height);
-		CD3DX12_HEAP_PROPERTIES defaultHeapProps(D3D12_HEAP_TYPE_DEFAULT);
-		g_pDevice->CreateCommittedResource(
-			&defaultHeapProps, D3D12_HEAP_FLAG_NONE, &defaultHeapDesc
-			, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&g_pAlbedoTexture));
-		g_pAlbedoTexture->SetName(L"Albedo texture - default");
+		sr::rendering::Texture albedoTexture(gsl::make_not_null<gsl::cwzstring>(L"albedo"), make_unique<ScratchImage>(scratchImage), *g_graphicsDevicePtr);
+		g_graphicsCommandListPtr->ResetCommandList();
+		g_graphicsCommandListPtr->RecordCommandCopyResource(albedoTexture.GetDefaultHeapResource(), albedoTexture.GetUploadHeapResource(), albedoTexture.GetSubResourceData());
+		g_graphicsCommandListPtr->FinishRecordingCommands();
 
-		// Create upload heap for albedo texture
-		CD3DX12_HEAP_PROPERTIES uploadProps(D3D12_HEAP_TYPE_UPLOAD);
-		CD3DX12_RESOURCE_DESC uploadResourceDesc = CD3DX12_RESOURCE_DESC::Buffer(GetRequiredIntermediateSize(g_pAlbedoTexture.Get(), 0, 1));
-		g_pDevice->CreateCommittedResource(
-			&uploadProps, D3D12_HEAP_FLAG_NONE, &uploadResourceDesc
-			, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&g_pAlbedoUploadHeap));
-		g_pAlbedoUploadHeap->SetName(L"Albedo texture - upload");
-
-		CD3DX12_RANGE uploadReadRange(0, 0);
-		uint8_t* mappedImageData = nullptr;
-		g_pAlbedoUploadHeap->Map(0, &uploadReadRange, reinterpret_cast<void**>(&mappedImageData));
-		{
-			memcpy(mappedImageData, image->pixels, image->slicePitch);
-		}
-		g_pAlbedoUploadHeap->Unmap(0, nullptr);
-
-		// Copy from upload to default heap
-		D3D12_SUBRESOURCE_DATA subresourceData = {};
-		subresourceData.pData = image->pixels;
-		subresourceData.RowPitch = image->width * sizeof(uint32_t); // R8G8B8A8 format per pixel
-		subresourceData.SlicePitch = image->height * subresourceData.RowPitch;
-
-		UpdateSubresources(g_pCmdList.Get(), g_pAlbedoTexture.Get(), g_pAlbedoUploadHeap.Get(), 0, 0, 1, &subresourceData); // GraphicsDevice
-
-		auto transitionBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
-			g_pAlbedoTexture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-		g_pCmdList->ResourceBarrier(1, &transitionBarrier);
+		// TODO: Create GraphicsCommandQueue::ExecuteCommandList() 
+		ID3D12CommandList* cmdListArray[] = { g_pCmdList.Get() };
+		g_pCmdQueue->ExecuteCommandLists(_countof(cmdListArray), cmdListArray);
 
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvViewDesc = {};
 		srvViewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -379,10 +355,6 @@ void LoadRenderResources()
 		srvHandle.ptr += g_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 		g_pDevice->CreateShaderResourceView(g_pAlbedoTexture.Get(), &srvViewDesc, srvHandle);
 	
-		g_pCmdList->Close();
-
-		ID3D12CommandList* cmdListArray[] = { g_pCmdList.Get() };
-		g_pCmdQueue->ExecuteCommandLists(_countof(cmdListArray), cmdListArray);
 
 		WaitForPreviousFrame();
 	}

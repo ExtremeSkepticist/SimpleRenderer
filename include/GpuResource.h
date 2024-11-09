@@ -31,10 +31,10 @@ namespace sr
 		class GpuResource
 		{
 		public:
-			GpuResource(gsl::not_null<gsl::wzstring> resourceName, const size_t bufferSize, const ResourceHeapType& resourceHeapType
+			GpuResource(gsl::not_null<gsl::cwzstring> resourceName, const size_t bufferSize, const ResourceHeapType& resourceHeapType
 				, const ResourceState& resourceState, const GraphicsDevice& graphicsDevice) noexcept;
 
-			GpuResource(gsl::not_null<gsl::wzstring> resourceName, const DirectX::Image& image, const ResourceHeapType& resourceHeapType
+			GpuResource(gsl::not_null<gsl::cwzstring> resourceName, const DirectX::Image& image, const ResourceHeapType& resourceHeapType
 				, const ResourceState& resourceState, const GraphicsDevice& graphicsDevice) noexcept;
 
 			inline gsl::not_null<gsl::wzstring> GetResourceName() const noexcept
@@ -69,7 +69,7 @@ namespace sr
 
 
 		private:
-			gsl::not_null<gsl::wzstring> mResourceName;
+			gsl::not_null<gsl::cwzstring> mResourceName;
 			CD3DX12_RESOURCE_DESC mResourceDesc = {};
 			ResourceState mResourceState = ResourceState::None;
 			CD3DX12_HEAP_PROPERTIES mResourceHeapProps = {};

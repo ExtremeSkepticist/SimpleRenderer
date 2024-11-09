@@ -9,6 +9,7 @@ namespace sr
 	namespace rendering
 	{
 		class GraphicsDevice;
+		class GraphicsResource;
 
 		class GraphicsCommandList
 		{
@@ -22,6 +23,15 @@ namespace sr
 			};
 
 			GraphicsCommandList(const GraphicsDevice& graphicsDevice) noexcept;
+
+			void ResetCommandList() noexcept;
+
+			inline void FinishRecordingCommands() noexcept
+			{
+				mD3d12CommandList->Close();
+			}
+
+			void RecordCommandCopyResource(GpuResource& destResource, const GpuResource& srcResource, const D3D12_SUBRESOURCE_DATA& subResourceData) noexcept;
 
 			inline ComPtr<ID3D12CommandAllocator>& GetD3d12CommandAllocatorOwner() noexcept
 			{
