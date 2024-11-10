@@ -137,28 +137,6 @@ namespace sr
 			Ensures(d3d12FenceOwner != nullptr);
 		}
 
-		void GraphicsDevice::CreateConstBuffer(ConstBuffer& constBuffer) const noexcept
-		{
-			ComPtr<ID3D12Resource>& d3d12ConstBufferResourceOwner = constBuffer.GetGpuResource().GetD3d12ResourceOwner();
-			Expects(d3d12ConstBufferResourceOwner == nullptr);
-			
-			const size_t mappableConstBufferSize = constBuffer.GetCpuConstBufferDataSize();
-			const CD3DX12_HEAP_PROPERTIES d3dx12HeapProperties(D3D12_HEAP_TYPE_UPLOAD);
-			const CD3DX12_RESOURCE_DESC d3dx12ResourceDesc = CD3DX12_RESOURCE_DESC::Buffer(mappableConstBufferSize);
-			mD3d12Device->CreateCommittedResource(
-				&d3dx12HeapProperties
-				, D3D12_HEAP_FLAG_NONE
-				, &d3dx12ResourceDesc
-				, D3D12_RESOURCE_STATE_GENERIC_READ
-				, nullptr
-				, IID_PPV_ARGS(&d3d12ConstBufferResourceOwner)
-			);
-
-			Ensures(d3d12ConstBufferResourceOwner != nullptr);
-
-			d3d12ConstBufferResourceOwner->SetName(L"Const buffer resource");
-		}
-
 		void GraphicsDevice::CreateConstBufferView(ConstBuffer& constBuffer, ShaderResourceDescriptorHeap& shaderResourceDescriptorHeap
 			, const gsl::index heapIndex) const noexcept
 		{
@@ -188,6 +166,14 @@ namespace sr
 			case ResourceState::CopyDestination:
 				d3d12ResourceState = D3D12_RESOURCE_STATE_COPY_DEST;
 				break;
+			case ResourceState::Common:
+				d3d12ResourceState - D3D12_RESOURCE_STATE_COMMON;
+				break;
+			case ResourceState::RenderTarget:
+				d3d12ResourceState = D3D12_RESOURCE_STATE_RENDER_TARGET;
+				break;
+			default:
+				assert(false);
 			}
 
 			ComPtr<ID3D12Resource>& d3d12ResourceOwner = gpuResource.GetD3d12ResourceOwner();
@@ -199,7 +185,5 @@ namespace sr
 
 			d3d12ResourceOwner->SetName(gpuResource.GetResourceName());
 		}
-
-
 	}
 }

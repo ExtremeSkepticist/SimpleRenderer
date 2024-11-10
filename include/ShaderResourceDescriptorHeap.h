@@ -18,7 +18,9 @@ namespace sr
 			}
 
 
-			void BindResource(GraphicsDevice& graphicsDevice) override final;
+			void BindResource(GraphicsDevice& graphicsDevice) override final
+			{
+			}
 		};
 	}
 }

@@ -13,7 +13,7 @@ namespace sr
 	{
 		class GraphicsDevice;
 
-		typedef struct
+		typedef struct CpuConstBufferData
 		{
 			DirectX::XMMATRIX mWorldMatrix;
 			DirectX::XMMATRIX mViewMatrix;
@@ -24,7 +24,7 @@ namespace sr
 		class ConstBuffer
 		{	
 		public:
-			ConstBuffer(const CpuConstBufferData& cpuConstBufferData, const GraphicsDevice& graphicsDevice) noexcept;
+			ConstBuffer(gsl::not_null<gsl::cwzstring> name, const CpuConstBufferData& cpuConstBufferData, const GraphicsDevice& graphicsDevice) noexcept;
 
 			inline GpuResource& GetGpuResource() noexcept
 			{
@@ -39,7 +39,7 @@ namespace sr
 		private:
 			uint8_t* mMappedMemoryForCpuConstBufferData = nullptr;
 			CpuConstBufferData mCpuConstBufferData = {};
-			GpuResource mGpuResource = GpuResource();
+			GpuResource mGpuResource;
 		};
 	}
 }

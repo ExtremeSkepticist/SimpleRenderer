@@ -34,8 +34,6 @@
 
 using namespace Microsoft::WRL;
 
-// TODO: Pass required parameters to the new GpuResource constructor ShaderResourceDescriptorHeap & ConstBuffer
-
 HWND g_hWnd = nullptr; //TODO: should be removed and replaced with getter from PlatformWindow
 
 // D3D12 resources
@@ -248,7 +246,7 @@ void Init(HINSTANCE hInstance, int nCmdShow)
 	const XMMATRIX unused = {};
 
 	const sr::rendering::CpuConstBufferData mappableConstBuffer{ worldMatrix, viewMatrix, projectionMatrix, unused };
-	sr::rendering::ConstBuffer constBuffer(mappableConstBuffer, graphicsDevice);
+	sr::rendering::ConstBuffer constBuffer(L"Coord Transform Const buffer", mappableConstBuffer, graphicsDevice);
 	constexpr uint32_t constBufferViewDescriptorIndex = 0;
 	graphicsDevice.CreateConstBufferView(constBuffer, shaderResourceDescriptorHeap, constBufferViewDescriptorIndex);
 	{
@@ -328,18 +326,11 @@ void LoadRenderResources()
 	WaitForPreviousFrame();
 
 #pragma region Create Albedo Texture
-	//g_pCmdAllocator->Reset();
-	//g_pCmdList->Reset(g_pCmdAllocator.Get(), nullptr);
-
-	g_graphicsCommandListPtr->ResetCommandList();
-
-	TexMetadata imageMetadata = {};
 	ScratchImage scratchImage = {};
-	HRESULT hasLoaded = LoadFromDDSFile(L"resources\\albedo.dds", DDS_FLAGS_NONE, &imageMetadata, scratchImage);
+	HRESULT hasLoaded = LoadFromDDSFile(L"resources\\albedo.dds", DDS_FLAGS_NONE, nullptr, scratchImage);
+	assert(SUCCEEDED(hasLoaded));
 	{
-		const Image* image = scratchImage.GetImage(0, 0, 0);
-
-		sr::rendering::Texture albedoTexture(gsl::make_not_null<gsl::cwzstring>(L"albedo"), make_unique<ScratchImage>(scratchImage), *g_graphicsDevicePtr);
+		sr::rendering::Texture albedoTexture(gsl::make_not_null<gsl::cwzstring>(L"albedo"), make_unique<ScratchImage>(std::move(scratchImage)), *g_graphicsDevicePtr);
 		g_graphicsCommandListPtr->ResetCommandList();
 		g_graphicsCommandListPtr->RecordCommandCopyResource(albedoTexture.GetDefaultHeapResource(), albedoTexture.GetUploadHeapResource(), albedoTexture.GetSubResourceData());
 		g_graphicsCommandListPtr->FinishRecordingCommands();
@@ -350,7 +341,7 @@ void LoadRenderResources()
 
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvViewDesc = {};
 		srvViewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		srvViewDesc.Format = image->format;
+		srvViewDesc.Format = scratchImage.GetMetadata().format;
 		srvViewDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 		srvViewDesc.Texture2D.MipLevels = 1;
 		D3D12_CPU_DESCRIPTOR_HANDLE srvHandle = g_pDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
@@ -360,8 +351,6 @@ void LoadRenderResources()
 
 		WaitForPreviousFrame();
 	}
-
-	scratchImage.Release();
 #pragma endregion
 
 #pragma region Create Vertex & Index Buffer
