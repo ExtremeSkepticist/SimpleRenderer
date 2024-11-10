@@ -1,5 +1,5 @@
 #include <d3dx12.h>
-#include <optional>
+#include <format>
 
 #include "GpuResource.h"
 #include "GraphicsDevice.h"
@@ -23,10 +23,29 @@ namespace sr
 			const uint8_t bufferCount = swapChain.GetBufferCount();
 			gsl::not_null<IDXGISwapChain3*> const dxgiSwapChain = swapChain.GetDxgiSwapChain();
 			std::vector<GpuResource>& gpuResources = GetGpuResources();
+			assert(gpuResources.size() > 0);
+			
 			for (gsl::index i = 0; i < bufferCount; ++i)
 			{
-				ComPtr<ID3D12Resource>& d3d12ResourceOwner = gsl::at(gpuResources, i).GetD3d12ResourceOwner();
+				GpuResource& resource = gsl::at(gpuResources, i);
+				ComPtr<ID3D12Resource>& d3d12ResourceOwner = resource.GetD3d12ResourceOwner();
 				dxgiSwapChain->GetBuffer(i, IID_PPV_ARGS(&d3d12ResourceOwner));
+				{
+					// TODO: replace this with better solution
+					std::wstring name(L"Render Target buffer ");
+					name += i;
+					resource.SetResourceName(name.c_str());
+
+					resource.SetResourceDescription(CD3DX12_RESOURCE_DESC(d3d12ResourceOwner->GetDesc()));
+					
+					CD3DX12_HEAP_PROPERTIES heapProperties = {};
+					D3D12_HEAP_FLAGS heapFlag;
+					d3d12ResourceOwner->GetHeapProperties(&heapProperties, &heapFlag);
+					resource.SetResourceHeapProperties(heapProperties);
+
+					resource.SetResourceState(ResourceState::Common);
+				}
+				
 				graphicsDevice.CreateRenderTargetView(*this, i);
 			}
 		}

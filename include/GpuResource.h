@@ -23,23 +23,32 @@ namespace sr
 		enum class ResourceState
 		{
 			None
+			, Common
 			, GenericRead
 			, CopyDestination
+			, RenderTarget
 			, Num
 		};
 
 		class GpuResource
 		{
 		public:
+			GpuResource() = default;
+			
 			GpuResource(gsl::not_null<gsl::cwzstring> resourceName, const size_t bufferSize, const ResourceHeapType& resourceHeapType
 				, const ResourceState& resourceState, const GraphicsDevice& graphicsDevice) noexcept;
 
 			GpuResource(gsl::not_null<gsl::cwzstring> resourceName, const DirectX::Image& image, const ResourceHeapType& resourceHeapType
 				, const ResourceState& resourceState, const GraphicsDevice& graphicsDevice) noexcept;
 
-			inline gsl::not_null<gsl::wzstring> GetResourceName() const noexcept
+			inline gsl::not_null<gsl::cwzstring> GetResourceName() const noexcept
 			{
 				return mResourceName;
+			}
+
+			inline void SetResourceName(gsl::not_null<gsl::cwzstring> resourceName) noexcept
+			{
+				mResourceName = resourceName;
 			}
 
 			inline ComPtr<ID3D12Resource>& GetD3d12ResourceOwner() noexcept
@@ -57,9 +66,19 @@ namespace sr
 				return mResourceState;
 			}
 
+			inline void SetResourceState(const ResourceState resourceState) noexcept
+			{
+				mResourceState = resourceState;
+			}
+
 			inline CD3DX12_RESOURCE_DESC GetResourceDescription() const noexcept
 			{
 				return mResourceDesc;
+			}
+
+			inline void SetResourceDescription(const CD3DX12_RESOURCE_DESC resourceDesc) noexcept
+			{
+				mResourceDesc = resourceDesc;
 			}
 
 			inline CD3DX12_HEAP_PROPERTIES GetResourceHeapProperties() const noexcept
@@ -67,9 +86,13 @@ namespace sr
 				return mResourceHeapProps;
 			}
 
+			inline void SetResourceHeapProperties(const CD3DX12_HEAP_PROPERTIES heapProps) noexcept
+			{
+				mResourceHeapProps = heapProps;
+			}
 
 		private:
-			gsl::not_null<gsl::cwzstring> mResourceName;
+			gsl::not_null<gsl::cwzstring> mResourceName = L"";
 			CD3DX12_RESOURCE_DESC mResourceDesc = {};
 			ResourceState mResourceState = ResourceState::None;
 			CD3DX12_HEAP_PROPERTIES mResourceHeapProps = {};

@@ -34,6 +34,8 @@
 
 using namespace Microsoft::WRL;
 
+// TODO: Pass required parameters to the new GpuResource constructor ShaderResourceDescriptorHeap & ConstBuffer
+
 HWND g_hWnd = nullptr; //TODO: should be removed and replaced with getter from PlatformWindow
 
 // D3D12 resources

@@ -74,7 +74,8 @@ namespace sr
 			Expects(heapIndex < gpuResources.size());
 
 			const ComPtr<ID3D12Resource>& renderTargetResourceOwner = gsl::at(gpuResources, heapIndex).GetD3d12ResourceOwner();
-			
+			Expects(renderTargetResourceOwner.Get() != nullptr);
+
 			D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandle = renderTargetHeap.GetCpuHeapStartHandle();
 			descriptorHandle.ptr += GetRenderTargetHeapHandleIncrementSize() * heapIndex;
 
