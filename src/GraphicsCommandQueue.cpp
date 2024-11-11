@@ -1,4 +1,5 @@
 #include "Fence.h"
+#include "GraphicsCommandList.h"
 #include "GraphicsCommandQueue.h"
 #include "GraphicsDevice.h"
 
@@ -37,5 +38,10 @@ namespace sr
 			mD3d12CommandQueue->Signal(d3d12Fence, value);
 		}
 	
+		void GraphicsCommandQueue::ExecuteCommandList(GraphicsCommandList& graphicsCommandList) const noexcept
+		{
+			ID3D12CommandList* arr[] = { graphicsCommandList.GetGraphicsCommandList() };
+			mD3d12CommandQueue->ExecuteCommandLists(1, arr);
+		}
 	}
 }

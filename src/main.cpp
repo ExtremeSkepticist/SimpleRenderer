@@ -75,6 +75,8 @@ void Render();
 // TODO: To be removed
 sr::rendering::GraphicsDevice* g_graphicsDevicePtr = nullptr;
 sr::rendering::GraphicsCommandList* g_graphicsCommandListPtr = nullptr;
+sr::rendering::GraphicsCommandQueue* g_graphicsCommandQueue = nullptr;
+sr::rendering::ShaderResourceDescriptorHeap* g_shaderResourceDescriptorHeap = nullptr;
 
 // TODO: deprecate d3dx12 and implement its own initialization
 int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int nCmdShow)
@@ -135,6 +137,8 @@ void Init(HINSTANCE hInstance, int nCmdShow)
 		// TODO: to be removed
 		g_pCmdQueue = graphicsCommandQueue.GetD3d12CommandQueue();
 		assert(g_pCmdQueue != nullptr);
+
+		g_graphicsCommandQueue = &graphicsCommandQueue;
 	}
 
 	sr::rendering::GraphicsCommandList graphicsCommandList(graphicsDevice);
@@ -225,6 +229,8 @@ void Init(HINSTANCE hInstance, int nCmdShow)
 	{
 		g_pDescriptorHeap = shaderResourceDescriptorHeap.GetDescriptorHeap();
 		assert(g_pDescriptorHeap != nullptr);
+
+		g_shaderResourceDescriptorHeap = &shaderResourceDescriptorHeap;
 	}
 
 	// Create Scene Camera
@@ -327,30 +333,18 @@ void LoadRenderResources()
 
 #pragma region Create Albedo Texture
 	ScratchImage scratchImage = {};
-	HRESULT hasLoaded = LoadFromDDSFile(L"resources\\albedo.dds", DDS_FLAGS_NONE, nullptr, scratchImage);
+	const HRESULT hasLoaded = LoadFromDDSFile(L"resources\\albedo.dds", DDS_FLAGS_NONE, nullptr, scratchImage);
 	assert(SUCCEEDED(hasLoaded));
-	{
-		sr::rendering::Texture albedoTexture(gsl::make_not_null<gsl::cwzstring>(L"albedo"), make_unique<ScratchImage>(std::move(scratchImage)), *g_graphicsDevicePtr);
-		g_graphicsCommandListPtr->ResetCommandList();
-		g_graphicsCommandListPtr->RecordCommandCopyResource(albedoTexture.GetDefaultHeapResource(), albedoTexture.GetUploadHeapResource(), albedoTexture.GetSubResourceData());
-		g_graphicsCommandListPtr->FinishRecordingCommands();
 
-		// TODO: Create GraphicsCommandQueue::ExecuteCommandList() 
-		ID3D12CommandList* cmdListArray[] = { g_pCmdList.Get() };
-		g_pCmdQueue->ExecuteCommandLists(_countof(cmdListArray), cmdListArray);
+	sr::rendering::Texture albedoTexture(gsl::make_not_null<gsl::cwzstring>(L"albedo"), make_unique<ScratchImage>(std::move(scratchImage)), *g_graphicsDevicePtr);
+	g_graphicsDevicePtr->CreateShaderResourceView(albedoTexture, *g_shaderResourceDescriptorHeap, 1);
 
-		D3D12_SHADER_RESOURCE_VIEW_DESC srvViewDesc = {};
-		srvViewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		srvViewDesc.Format = scratchImage.GetMetadata().format;
-		srvViewDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		srvViewDesc.Texture2D.MipLevels = 1;
-		D3D12_CPU_DESCRIPTOR_HANDLE srvHandle = g_pDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-		srvHandle.ptr += g_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		g_pDevice->CreateShaderResourceView(g_pAlbedoTexture.Get(), &srvViewDesc, srvHandle);
-	
+	g_graphicsCommandListPtr->ResetCommandList();
+	g_graphicsCommandListPtr->RecordCommandCopyResource(albedoTexture.GetDefaultHeapResource(), albedoTexture.GetUploadHeapResource(), albedoTexture.GetSubResourceData());
+	g_graphicsCommandListPtr->FinishRecordingCommands();
+	g_graphicsCommandQueue->ExecuteCommandList(*g_graphicsCommandListPtr);
 
-		WaitForPreviousFrame();
-	}
+	WaitForPreviousFrame();
 #pragma endregion
 
 #pragma region Create Vertex & Index Buffer

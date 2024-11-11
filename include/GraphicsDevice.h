@@ -41,6 +41,8 @@ namespace sr
 			void CreateFence(Fence& fence) const noexcept;
 			void CreateConstBufferView(ConstBuffer& constBuffer, ShaderResourceDescriptorHeap& shaderResourceDescriptorHeap
 				, const gsl::index heapIndex) const noexcept;
+			void CreateShaderResourceView(Texture& texture, ShaderResourceDescriptorHeap& shaderResourceDescriptorHeap, const gsl::index heapIndex);
+
 			void CreateGpuResource(GpuResource& gpuResource) const noexcept;
 
 			inline uint32_t GetRenderTargetHeapHandleIncrementSize() const noexcept

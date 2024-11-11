@@ -10,6 +10,7 @@
 #include "RenderTargetDescriptorHeap.h"
 #include "RootSignature.h"
 #include "ShaderResourceDescriptorHeap.h"
+#include "Texture.h"
 
 namespace sr
 {
@@ -140,6 +141,8 @@ namespace sr
 		void GraphicsDevice::CreateConstBufferView(ConstBuffer& constBuffer, ShaderResourceDescriptorHeap& shaderResourceDescriptorHeap
 			, const gsl::index heapIndex) const noexcept
 		{
+			Expects(heapIndex < shaderResourceDescriptorHeap.GetDescriptorNum());
+
 			ID3D12Resource* const d3d12ResourceForConstBuffer = constBuffer.GetGpuResource().GetD3d12Resource();
 			D3D12_CONSTANT_BUFFER_VIEW_DESC constBufferDesc = { 0, };
 			constBufferDesc.BufferLocation = d3d12ResourceForConstBuffer->GetGPUVirtualAddress();
@@ -150,6 +153,27 @@ namespace sr
 
 			mD3d12Device->CreateConstantBufferView(&constBufferDesc, d3d12DescriptorHandle);
 		}
+
+		void GraphicsDevice::CreateShaderResourceView(Texture& texture, ShaderResourceDescriptorHeap& shaderResourceDescriptorHeap, const gsl::index heapIndex)
+		{
+			Expects(heapIndex < shaderResourceDescriptorHeap.GetDescriptorNum());
+
+			const DirectX::TexMetadata textureMetaData = texture.GetMetaData();
+			D3D12_SHADER_RESOURCE_VIEW_DESC srvViewDesc = {};
+			{
+				srvViewDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+				srvViewDesc.Format = textureMetaData.format;
+				srvViewDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+				srvViewDesc.Texture2D.MipLevels = 1;
+
+			}
+			D3D12_CPU_DESCRIPTOR_HANDLE srvHandle = shaderResourceDescriptorHeap.GetCpuHeapStartHandle();
+			srvHandle.ptr += mD3d12Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+			ID3D12Resource* resource = texture.GetDefaultHeapResource().GetD3d12Resource();
+			mD3d12Device->CreateShaderResourceView(resource, &srvViewDesc, srvHandle);
+		}
+
 
 		void GraphicsDevice::CreateGpuResource(GpuResource& gpuResource) const noexcept
 		{

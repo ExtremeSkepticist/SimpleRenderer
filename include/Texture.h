@@ -36,6 +36,11 @@ namespace sr
 				return mSubResourceData;
 			}
 
+			inline DirectX::TexMetadata GetMetaData() const noexcept
+			{
+				return mRawImage->GetMetadata();
+			}
+
 		private:
 			GpuResource mDefaultHeap;
 			GpuResource mUploadHeap;

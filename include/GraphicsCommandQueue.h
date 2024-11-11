@@ -6,6 +6,7 @@ namespace sr
 {
 	namespace rendering
 	{
+		class GraphicsCommandList;
 		class GraphicsDevice;
 		class Fence;
 
@@ -38,6 +39,8 @@ namespace sr
 			{
 				return mD3d12CommandQueue.Get();
 			}
+
+			void ExecuteCommandList(GraphicsCommandList& graphicsCommandList) const noexcept;
 
 		private:
 			D3D12_COMMAND_QUEUE_DESC mCommandQueueDesc = {};

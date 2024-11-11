@@ -55,10 +55,16 @@ namespace sr
 				return mD3d12DescriptorHeap->GetGPUDescriptorHandleForHeapStart();
 			}
 
+			inline size_t GetDescriptorNum() const noexcept
+			{
+				return mNumDescriptors;
+			}
+
 		private:
 			D3D12_DESCRIPTOR_HEAP_DESC mDescriptorHeapDescription = {};
 			ComPtr<ID3D12DescriptorHeap> mD3d12DescriptorHeap = nullptr;
 			std::vector<GpuResource> mGpuResources = {};
+			size_t mNumDescriptors = 0;
 		};
 	}
 }

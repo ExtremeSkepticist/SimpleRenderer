@@ -6,12 +6,13 @@ namespace sr
 	{
 		DescriptorHeap::DescriptorHeap(const uint32_t numDescriptors) noexcept
 			: mD3d12DescriptorHeap(nullptr)
-			, mGpuResources(numDescriptors)
+			, mNumDescriptors(numDescriptors)
+			, mGpuResources(mNumDescriptors)
 		{
-			mDescriptorHeapDescription.NumDescriptors = numDescriptors;
+			mDescriptorHeapDescription.NumDescriptors = mNumDescriptors;
 			mDescriptorHeapDescription.NodeMask = 0;
 
-			assert(mGpuResources.size() == numDescriptors);
+			assert(mGpuResources.size() == mNumDescriptors);
 		}
 
 	}

@@ -43,6 +43,11 @@ namespace sr
 				return mD3d12CommandList;
 			}
 
+			inline ID3D12GraphicsCommandList* GetGraphicsCommandList() const noexcept
+			{
+				return mD3d12CommandList.Get();
+			}
+
 		private:
 			ComPtr<ID3D12CommandAllocator> mD3d12CommandAllocator = nullptr;
 			ComPtr<ID3D12GraphicsCommandList> mD3d12CommandList = nullptr;
