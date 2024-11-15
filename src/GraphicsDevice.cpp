@@ -154,7 +154,7 @@ namespace sr
 			mD3d12Device->CreateConstantBufferView(&constBufferDesc, d3d12DescriptorHandle);
 		}
 
-		void GraphicsDevice::CreateShaderResourceView(Texture& texture, ShaderResourceDescriptorHeap& shaderResourceDescriptorHeap, const gsl::index heapIndex)
+		void GraphicsDevice::CreateShaderResourceView(Texture& texture, ShaderResourceDescriptorHeap& shaderResourceDescriptorHeap, const gsl::index heapIndex) const noexcept
 		{
 			Expects(heapIndex < shaderResourceDescriptorHeap.GetDescriptorNum());
 

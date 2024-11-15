@@ -62,7 +62,7 @@ ComPtr<ID3D12Resource> g_pAlbedoTexture = nullptr;
 ComPtr<ID3D12Resource> g_pAlbedoUploadHeap = nullptr;
 
 // Model related variables
-Model* g_pModel = nullptr;
+sr::rendering::Model* g_pModel = nullptr;
 const XMFLOAT3 g_MODEL_WORLD_POSITION(0, 4, 2);
 
 void LoadRenderResources();
@@ -88,7 +88,7 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 	assert(scene != nullptr);
 
 	// TODO: Implement recursive initialization when needed
-	Model model(*scene, g_MODEL_WORLD_POSITION);
+	sr::rendering::Model model(*scene, g_MODEL_WORLD_POSITION);
 	g_pModel = &model;
 
 	LoadRenderResources();
@@ -352,7 +352,7 @@ void LoadRenderResources()
 	for (auto& mesh : meshes)
 	{
 		// TODO: Use DEFAULT heap instead
-		const size_t VERTEX_BUFFER_SIZE = sizeof(Mesh::Vertex) * mesh->GetVerticeNum();
+		const size_t VERTEX_BUFFER_SIZE = sizeof(sr::rendering::Mesh::Vertex) * mesh->GetVerticeNum();
 		CD3DX12_HEAP_PROPERTIES heapProp(D3D12_HEAP_TYPE_UPLOAD);
 		CD3DX12_RESOURCE_DESC vertexBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(VERTEX_BUFFER_SIZE);
 
@@ -400,7 +400,7 @@ void LoadRenderResources()
 
 		D3D12_VERTEX_BUFFER_VIEW& vertexBufferView = mesh->GetVertexBufferView();
 		vertexBufferView.BufferLocation = mesh->GetVertexBuffer()->GetGPUVirtualAddress();
-		vertexBufferView.StrideInBytes = sizeof(Mesh::Vertex);
+		vertexBufferView.StrideInBytes = sizeof(sr::rendering::Mesh::Vertex);
 		vertexBufferView.SizeInBytes = VERTEX_BUFFER_SIZE;
 
 		D3D12_INDEX_BUFFER_VIEW& indexBufferView = mesh->GetIndexBufferView();
