@@ -11,6 +11,8 @@ namespace sr
 			: mCommandQueueDesc({})
 			, mD3d12CommandQueue(nullptr)
 		{
+			Expects(mD3d12CommandQueue == nullptr);
+
 			switch (commandQueueType)
 			{
 				case GraphicsCommandQueueType::Graphics:

@@ -19,6 +19,8 @@ namespace sr
 		GraphicsDevice::GraphicsDevice(const GraphicsInfrastructure& graphicsInfrastructure) noexcept
 			: mD3d12Device(nullptr)
 		{
+			Expects(mD3d12Device == nullptr);
+
 			const gsl::not_null<IDXGIFactory6*> dxgiFactory = graphicsInfrastructure.GetDxgiFactory();
 
 			ComPtr<IDXGIAdapter1> adapter = nullptr;

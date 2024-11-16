@@ -25,6 +25,7 @@
 #include "Shader.h"
 #include "SwapChain.h"
 #include "Texture.h"
+#include "RenderingPipeline.h"
 
 #include <DirectXTex.h>
 
@@ -33,8 +34,6 @@
 #include "Model.h"
 
 using namespace Microsoft::WRL;
-
-HWND g_hWnd = nullptr; //TODO: should be removed and replaced with getter from PlatformWindow
 
 // D3D12 resources
 const size_t g_FRAME_WIDTH = 800;
@@ -45,7 +44,6 @@ CD3DX12_VIEWPORT g_Viewport(0.0f, 0.0f, static_cast<float>(g_FRAME_WIDTH), stati
 CD3DX12_RECT g_ScissorRect(0, 0, static_cast<LONG>(g_FRAME_WIDTH), static_cast<LONG>(g_FRAME_HEIGHT));
 ComPtr<IDXGISwapChain3> g_pSwapChain = nullptr;
 ComPtr<ID3D12Resource> g_pRenderTargets[g_FRAME_COUNT];
-ComPtr<ID3D12Device> g_pDevice = nullptr;
 ComPtr<ID3D12DescriptorHeap> g_pRenderTargetViewHeap = nullptr;
 ComPtr<ID3D12DescriptorHeap> g_pDescriptorHeap = nullptr;
 ComPtr<ID3D12Resource> g_pConstBuffer = nullptr;
@@ -68,14 +66,11 @@ const XMFLOAT3 g_MODEL_WORLD_POSITION(0, 4, 2);
 void LoadRenderResources();
 void WaitForPreviousFrame();
 
-void Init(HINSTANCE hInstance, int nCmdShow);
+void Init(unique_ptr<sr::platform::PlatformWindow>& platformWindow, unique_ptr<sr::rendering::RenderingPipeline>& renderingPipeline, HINSTANCE hInstance, int nCmdShow);
 void Update();
-void Render();
+void Render(gsl::not_null<sr::rendering::RenderingPipeline*> renderingPipeline);
 
 // TODO: To be removed
-sr::rendering::GraphicsDevice* g_graphicsDevicePtr = nullptr;
-sr::rendering::GraphicsCommandList* g_graphicsCommandListPtr = nullptr;
-sr::rendering::GraphicsCommandQueue* g_graphicsCommandQueue = nullptr;
 sr::rendering::ShaderResourceDescriptorHeap* g_shaderResourceDescriptorHeap = nullptr;
 sr::rendering::GraphicsPipelineState* g_graphicsPipelineState = nullptr;
 sr::rendering::RootSignature* g_rootSignature = nullptr;
@@ -83,20 +78,22 @@ sr::rendering::RootSignature* g_rootSignature = nullptr;
 // TODO: deprecate d3dx12 and implement its own initialization
 int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int nCmdShow)
 {
-	Init(hInstance, nCmdShow);
+	unique_ptr<sr::platform::PlatformWindow> platformWindow = nullptr;
+	unique_ptr<sr::rendering::RenderingPipeline> renderingPipeline = nullptr;
+	Init(platformWindow, renderingPipeline, hInstance, nCmdShow);
 
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile("resources\\DamagedHelmet.gltf", aiProcess_ConvertToLeftHanded | aiProcess_CalcTangentSpace);
 	assert(scene != nullptr);
 
 	// TODO: Implement recursive initialization when needed
-	sr::rendering::Model model(*scene, g_MODEL_WORLD_POSITION, *g_graphicsDevicePtr);
+	sr::rendering::Model model(*scene, g_MODEL_WORLD_POSITION, *renderingPipeline->GetGraphicsDevice());
 	g_pModel = &model;
 
 	LoadRenderResources();
 	
 	while (true) {
-		Render();
+		Render(renderingPipeline.get());
 	}
 
 	return 0;
@@ -108,68 +105,36 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 // RenderingPipeline class: Platform Window + GraphicsInfrastructure + ...
 // RenderResources: Texture + Shader + ...
 // TODO: Encapsulate all directx 12, WinApi logic inside a wrapper class
-void Init(HINSTANCE hInstance, int nCmdShow)
+void Init(unique_ptr<sr::platform::PlatformWindow>& platformWindow, unique_ptr<sr::rendering::RenderingPipeline>& renderingPipeline, HINSTANCE hInstance, int nCmdShow)
 {
+	Expects(platformWindow == nullptr);
+	Expects(renderingPipeline == nullptr);
 	Expects(hInstance != nullptr);
 
-#pragma region Init Platform
-	LoadLibrary(L"C:\\Program Files\\Microsoft PIX\\2405.15.002-OneBranch_release\\WinPixGpuCapturer.dll");
+	gsl::not_null<gsl::cwzstring> profilerPath = L"C:\\Program Files\\Microsoft PIX\\2405.15.002-OneBranch_release\\WinPixGpuCapturer.dll";
+	LoadLibrary(profilerPath);
 
+#pragma region Init Platform
 	const HRESULT isComInitialized = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 	assert(SUCCEEDED(isComInitialized));
 
 	constexpr uint16_t frameWidth = 800;
 	constexpr uint16_t frameHeight = 600;
-	sr::platform::PlatformWindow platformWindow(frameWidth, frameHeight, L"SimpleRenderer", hInstance, nCmdShow);
-	{
-		g_hWnd = platformWindow.GetWindowHandle(); // TODO: should be removed and replaced
-	}
+	gsl::not_null<gsl::cwzstring> windowName = L"SimpleRenderer";
+	platformWindow = make_unique<sr::platform::PlatformWindow>(frameWidth, frameHeight, windowName, hInstance, nCmdShow);
 #pragma endregion
 
 // TODO: Rendering Pipeline Class that contains below
 #pragma region Init Rendering Pipeline
-	constexpr UINT infrastructureFlag = 0;
-	sr::rendering::GraphicsInfrastructure graphicsInfrastructure(infrastructureFlag);
-	sr::rendering::GraphicsDevice graphicsDevice(graphicsInfrastructure);
-	{
-		// TODO: to be removed
-		g_pDevice = graphicsDevice.GetD3d12Device();
-		assert(g_pDevice != nullptr);
+	constexpr uint32_t swapChainBufferNum = 2;
+	constexpr uint32_t infrastructureFlag = 0;
+	renderingPipeline = make_unique<sr::rendering::RenderingPipeline>(*platformWindow, swapChainBufferNum, infrastructureFlag);
 
-		g_graphicsDevicePtr = &graphicsDevice;
-	}	
-	
-	sr::rendering::GraphicsCommandQueue graphicsCommandQueue(sr::rendering::GraphicsCommandQueueType::Graphics, graphicsDevice);
-	{
-		// TODO: to be removed
-		g_pCmdQueue = graphicsCommandQueue.GetD3d12CommandQueue();
-		assert(g_pCmdQueue != nullptr);
-
-		g_graphicsCommandQueue = &graphicsCommandQueue;
-	}
-
-	sr::rendering::GraphicsCommandList graphicsCommandList(graphicsDevice);
-	{
-		g_pCmdAllocator = graphicsCommandList.GetD3d12CommandAllocatorOwner();
-		assert(g_pCmdAllocator != nullptr);
-		
-		g_pCmdList = graphicsCommandList.GetD3d12GraphicsCommandListOwner();
-		assert(g_pCmdList != nullptr);
-
-		g_graphicsCommandListPtr = &graphicsCommandList;
-	}
-
-	// Create SwapChain
-	constexpr uint32_t swapChainBufferCount = 2;
-	sr::rendering::SwapChain swapChain(swapChainBufferCount, platformWindow, graphicsCommandQueue, graphicsInfrastructure);
-	{
-		// TODO: to be removed
-		g_pSwapChain = swapChain.GetDxgiSwapChain();
-		assert(g_pSwapChain != nullptr);
-	}
+	const sr::rendering::GraphicsDevice& graphicsDevice = *renderingPipeline->GetGraphicsDevice();
+	const sr::rendering::SwapChain& swapChain = *renderingPipeline->GetSwapChain();
 
 	// Create RenderTargetHeap
-	sr::rendering::RenderTargetDescriptorHeap renderTargetDescriptorHeap(swapChainBufferCount, swapChain, graphicsDevice);
+	sr::rendering::RenderTargetDescriptorHeap renderTargetDescriptorHeap(swapChainBufferNum, *renderingPipeline->GetSwapChain(), graphicsDevice);
 	{
 		// TODO: to be removed
 		g_pRenderTargetViewHeap = renderTargetDescriptorHeap.GetDescriptorHeapOwnership();
@@ -282,9 +247,12 @@ void Init(HINSTANCE hInstance, int nCmdShow)
 	}
 
 #pragma endregion
+
+	Ensures(platformWindow != nullptr);
+	Ensures(renderingPipeline != nullptr);
 }
 
-void Render()
+void Render(gsl::not_null<sr::rendering::RenderingPipeline*> renderingPipeline)
 {
 	g_graphicsCommandListPtr->ResetCommandList();
 
@@ -302,7 +270,7 @@ void Render()
 		, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	g_pCmdList->ResourceBarrier(1, &resourceBarrier);
 	{
-		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(g_pRenderTargetViewHeap->GetCPUDescriptorHandleForHeapStart(), g_CurrentFrameIndex, g_pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
+		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(g_pRenderTargetViewHeap->GetCPUDescriptorHandleForHeapStart(), g_CurrentFrameIndex, renderingPipeline->GetGraphicsDevice()->GetD3d12Device()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
 		g_pCmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
 		const FLOAT pClearingColor[] = { 0, 0, 0, 0 };

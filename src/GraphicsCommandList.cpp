@@ -14,7 +14,13 @@ namespace sr
 			: mD3d12CommandAllocator(nullptr)
 			, mD3d12CommandList(nullptr)
 		{
+			Expects(mD3d12CommandAllocator == nullptr);
+			Expects(mD3d12CommandList == nullptr);
+
 			graphicsDevice.CreateCommandList(*this);
+		
+			Ensures(mD3d12CommandAllocator != nullptr);
+			Ensures(mD3d12CommandList != nullptr);
 		}
 
 		void GraphicsCommandList::ResetCommandList() noexcept

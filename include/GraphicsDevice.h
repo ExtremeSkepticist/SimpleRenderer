@@ -19,6 +19,7 @@ namespace sr
 		class RenderTargetDescriptorHeap;
 		class RootSignature;
 		class ShaderResourceDescriptorHeap;
+		class Texture;
 
 		class GraphicsDevice
 		{
@@ -56,7 +57,7 @@ namespace sr
 			}
 
 			// TODO: to be removed; D3D12Device should not be exposed
-			inline ID3D12Device* const GetD3d12Device() const noexcept
+			inline gsl::not_null<ID3D12Device*> const GetD3d12Device() const noexcept
 			{
 				return mD3d12Device.Get();
 			}
