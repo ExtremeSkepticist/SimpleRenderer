@@ -102,6 +102,11 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 	return 0;
 }
 
+// 1. main: Init() -> LoadResources() -> Update() & Render()
+// 2. Init(): InitPlatformWindow() -> InitPipeline()
+// 3. LoadResource(): Load model -> Load Texture -> Load Shader
+// RenderingPipeline class: Platform Window + GraphicsInfrastructure + ...
+// RenderResources: Texture + Shader + ...
 // TODO: Encapsulate all directx 12, WinApi logic inside a wrapper class
 void Init(HINSTANCE hInstance, int nCmdShow)
 {
