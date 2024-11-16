@@ -29,6 +29,11 @@ namespace sr
 				return mD3d12PipelineState;
 			}
 
+			inline ID3D12PipelineState* GetPipelineState() const noexcept
+			{
+				return mD3d12PipelineState.Get();
+			}
+
 		private:
 			D3D12_GRAPHICS_PIPELINE_STATE_DESC mD3d12GraphicsPipelineStateDescription = {};
 			ComPtr<ID3D12PipelineState> mD3d12PipelineState = nullptr;

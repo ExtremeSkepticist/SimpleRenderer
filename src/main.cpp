@@ -77,6 +77,8 @@ sr::rendering::GraphicsDevice* g_graphicsDevicePtr = nullptr;
 sr::rendering::GraphicsCommandList* g_graphicsCommandListPtr = nullptr;
 sr::rendering::GraphicsCommandQueue* g_graphicsCommandQueue = nullptr;
 sr::rendering::ShaderResourceDescriptorHeap* g_shaderResourceDescriptorHeap = nullptr;
+sr::rendering::GraphicsPipelineState* g_graphicsPipelineState = nullptr;
+sr::rendering::RootSignature* g_rootSignature = nullptr;
 
 // TODO: deprecate d3dx12 and implement its own initialization
 int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int nCmdShow)
@@ -88,7 +90,7 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 	assert(scene != nullptr);
 
 	// TODO: Implement recursive initialization when needed
-	sr::rendering::Model model(*scene, g_MODEL_WORLD_POSITION);
+	sr::rendering::Model model(*scene, g_MODEL_WORLD_POSITION, *g_graphicsDevicePtr);
 	g_pModel = &model;
 
 	LoadRenderResources();
@@ -193,6 +195,8 @@ void Init(HINSTANCE hInstance, int nCmdShow)
 		// TODO: to be removed
 		g_pRootSignature = rootSignature.GetD3d12RootSignatureOwner();
 		assert(g_pRootSignature != nullptr);
+
+		g_rootSignature = &rootSignature;
 	}
 #pragma endregion
 
@@ -221,6 +225,8 @@ void Init(HINSTANCE hInstance, int nCmdShow)
 		// Todo: To be removed
 		g_pPipelineStateObj = graphicsPipelineState.GetPipelineStateOwner();
 		assert(g_pPipelineStateObj != nullptr);
+
+		g_graphicsPipelineState = &graphicsPipelineState;
 	}
 
 	// Create Shader Resource descriptor heap
@@ -275,14 +281,10 @@ void Init(HINSTANCE hInstance, int nCmdShow)
 
 void Render()
 {
-	HRESULT result = g_pCmdAllocator->Reset();
-	assert(SUCCEEDED(result));
+	g_graphicsCommandListPtr->ResetCommandList();
 
-	result = g_pCmdList->Reset(g_pCmdAllocator.Get(), g_pPipelineStateObj.Get());
-	assert(SUCCEEDED(result));
-
-	g_pCmdList->SetPipelineState(g_pPipelineStateObj.Get());
-	g_pCmdList->SetGraphicsRootSignature(g_pRootSignature.Get());
+	g_graphicsCommandListPtr->SetPipelineState(*g_graphicsPipelineState);
+	g_graphicsCommandListPtr->SetGraphicsRootSignature(*g_rootSignature);
 
 	ID3D12DescriptorHeap* pArrayDescriptorHeaps[] = { g_pDescriptorHeap.Get() };
 	g_pCmdList->SetDescriptorHeaps(_countof(pArrayDescriptorHeaps), pArrayDescriptorHeaps);
@@ -308,7 +310,7 @@ void Render()
 		{
 			g_pCmdList->IASetVertexBuffers(0, 1, &meshes[i]->GetVertexBufferView());
 			g_pCmdList->IASetIndexBuffer(&meshes[i]->GetIndexBufferView());
-			g_pCmdList->DrawIndexedInstanced(meshes[i]->GetIndexNum(), 1, 0, 0, 0);
+			g_pCmdList->DrawIndexedInstanced(meshes[i]->GetIndicesNum(), 1, 0, 0, 0);
 		}
 	}
 	resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(g_pRenderTargets[g_CurrentFrameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
@@ -345,69 +347,6 @@ void LoadRenderResources()
 	g_graphicsCommandQueue->ExecuteCommandList(*g_graphicsCommandListPtr);
 
 	WaitForPreviousFrame();
-#pragma endregion
-
-#pragma region Create Vertex & Index Buffer
-	auto& meshes = g_pModel->GetMeshes();
-	for (auto& mesh : meshes)
-	{
-		// TODO: Use DEFAULT heap instead
-		const size_t VERTEX_BUFFER_SIZE = sizeof(sr::rendering::Mesh::Vertex) * mesh->GetVerticeNum();
-		CD3DX12_HEAP_PROPERTIES heapProp(D3D12_HEAP_TYPE_UPLOAD);
-		CD3DX12_RESOURCE_DESC vertexBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(VERTEX_BUFFER_SIZE);
-
-		HRESULT isVertexBufferCreated = g_pDevice->CreateCommittedResource(
-			&heapProp
-			, D3D12_HEAP_FLAG_NONE
-			, &vertexBufferDesc
-			, D3D12_RESOURCE_STATE_GENERIC_READ
-			, nullptr
-			, IID_PPV_ARGS(&mesh->GetVertexBuffer()));
-
-		assert(SUCCEEDED(isVertexBufferCreated));
-		
-		// TODO: Set every resource name
-		mesh->GetVertexBuffer()->SetName(L"Vertex buffer resource");
-
-		// TODO: Figure out how to set index size cleanly
-		const size_t INDEX_SIZE = sizeof(UINT32);
-		const size_t INDEX_BUFFER_SIZE = mesh->GetIndexNum() * INDEX_SIZE;
-		CD3DX12_RESOURCE_DESC indexBufferDesc = CD3DX12_RESOURCE_DESC::Buffer(INDEX_BUFFER_SIZE);
-		bool isIndexBufferCreated = g_pDevice->CreateCommittedResource(
-			&heapProp
-			, D3D12_HEAP_FLAG_NONE
-			, &indexBufferDesc
-			, D3D12_RESOURCE_STATE_GENERIC_READ
-			, nullptr
-			, IID_PPV_ARGS(&mesh->GetIndexBuffer())
-		);
-		assert(SUCCEEDED(isIndexBufferCreated));
-
-		UINT8* ptrVertexDataMapped = nullptr;
-		CD3DX12_RANGE readRange(0, 0);
-		mesh->GetVertexBuffer()->Map(0, &readRange, reinterpret_cast<void**>(&ptrVertexDataMapped));
-		{
-			memcpy(ptrVertexDataMapped, &mesh->GetVerticeData()[0], VERTEX_BUFFER_SIZE);
-		}
-		mesh->GetVertexBuffer()->Unmap(0, nullptr);
-
-		UINT8* ptrIndexDataMapped = nullptr;
-		mesh->GetIndexBuffer()->Map(0, &readRange, reinterpret_cast<void**>(&ptrIndexDataMapped));
-		{
-			memcpy(ptrIndexDataMapped, &mesh->GetIndexData()[0], INDEX_BUFFER_SIZE);
-		}
-		mesh->GetIndexBuffer()->Unmap(0, nullptr);
-
-		D3D12_VERTEX_BUFFER_VIEW& vertexBufferView = mesh->GetVertexBufferView();
-		vertexBufferView.BufferLocation = mesh->GetVertexBuffer()->GetGPUVirtualAddress();
-		vertexBufferView.StrideInBytes = sizeof(sr::rendering::Mesh::Vertex);
-		vertexBufferView.SizeInBytes = VERTEX_BUFFER_SIZE;
-
-		D3D12_INDEX_BUFFER_VIEW& indexBufferView = mesh->GetIndexBufferView();
-		indexBufferView.BufferLocation = mesh->GetIndexBuffer()->GetGPUVirtualAddress();
-		indexBufferView.SizeInBytes = INDEX_BUFFER_SIZE;
-		indexBufferView.Format = DXGI_FORMAT_R32_UINT;
-	}
 #pragma endregion
 }
 

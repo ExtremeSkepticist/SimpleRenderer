@@ -1,6 +1,7 @@
 #include <assimp/scene.h>
 #include <wincodec.h>
 
+#include "GraphicsDevice.h"
 #include "Model.h"
 
 namespace sr
@@ -8,7 +9,7 @@ namespace sr
 	namespace rendering
 	{
 		// TODO: https://learn.microsoft.com/en-us/windows/win32/wic/-wic-decoder-howto-createusingstream
-		Model::Model(const aiScene& assimpScene, XMFLOAT3 worldCoords)
+		Model::Model(const aiScene& assimpScene, const XMFLOAT3 worldCoords, const GraphicsDevice& graphicsDevice) noexcept
 			: mWorldCoords(worldCoords)
 		{
 			Expects(assimpScene.HasMeshes() == true);
@@ -17,7 +18,7 @@ namespace sr
 			for (gsl::index i = 0; i < assimpScene.mNumMeshes; ++i)
 			{
 				mMeshes.emplace_back();
-				mMeshes[i] = make_unique<Mesh>(*assimpScene.mMeshes[i]);
+				mMeshes[i] = make_unique<Mesh>(*assimpScene.mMeshes[i], graphicsDevice);
 			}
 
 			// Material: lighting properties of a material's surface (e.g. Wood material - base color(brown), roughness, reflection, etc.)

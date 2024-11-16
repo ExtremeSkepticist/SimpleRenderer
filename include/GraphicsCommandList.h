@@ -10,6 +10,8 @@ namespace sr
 	{
 		class GraphicsDevice;
 		class GraphicsResource;
+		class GraphicsPipelineState;
+		class RootSignature;
 
 		class GraphicsCommandList
 		{
@@ -47,6 +49,10 @@ namespace sr
 			{
 				return mD3d12CommandList.Get();
 			}
+
+			void SetPipelineState(GraphicsPipelineState& graphicsPipelineState) const noexcept;
+
+			void SetGraphicsRootSignature(RootSignature& rootSignature) const noexcept;
 
 		private:
 			ComPtr<ID3D12CommandAllocator> mD3d12CommandAllocator = nullptr;

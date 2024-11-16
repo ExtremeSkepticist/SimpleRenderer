@@ -18,7 +18,8 @@ namespace sr
 		static constexpr size_t indiceNumPerFace = 3;
 		static_assert(indiceNumPerFace == 3, "The number of indice per face should remain 3 (Triangle)");
 
-		static constexpr size_t indexSize = sizeof(uint32_t);
+		using IndexType = uint32_t;
+		static constexpr size_t indexSize = sizeof(IndexType);
 		static constexpr DXGI_FORMAT indexFormat = DXGI_FORMAT_R32_UINT;
 
 		class Mesh
@@ -37,42 +38,42 @@ namespace sr
 			Mesh() = delete;
 			Mesh(const aiMesh& assimpMesh, const GraphicsDevice& graphicsDevice) noexcept;
 
-			inline vector<Vertex>& GetVerticeData()
+			inline vector<Vertex>& GetVerticeDataOwner() noexcept
 			{
 				return mVertices;
 			}
 
-			inline vector<UINT32>& GetIndexData()
+			inline vector<IndexType>& GetIndexDataOwner() noexcept
 			{
 				return mIndices;
 			}
 
-			inline ComPtr<ID3D12Resource>& GetVertexBuffer()
+			inline ID3D12Resource* GetVertexBufferResource() noexcept
 			{
-				return mVertexBuffer;
+				return mVertexBufferResource->GetD3d12Resource();
 			}
 
-			inline ComPtr<ID3D12Resource>& GetIndexBuffer()
+			inline ID3D12Resource* GetIndexBufferResource() noexcept
 			{
-				return mIndexBuffer;
+				return mIndexBufferResource->GetD3d12Resource();
 			}
 
-			inline D3D12_VERTEX_BUFFER_VIEW& GetVertexBufferView()
+			inline D3D12_VERTEX_BUFFER_VIEW& GetVertexBufferView() noexcept
 			{
 				return mVertexBufferView;
 			}
 
-			inline D3D12_INDEX_BUFFER_VIEW& GetIndexBufferView()
+			inline D3D12_INDEX_BUFFER_VIEW& GetIndexBufferView() noexcept
 			{
 				return mIndexBufferView;
 			}
 
-			inline const size_t GetVerticeNum() const
+			inline const size_t GetVerticeNum() const noexcept
 			{
 				return mVerticesNum;
 			}
 
-			inline const size_t GetIndexNum() const
+			inline const size_t GetIndicesNum() const noexcept
 			{
 				return mIndicesNum;
 			}
@@ -82,7 +83,7 @@ namespace sr
 			size_t mVerticesNum = 0;
 			size_t mIndicesNum = 0;
 			vector<Vertex> mVertices = {};
-			vector<UINT32> mIndices = {};
+			vector<IndexType> mIndices = {};
 
 			unique_ptr<GpuResource> mVertexBufferResource = nullptr;
 			unique_ptr<GpuResource> mIndexBufferResource = nullptr;

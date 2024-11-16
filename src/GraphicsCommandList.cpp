@@ -3,6 +3,8 @@
 #include "GpuResource.h"
 #include "GraphicsCommandList.h"
 #include "GraphicsDevice.h"
+#include "GraphicsPipelineState.h"
+#include "RootSignature.h"
 
 namespace sr
 {
@@ -31,6 +33,17 @@ namespace sr
 
 			mD3d12CommandList->Close();
 		}
+
+		void GraphicsCommandList::SetPipelineState(GraphicsPipelineState& graphicsPipelineState) const noexcept
+		{
+			mD3d12CommandList->SetPipelineState(graphicsPipelineState.GetPipelineState());
+		}
+		
+		void GraphicsCommandList::SetGraphicsRootSignature(RootSignature& rootSignature) const noexcept
+		{
+			mD3d12CommandList->SetGraphicsRootSignature(rootSignature.GetD3d12RootSignature());
+		}
+
 
 	}
 }

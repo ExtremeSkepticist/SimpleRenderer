@@ -11,20 +11,23 @@ namespace sr
 {
 	namespace rendering
 	{
+		class GraphicsDevice;
+
 		class Model
 		{
 		public:
 			Model() = delete;
-			Model(const aiScene& assimpScene, XMFLOAT3 worldCoords);
+			Model(const aiScene& assimpScene, const XMFLOAT3 worldCoords, const GraphicsDevice& graphicsDevice) noexcept;
+			~Model() = default;
 
-			inline vector<unique_ptr<Mesh>>& GetMeshes()
+			inline vector<unique_ptr<Mesh>>& GetMeshes() noexcept
 			{
 				return mMeshes;
 			}
 
 		private:
-			vector<unique_ptr<Mesh>> mMeshes;
-			XMFLOAT3 mWorldCoords;
+			vector<unique_ptr<Mesh>> mMeshes = {};
+			XMFLOAT3 mWorldCoords = {};
 		};
 	}
 }

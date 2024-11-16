@@ -61,6 +61,7 @@ namespace sr
 				uint8_t* mappedMemoryForVertexBuffer = nullptr;
 				CD3DX12_RANGE readRange(0, 0);
 				ComPtr<ID3D12Resource>& vertexBufferOwner = mVertexBufferResource->GetD3d12ResourceOwner();
+
 				vertexBufferOwner->Map(0, &readRange, reinterpret_cast<void**>(&mappedMemoryForVertexBuffer));
 				memcpy(mappedMemoryForVertexBuffer, &mVertices[0], vertexDataSize);
 				vertexBufferOwner->Unmap(0, nullptr);
@@ -78,6 +79,7 @@ namespace sr
 				uint8_t* mappedMemoryForIndexBuffer = nullptr;
 				CD3DX12_RANGE readRange(0, 0);
 				ComPtr<ID3D12Resource>& indexBufferOwner = mIndexBufferResource->GetD3d12ResourceOwner();
+
 				indexBufferOwner->Map(0, &readRange, reinterpret_cast<void**>(&mappedMemoryForIndexBuffer));
 				memcpy(mappedMemoryForIndexBuffer, &mIndices[0], indexDataSize);
 				indexBufferOwner->Unmap(0, nullptr);
