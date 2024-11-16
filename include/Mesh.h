@@ -13,9 +13,13 @@ namespace sr
 	namespace rendering
 	{
 		class GpuResource;
+		class GraphicsDevice;
 
-		static constexpr size_t faceIndiceNum = 3;
-		static_assert(faceIndiceNum == 3, "The number of indice per face should remain 3 (Triangle)");
+		static constexpr size_t indiceNumPerFace = 3;
+		static_assert(indiceNumPerFace == 3, "The number of indice per face should remain 3 (Triangle)");
+
+		static constexpr size_t indexSize = sizeof(uint32_t);
+		static constexpr DXGI_FORMAT indexFormat = DXGI_FORMAT_R32_UINT;
 
 		class Mesh
 		{
@@ -31,7 +35,7 @@ namespace sr
 
 
 			Mesh() = delete;
-			Mesh(const aiMesh& assimpMesh);
+			Mesh(const aiMesh& assimpMesh, const GraphicsDevice& graphicsDevice) noexcept;
 
 			inline vector<Vertex>& GetVerticeData()
 			{
@@ -85,7 +89,6 @@ namespace sr
 			D3D12_VERTEX_BUFFER_VIEW mVertexBufferView;
 			D3D12_INDEX_BUFFER_VIEW mIndexBufferView;
 			
-
 			ComPtr<ID3D12Resource> mVertexBuffer;
 			ComPtr<ID3D12Resource> mIndexBuffer;
 		};
