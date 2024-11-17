@@ -30,15 +30,28 @@ namespace sr
 			RenderingPipeline& operator=(const RenderingPipeline&) = delete;
 			RenderingPipeline& operator=(RenderingPipeline&&) = delete;
 
-			inline GraphicsDevice& GetGraphicsDevice() const noexcept
+			inline GraphicsDevice& GetGraphicsDevice() noexcept
 			{
 				Expects(mGraphicsDevice != nullptr);
 				return *mGraphicsDevice;
 			}
 
-			inline gsl::not_null<SwapChain*> GetSwapChain() const noexcept
+			inline GraphicsCommandQueue& GetGraphicsCommandQueue() noexcept
 			{
-				return mSwapChain.get();
+				Expects(mGraphicsCommandQueue != nullptr);
+				return *mGraphicsCommandQueue;
+			}
+
+			inline GraphicsCommandList& GetGraphicsCommandList() noexcept
+			{
+				Expects(mGraphicsCommandList != nullptr);
+				return *mGraphicsCommandList;
+			}
+
+			inline SwapChain& GetSwapChain() noexcept
+			{
+				Expects(mSwapChain != nullptr);
+				return *mSwapChain;
 			}
 
 		private:

@@ -60,15 +60,14 @@ ComPtr<ID3D12Resource> g_pAlbedoTexture = nullptr;
 ComPtr<ID3D12Resource> g_pAlbedoUploadHeap = nullptr;
 
 // Model related variables
-sr::rendering::Model* g_pModel = nullptr;
 const XMFLOAT3 g_MODEL_WORLD_POSITION(0, 4, 2);
 
-void LoadRenderResources();
 void WaitForPreviousFrame();
 
-void Init(unique_ptr<sr::platform::PlatformWindow>& platformWindow, unique_ptr<sr::rendering::RenderingPipeline>& renderingPipeline, HINSTANCE hInstance, int nCmdShow);
+void InitGraphicsPipeline(unique_ptr<sr::platform::PlatformWindow>& platformWindow, unique_ptr<sr::rendering::RenderingPipeline>& renderingPipeline, HINSTANCE hInstance, int nCmdShow);
+void LoadResources(gsl::not_null<gsl::czstring> modelPath, unique_ptr<sr::rendering::Model>& model, sr::rendering::RenderingPipeline& renderingPipeline);
 void Update();
-void Render(gsl::not_null<sr::rendering::RenderingPipeline*> renderingPipeline);
+void Render(sr::rendering::RenderingPipeline& renderingPipeline);
 
 // TODO: To be removed
 sr::rendering::ShaderResourceDescriptorHeap* g_shaderResourceDescriptorHeap = nullptr;
@@ -80,20 +79,15 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 {
 	unique_ptr<sr::platform::PlatformWindow> platformWindow = nullptr;
 	unique_ptr<sr::rendering::RenderingPipeline> renderingPipeline = nullptr;
-	Init(platformWindow, renderingPipeline, hInstance, nCmdShow);
 
-	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile("resources\\DamagedHelmet.gltf", aiProcess_ConvertToLeftHanded | aiProcess_CalcTangentSpace);
-	assert(scene != nullptr);
+	InitGraphicsPipeline(platformWindow, renderingPipeline, hInstance, nCmdShow);
 
-	// TODO: Implement recursive initialization when needed
-	sr::rendering::Model model(*scene, g_MODEL_WORLD_POSITION, *renderingPipeline->GetGraphicsDevice());
-	g_pModel = &model;
+	gsl::czstring modelPath = "resources\\DamagedHelmet.gltf";
+	unique_ptr<sr::rendering::Model> model = nullptr;
+	LoadResources(modelPath, model, *renderingPipeline);
 
-	LoadRenderResources();
-	
 	while (true) {
-		Render(renderingPipeline.get());
+		Render(*renderingPipeline);
 	}
 
 	return 0;
@@ -105,7 +99,7 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 // RenderingPipeline class: Platform Window + GraphicsInfrastructure + ...
 // RenderResources: Texture + Shader + ...
 // TODO: Encapsulate all directx 12, WinApi logic inside a wrapper class
-void Init(unique_ptr<sr::platform::PlatformWindow>& platformWindow, unique_ptr<sr::rendering::RenderingPipeline>& renderingPipeline, HINSTANCE hInstance, int nCmdShow)
+void InitGraphicsPipeline(unique_ptr<sr::platform::PlatformWindow>& platformWindow, unique_ptr<sr::rendering::RenderingPipeline>& renderingPipeline, HINSTANCE hInstance, int nCmdShow)
 {
 	Expects(platformWindow == nullptr);
 	Expects(renderingPipeline == nullptr);
@@ -130,11 +124,11 @@ void Init(unique_ptr<sr::platform::PlatformWindow>& platformWindow, unique_ptr<s
 	constexpr uint32_t infrastructureFlag = 0;
 	renderingPipeline = make_unique<sr::rendering::RenderingPipeline>(*platformWindow, swapChainBufferNum, infrastructureFlag);
 
-	const sr::rendering::GraphicsDevice& graphicsDevice = *renderingPipeline->GetGraphicsDevice();
-	const sr::rendering::SwapChain& swapChain = *renderingPipeline->GetSwapChain();
+	const sr::rendering::GraphicsDevice& graphicsDevice = renderingPipeline->GetGraphicsDevice();
+	const sr::rendering::SwapChain& swapChain = renderingPipeline->GetSwapChain();
 
 	// Create RenderTargetHeap
-	sr::rendering::RenderTargetDescriptorHeap renderTargetDescriptorHeap(swapChainBufferNum, *renderingPipeline->GetSwapChain(), graphicsDevice);
+	sr::rendering::RenderTargetDescriptorHeap renderTargetDescriptorHeap(swapChainBufferNum, swapChain, graphicsDevice);
 	{
 		// TODO: to be removed
 		g_pRenderTargetViewHeap = renderTargetDescriptorHeap.GetDescriptorHeapOwnership();
@@ -252,12 +246,13 @@ void Init(unique_ptr<sr::platform::PlatformWindow>& platformWindow, unique_ptr<s
 	Ensures(renderingPipeline != nullptr);
 }
 
-void Render(gsl::not_null<sr::rendering::RenderingPipeline*> renderingPipeline)
+void Render(sr::rendering::RenderingPipeline& renderingPipeline)
 {
-	g_graphicsCommandListPtr->ResetCommandList();
+	sr::rendering::GraphicsCommandList& graphicsCommandList = renderingPipeline.GetGraphicsCommandList();
 
-	g_graphicsCommandListPtr->SetPipelineState(*g_graphicsPipelineState);
-	g_graphicsCommandListPtr->SetGraphicsRootSignature(*g_rootSignature);
+	graphicsCommandList.ResetCommandList();
+	graphicsCommandList.SetPipelineState(*g_graphicsPipelineState);
+	graphicsCommandList.SetGraphicsRootSignature(*g_rootSignature);
 
 	ID3D12DescriptorHeap* pArrayDescriptorHeaps[] = { g_pDescriptorHeap.Get() };
 	g_pCmdList->SetDescriptorHeaps(_countof(pArrayDescriptorHeaps), pArrayDescriptorHeaps);
@@ -299,11 +294,18 @@ void Render(gsl::not_null<sr::rendering::RenderingPipeline*> renderingPipeline)
 	WaitForPreviousFrame();
 }
 
-void LoadRenderResources()
+void LoadResources(gsl::not_null<gsl::czstring> modelPath, unique_ptr<sr::rendering::Model>& model, sr::rendering::RenderingPipeline& renderingPipeline)
 {
-	// Wait for the command list to execute; we are reusing the same command 
-	// list in our main loop but for now, we just want to wait for setup to 
-	// complete before continuing.
+	Expects(model == nullptr);
+
+	Assimp::Importer importer;
+	constexpr uint32_t importFlag = aiProcess_ConvertToLeftHanded | aiProcess_CalcTangentSpace;
+	const aiScene* scene = importer.ReadFile(modelPath, importFlag);
+	assert(scene != nullptr);
+
+	// TODO: Implement recursive initialization when needed
+	model = make_unique<sr::rendering::Model>(*scene, g_MODEL_WORLD_POSITION, renderingPipeline.GetGraphicsDevice());
+
 	WaitForPreviousFrame();
 
 #pragma region Create Albedo Texture
@@ -311,16 +313,20 @@ void LoadRenderResources()
 	const HRESULT hasLoaded = LoadFromDDSFile(L"resources\\albedo.dds", DDS_FLAGS_NONE, nullptr, scratchImage);
 	assert(SUCCEEDED(hasLoaded));
 
-	sr::rendering::Texture albedoTexture(gsl::make_not_null<gsl::cwzstring>(L"albedo"), make_unique<ScratchImage>(std::move(scratchImage)), *g_graphicsDevicePtr);
-	g_graphicsDevicePtr->CreateShaderResourceView(albedoTexture, *g_shaderResourceDescriptorHeap, 1);
+	const sr::rendering::GraphicsDevice& graphicsDevice = renderingPipeline.GetGraphicsDevice();
+	sr::rendering::Texture albedoTexture(gsl::make_not_null<gsl::cwzstring>(L"albedo"), make_unique<ScratchImage>(std::move(scratchImage)), graphicsDevice);
+	graphicsDevice.CreateShaderResourceView(albedoTexture, *g_shaderResourceDescriptorHeap, 1);
 
-	g_graphicsCommandListPtr->ResetCommandList();
-	g_graphicsCommandListPtr->RecordCommandCopyResource(albedoTexture.GetDefaultHeapResource(), albedoTexture.GetUploadHeapResource(), albedoTexture.GetSubResourceData());
-	g_graphicsCommandListPtr->FinishRecordingCommands();
-	g_graphicsCommandQueue->ExecuteCommandList(*g_graphicsCommandListPtr);
+	sr::rendering::GraphicsCommandList& graphicsCommandList = renderingPipeline.GetGraphicsCommandList();
+	graphicsCommandList.ResetCommandList();
+	graphicsCommandList.RecordCommandCopyResource(albedoTexture.GetDefaultHeapResource(), albedoTexture.GetUploadHeapResource(), albedoTexture.GetSubResourceData());
+	graphicsCommandList.FinishRecordingCommands();
+	renderingPipeline.GetGraphicsCommandQueue().ExecuteCommandList(graphicsCommandList);
 
 	WaitForPreviousFrame();
 #pragma endregion
+
+	Ensures(model != nullptr);
 }
 
 //TODO: lOOK AT D3D12HellOFrameBuffering

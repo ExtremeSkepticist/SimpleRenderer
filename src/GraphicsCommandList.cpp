@@ -50,6 +50,5 @@ namespace sr
 			mD3d12CommandList->SetGraphicsRootSignature(rootSignature.GetD3d12RootSignature());
 		}
 
-
 	}
 }
