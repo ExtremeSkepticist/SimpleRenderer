@@ -25,6 +25,11 @@ namespace sr
 				return mMeshes;
 			}
 
+			inline XMFLOAT3 GetWorldCoords() const noexcept
+			{
+				return mWorldCoords;
+			}
+
 		private:
 			vector<unique_ptr<Mesh>> mMeshes = {};
 			XMFLOAT3 mWorldCoords = {};

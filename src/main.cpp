@@ -59,9 +59,6 @@ HANDLE g_FenceEvent = nullptr;
 ComPtr<ID3D12Resource> g_pAlbedoTexture = nullptr;
 ComPtr<ID3D12Resource> g_pAlbedoUploadHeap = nullptr;
 
-// Model related variables
-const XMFLOAT3 g_MODEL_WORLD_POSITION(0, 4, 2);
-
 void WaitForPreviousFrame();
 
 void InitGraphicsPipeline(unique_ptr<sr::platform::PlatformWindow>& platformWindow, unique_ptr<sr::rendering::RenderingPipeline>& renderingPipeline, HINSTANCE hInstance, int nCmdShow);
@@ -303,8 +300,8 @@ void LoadResources(gsl::not_null<gsl::czstring> modelPath, unique_ptr<sr::render
 	const aiScene* scene = importer.ReadFile(modelPath, importFlag);
 	assert(scene != nullptr);
 
-	// TODO: Implement recursive initialization when needed
-	model = make_unique<sr::rendering::Model>(*scene, g_MODEL_WORLD_POSITION, renderingPipeline.GetGraphicsDevice());
+	constexpr XMFLOAT3 modelWorldPosition(0, 4, 2);
+	model = make_unique<sr::rendering::Model>(*scene, modelWorldPosition, renderingPipeline.GetGraphicsDevice()); 	// TODO: Implement recursive initialization when needed
 
 	WaitForPreviousFrame();
 
