@@ -4,6 +4,7 @@
 #include <d3d12.h>
 
 #include "Common.h"
+#include "GpuResource.h"
 
 struct aiMesh;
 
@@ -12,7 +13,6 @@ namespace sr
 {
 	namespace rendering
 	{
-		class GpuResource;
 		class GraphicsDevice;
 
 		static constexpr size_t indiceNumPerFace = 3;

@@ -71,9 +71,6 @@
     <ClCompile Include="src\GraphicsDevice.cpp">
       <Filter>pipeline\src</Filter>
     </ClCompile>
-    <ClCompile Include="src\GraphicsInfrastructure.cpp">
-      <Filter>pipeline\src</Filter>
-    </ClCompile>
     <ClCompile Include="src\RenderingPipeline.cpp">
       <Filter>pipeline\src</Filter>
     </ClCompile>
@@ -143,9 +140,6 @@
       <Filter>pipeline\include</Filter>
     </ClInclude>
     <ClInclude Include="include\GraphicsDevice.h">
-      <Filter>pipeline\include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\GraphicsInfrastructure.h">
       <Filter>pipeline\include</Filter>
     </ClInclude>
     <ClInclude Include="include\RenderingPipeline.h">

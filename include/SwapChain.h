@@ -14,16 +14,14 @@ namespace sr
 	
 	namespace rendering
 	{
-		class GraphicsInfrastructure;
 		class GraphicsCommandQueue;
 		
 		class SwapChain
 		{
 
 		public:
+			SwapChain(const uint8_t bufferCount, sr::platform::PlatformWindow& platformWindow, const GraphicsCommandQueue& graphicsCommandQueue) noexcept;
 			SwapChain() = delete;
-			SwapChain(const uint8_t bufferCount, sr::platform::PlatformWindow& platformWindow
-				, const GraphicsCommandQueue& graphicsCommandQueue, const GraphicsInfrastructure& graphicsInfrastructure) noexcept;
 			SwapChain(const SwapChain&) = delete;
 			SwapChain(SwapChain&&) = delete;
 			SwapChain& operator=(const SwapChain&) = delete;

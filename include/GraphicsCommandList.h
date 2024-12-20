@@ -12,6 +12,7 @@ namespace sr
 		class GraphicsResource;
 		class GraphicsPipelineState;
 		class RootSignature;
+		class GpuResource;
 
 		class GraphicsCommandList
 		{

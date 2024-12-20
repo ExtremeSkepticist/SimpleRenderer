@@ -12,8 +12,6 @@ namespace sr
 			: mName(assimpMesh.mName.C_Str())
 			, mVerticesNum(assimpMesh.mNumVertices)
 			, mIndicesNum(assimpMesh.mNumFaces * indiceNumPerFace)
-			, mVertices(mVerticesNum)
-			, mIndices(mIndicesNum)
 			, mVertexBufferResource(nullptr)
 			, mIndexBufferResource(nullptr)
 			, mVertexBufferView()
@@ -27,6 +25,8 @@ namespace sr
 			Expects(assimpMesh.HasNormals());
 			Expects(assimpMesh.HasFaces());
 
+			mVertices.reserve(mVerticesNum);
+			mIndices.reserve(mIndicesNum);
 			for (gsl::index i = 0; i < mVerticesNum; ++i)
 			{
 				// TODO: might have to change this to XMFLOAT4

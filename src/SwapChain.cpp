@@ -1,5 +1,6 @@
+#include <dxgi1_6.h>
+
 #include "GraphicsCommandQueue.h"
-#include "GraphicsInfrastructure.h"
 #include "PlatformWindow.h"
 #include "SwapChain.h"
 
@@ -7,17 +8,14 @@ namespace sr
 {
 	namespace rendering
 	{
-		SwapChain::SwapChain(const uint8_t bufferCount, sr::platform::PlatformWindow& platformWindow
-			, const GraphicsCommandQueue& graphicsCommandQueue, const GraphicsInfrastructure& graphicsInfrastructure) noexcept
+		SwapChain::SwapChain(const uint8_t bufferCount, sr::platform::PlatformWindow& platformWindow, const GraphicsCommandQueue& graphicsCommandQueue) noexcept
 			: mBufferCount(bufferCount)
 			, mBufferWidth(platformWindow.GetFrameWidth())
 			, mBufferHeight(platformWindow.GetFrameHeight())
 			, mDxgiSwapChain(nullptr)
 			, mCurrentBufferIndex(0)
 		{
-			//Expects(mBufferCount > 0);
-			//Expects(mBufferWidth > 0);
-			//Expects(mBufferHeight > 0);
+			Expects(mBufferCount > 0);
 			
 			mSwapChainDescription.BufferCount = mBufferCount;
 			mSwapChainDescription.Width = mBufferWidth;
@@ -27,16 +25,21 @@ namespace sr
 			mSwapChainDescription.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 			mSwapChainDescription.SampleDesc.Count = 1;
 
-			const gsl::not_null<IDXGIFactory6*> dxgiFactory = graphicsInfrastructure.GetDxgiFactory();
+			UINT dxgiFactoryFlags = 0;
+#if defined(_DEBUG)
+			dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
+#endif
+			ComPtr<IDXGIFactory6> dxgiFactory = nullptr;
+			CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&dxgiFactory));
+
 			const gsl::not_null<HWND> windowHandle = platformWindow.GetWindowHandle();
 			const gsl::not_null<ID3D12CommandQueue*> commandQueue = graphicsCommandQueue.GetD3d12CommandQueue();
 
-			ComPtr<IDXGISwapChain1> temp = nullptr;
+			ComPtr<IDXGISwapChain1> tempSwapChain = nullptr;
 			dxgiFactory->MakeWindowAssociation(windowHandle, DXGI_MWA_NO_ALT_ENTER);
-			dxgiFactory->CreateSwapChainForHwnd(commandQueue, windowHandle, &mSwapChainDescription, nullptr, nullptr, &temp);
-			assert(temp != nullptr);
-
-			const HRESULT hasConversionSucceeded = temp.As(&mDxgiSwapChain);
+			dxgiFactory->CreateSwapChainForHwnd(commandQueue, windowHandle, &mSwapChainDescription, nullptr, nullptr, &tempSwapChain);
+			
+			const HRESULT hasConversionSucceeded = tempSwapChain.As(&mDxgiSwapChain);
 			assert(SUCCEEDED(hasConversionSucceeded));
 			mCurrentBufferIndex = mDxgiSwapChain->GetCurrentBackBufferIndex();
 

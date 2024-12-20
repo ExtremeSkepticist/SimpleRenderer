@@ -14,7 +14,6 @@ namespace sr
 		class GpuResource;
 		class GraphicsCommandList;
 		class GraphicsCommandQueue;
-		class GraphicsInfrastructure;
 		class GraphicsPipelineState;
 		class RenderTargetDescriptorHeap;
 		class RootSignature;
@@ -24,9 +23,8 @@ namespace sr
 		class GraphicsDevice
 		{
 		public:
-			GraphicsDevice(const GraphicsInfrastructure& graphicsInfrastructure) noexcept;
+			GraphicsDevice() noexcept;
 
-			GraphicsDevice() = delete;
 			GraphicsDevice(const GraphicsDevice&) = delete;
 			GraphicsDevice(GraphicsDevice&&) = delete;
 			GraphicsDevice& operator=(const GraphicsDevice&&) = delete;
@@ -62,7 +60,6 @@ namespace sr
 				return mD3d12Device.Get();
 			}
 
-			
 		private:
 			ComPtr<ID3D12Device> mD3d12Device = nullptr;
 		};

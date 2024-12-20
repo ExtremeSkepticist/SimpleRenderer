@@ -18,13 +18,14 @@ namespace sr
 		public:
 			PlatformWindow() = delete;
 			PlatformWindow(const uint16_t frameWidth, const uint16_t frameHeight
-				, const gsl::not_null<gsl::cwzstring> className, const gsl::not_null<HINSTANCE> hInstance
-				, int nCmdShow) noexcept;
+				, const gsl::not_null<gsl::cwzstring> className, int nCmdShow) noexcept;
 			PlatformWindow(const PlatformWindow&) = delete;
 			PlatformWindow(PlatformWindow&&) = delete;
 			PlatformWindow& operator=(const PlatformWindow&) = delete;
 			PlatformWindow& operator=(PlatformWindow&&) = delete;
 			~PlatformWindow() = default;
+
+			static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) noexcept;
 
 			inline uint16_t GetFrameWidth() const noexcept
 			{
@@ -46,7 +47,6 @@ namespace sr
 			uint16_t mFrameHeight = minFrameHeight;
 			gsl::not_null<gsl::cwzstring> mClassName;
 			HWND mHwnd;
-			gsl::not_null<HINSTANCE> mHinstance;
 		};
 	}
 }

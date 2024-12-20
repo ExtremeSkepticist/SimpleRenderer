@@ -1,3 +1,5 @@
+#include <dxgi1_6.h>
+
 #include "ConstBuffer.h"
 #include "DescriptorHeap.h"
 #include "Fence.h"
@@ -5,7 +7,6 @@
 #include "GraphicsCommandList.h"
 #include "GraphicsCommandQueue.h"
 #include "GraphicsDevice.h"
-#include "GraphicsInfrastructure.h"
 #include "GraphicsPipelineState.h"
 #include "RenderTargetDescriptorHeap.h"
 #include "RootSignature.h"
@@ -16,12 +17,23 @@ namespace sr
 {
 	namespace rendering
 	{
-		GraphicsDevice::GraphicsDevice(const GraphicsInfrastructure& graphicsInfrastructure) noexcept
+		GraphicsDevice::GraphicsDevice() noexcept
 			: mD3d12Device(nullptr)
 		{
 			Expects(mD3d12Device == nullptr);
 
-			const gsl::not_null<IDXGIFactory6*> dxgiFactory = graphicsInfrastructure.GetDxgiFactory();
+			UINT dxgiFactoryFlags = 0;
+#if defined(_DEBUG)
+			ComPtr<ID3D12Debug> debugController;
+			if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
+			{
+				debugController->EnableDebugLayer();
+				dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
+			}
+#endif
+			ComPtr<IDXGIFactory6> dxgiFactory = nullptr;
+			CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&dxgiFactory));
+			assert(dxgiFactory != nullptr);
 
 			ComPtr<IDXGIAdapter1> adapter = nullptr;
 			gsl::index adapterIndex = 0;

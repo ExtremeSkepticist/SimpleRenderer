@@ -21,9 +21,9 @@ namespace sr
 			assert(descriptorHeapOwner != nullptr);
 		}
 
-		void ShaderResourceDescriptorHeap::BindResource(GraphicsDevice& graphicsDevice)
-		{
+		//void ShaderResourceDescriptorHeap::BindResource(GraphicsDevice& graphicsDevice)
+		//{
 
-		}
+		//}
 	}
 }

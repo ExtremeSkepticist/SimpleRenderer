@@ -15,16 +15,15 @@ namespace sr
 		class GraphicsCommandList;
 		class GraphicsCommandQueue;
 		class GraphicsDevice;
-		class GraphicsInfrastructure;
 		class SwapChain;
 
 		class RenderingPipeline final
 		{
 		public:
+			RenderingPipeline(const platform::PlatformWindow& platformWindow, const uint32_t swapChainBufferNum, const uint32_t infrastructureFlag) noexcept;
 			RenderingPipeline() = delete;
 			RenderingPipeline(const RenderingPipeline&) = delete;
 			RenderingPipeline(RenderingPipeline&&) = delete;
-			RenderingPipeline(const platform::PlatformWindow& platformWindow, const uint32_t swapChainBufferNum, const uint32_t infrastructureFlag) noexcept;
 			~RenderingPipeline() = default;
 
 			RenderingPipeline& operator=(const RenderingPipeline&) = delete;
@@ -55,7 +54,6 @@ namespace sr
 			}
 
 		private:
-			unique_ptr<GraphicsInfrastructure> mGraphicsInfrastructure = nullptr;
 			unique_ptr<GraphicsDevice> mGraphicsDevice = nullptr;
 			unique_ptr<GraphicsCommandQueue> mGraphicsCommandQueue = nullptr;
 			unique_ptr<GraphicsCommandList> mGraphicsCommandList = nullptr;

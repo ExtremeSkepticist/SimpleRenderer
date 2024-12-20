@@ -12,7 +12,6 @@
 #include "GraphicsCommandList.h"
 #include "GraphicsCommandQueue.h"
 #include "GraphicsDevice.h"
-#include "GraphicsInfrastructure.h"
 #include "GraphicsPipelineState.h"
 #include "GpuResource.h"
 #include "Fence.h"
@@ -55,6 +54,7 @@ ComPtr<ID3D12PipelineState> g_pPipelineStateObj = nullptr;
 ComPtr<ID3D12Fence> g_pFence = nullptr;
 UINT64 g_FenceValue = 1;
 HANDLE g_FenceEvent = nullptr;
+sr::rendering::Model* g_Model = nullptr;
 
 ComPtr<ID3D12Resource> g_pAlbedoTexture = nullptr;
 ComPtr<ID3D12Resource> g_pAlbedoUploadHeap = nullptr;
@@ -90,12 +90,6 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 	return 0;
 }
 
-// 1. main: Init() -> LoadResources() -> Update() & Render()
-// 2. Init(): InitPlatformWindow() -> InitPipeline()
-// 3. LoadResource(): Load model -> Load Texture -> Load Shader
-// RenderingPipeline class: Platform Window + GraphicsInfrastructure + ...
-// RenderResources: Texture + Shader + ...
-// TODO: Encapsulate all directx 12, WinApi logic inside a wrapper class
 void InitGraphicsPipeline(unique_ptr<sr::platform::PlatformWindow>& platformWindow, unique_ptr<sr::rendering::RenderingPipeline>& renderingPipeline, HINSTANCE hInstance, int nCmdShow)
 {
 	Expects(platformWindow == nullptr);
@@ -122,10 +116,10 @@ void InitGraphicsPipeline(unique_ptr<sr::platform::PlatformWindow>& platformWind
 	renderingPipeline = make_unique<sr::rendering::RenderingPipeline>(*platformWindow, swapChainBufferNum, infrastructureFlag);
 
 	const sr::rendering::GraphicsDevice& graphicsDevice = renderingPipeline->GetGraphicsDevice();
-	const sr::rendering::SwapChain& swapChain = renderingPipeline->GetSwapChain();
-
+	
 	// Create RenderTargetHeap
-	sr::rendering::RenderTargetDescriptorHeap renderTargetDescriptorHeap(swapChainBufferNum, swapChain, graphicsDevice);
+	sr::rendering::RenderTargetDescriptorHeap renderTargetDescriptorHeap(swapChainBufferNum
+		, renderingPipeline->GetSwapChain(), graphicsDevice);
 	{
 		// TODO: to be removed
 		g_pRenderTargetViewHeap = renderTargetDescriptorHeap.GetDescriptorHeapOwnership();
@@ -211,10 +205,12 @@ void InitGraphicsPipeline(unique_ptr<sr::platform::PlatformWindow>& platformWind
 	// Create const buffer
 	XMMATRIX worldMatrix = XMMatrixMultiply(XMMatrixScaling(0.8f, 0.8f, 0.8f), XMMatrixRotationX(-0.8));
 	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixRotationY(-0.1));
-	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(g_MODEL_WORLD_POSITION.x, g_MODEL_WORLD_POSITION.y, g_MODEL_WORLD_POSITION.z));
+	
+	constexpr XMFLOAT3 modelWorldPosition(0, 4, 2);
+	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(modelWorldPosition.x, modelWorldPosition.y, modelWorldPosition.z));
 	worldMatrix = XMMatrixTranspose(worldMatrix);
 
-	const XMMATRIX viewMatrix = XMMatrixTranspose(sceneCamera.GetViewLookAtMatrixLh(cameraWorldPosition, g_MODEL_WORLD_POSITION, worldUpDirection));
+	const XMMATRIX viewMatrix = XMMatrixTranspose(sceneCamera.GetViewLookAtMatrixLh(cameraWorldPosition, modelWorldPosition, worldUpDirection));
 	const XMMATRIX projectionMatrix = XMMatrixTranspose(sceneCamera.GetProjectionMatrixLh());
 	const XMMATRIX unused = {};
 
@@ -262,15 +258,15 @@ void Render(sr::rendering::RenderingPipeline& renderingPipeline)
 		, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 	g_pCmdList->ResourceBarrier(1, &resourceBarrier);
 	{
-		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(g_pRenderTargetViewHeap->GetCPUDescriptorHandleForHeapStart(), g_CurrentFrameIndex, renderingPipeline->GetGraphicsDevice()->GetD3d12Device()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
+		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(g_pRenderTargetViewHeap->GetCPUDescriptorHandleForHeapStart(), g_CurrentFrameIndex, renderingPipeline.GetGraphicsDevice().GetD3d12Device()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
 		g_pCmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
 		const FLOAT pClearingColor[] = { 0, 0, 0, 0 };
 		g_pCmdList->ClearRenderTargetView(rtvHandle, pClearingColor, 0, nullptr);
 		g_pCmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-		const size_t MESH_COUNT = g_pModel->GetMeshes().size();
-		auto& meshes = g_pModel->GetMeshes();
+		const size_t MESH_COUNT = g_Model->GetMeshes().size();
+		auto& meshes = g_Model->GetMeshes();
 		for (size_t i = 0; i < MESH_COUNT; ++i)
 		{
 			g_pCmdList->IASetVertexBuffers(0, 1, &meshes[i]->GetVertexBufferView());
@@ -302,7 +298,14 @@ void LoadResources(gsl::not_null<gsl::czstring> modelPath, unique_ptr<sr::render
 
 	constexpr XMFLOAT3 modelWorldPosition(0, 4, 2);
 	model = make_unique<sr::rendering::Model>(*scene, modelWorldPosition, renderingPipeline.GetGraphicsDevice()); 	// TODO: Implement recursive initialization when needed
+	{
+		// To be removed
+		g_Model = model.get();
+	}
 
+	// TODO: to be removed
+	g_pCmdQueue = renderingPipeline.GetGraphicsCommandQueue().GetD3d12CommandQueue();
+	g_pSwapChain = renderingPipeline.GetSwapChain().GetDxgiSwapChain();
 	WaitForPreviousFrame();
 
 #pragma region Create Albedo Texture
