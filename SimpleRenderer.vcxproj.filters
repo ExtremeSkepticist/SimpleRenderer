@@ -65,9 +65,6 @@
     <ClCompile Include="src\GraphicsCommandList.cpp">
       <Filter>pipeline\src</Filter>
     </ClCompile>
-    <ClCompile Include="src\GraphicsCommandQueue.cpp">
-      <Filter>pipeline\src</Filter>
-    </ClCompile>
     <ClCompile Include="src\GraphicsDevice.cpp">
       <Filter>pipeline\src</Filter>
     </ClCompile>
@@ -128,15 +125,15 @@
     <ClCompile Include="src\Texture.cpp">
       <Filter>pipeline resources\src</Filter>
     </ClCompile>
+    <ClCompile Include="src\CommandQueue.cpp">
+      <Filter>pipeline\src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Fence.h">
       <Filter>pipeline\include</Filter>
     </ClInclude>
     <ClInclude Include="include\GraphicsCommandList.h">
-      <Filter>pipeline\include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\GraphicsCommandQueue.h">
       <Filter>pipeline\include</Filter>
     </ClInclude>
     <ClInclude Include="include\GraphicsDevice.h">
@@ -198,6 +195,9 @@
     </ClInclude>
     <ClInclude Include="include\Texture.h">
       <Filter>pipeline resources\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\CommandQueue.h">
+      <Filter>pipeline\include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -5,11 +5,10 @@ namespace sr
 {
 	namespace rendering
 	{
-		Fence::Fence(const GraphicsDevice& graphicsDevice) noexcept
+		Fence::Fence() noexcept
 			: mD3d12Fence(nullptr)
 			, mFenceEvent(nullptr)
 		{
-			graphicsDevice.CreateFence(*this);
 			mFenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 		}
 	}

@@ -10,8 +10,7 @@ namespace sr
 {
 	namespace rendering
 	{
-		RenderTargetDescriptorHeap::RenderTargetDescriptorHeap(const uint32_t numDescriptors
-			, SwapChain& swapChain, const GraphicsDevice& graphicsDevice) noexcept
+		RenderTargetDescriptorHeap::RenderTargetDescriptorHeap(const uint32_t numDescriptors, SwapChain& swapChain) noexcept
 			: DescriptorHeap(numDescriptors)
 		{
 			D3D12_DESCRIPTOR_HEAP_DESC& heapDescription = DescriptorHeap::GetDescription();

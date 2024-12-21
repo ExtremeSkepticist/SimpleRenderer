@@ -9,11 +9,11 @@ namespace sr
 	namespace rendering
 	{
 		class ConstBuffer;
+		class CommandQueue;
 		class DescriptorHeap;
 		class Fence;
 		class GpuResource;
 		class GraphicsCommandList;
-		class GraphicsCommandQueue;
 		class GraphicsPipelineState;
 		class RenderTargetDescriptorHeap;
 		class RootSignature;
@@ -31,7 +31,7 @@ namespace sr
 			GraphicsDevice& operator=(GraphicsDevice&&) = delete;
 			~GraphicsDevice() = default;
 
-			void CreateCommandQueue(GraphicsCommandQueue& commandQueue) const noexcept;
+			void CreateCommandQueue(CommandQueue& commandQueue) const noexcept;
 			void CreateDescriptorHeap(DescriptorHeap& descriptorHeap) const noexcept;
 			void CreateRenderTargetView(RenderTargetDescriptorHeap& renderTargetHeap, gsl::index heapIndex) const noexcept;
 			void CreateRootSignature(RootSignature& rootSignature) const noexcept;

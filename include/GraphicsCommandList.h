@@ -14,7 +14,8 @@ namespace sr
 		class RootSignature;
 		class GpuResource;
 
-		class GraphicsCommandList
+		// TODO: Change name to GraphicsCommandList -> CommandList
+		class CommandList
 		{
 		public:
 			enum class CommandListType
@@ -25,7 +26,7 @@ namespace sr
 				, Num
 			};
 
-			GraphicsCommandList(const GraphicsDevice& graphicsDevice) noexcept;
+			CommandList() noexcept = default;
 
 			void ResetCommandList() noexcept;
 

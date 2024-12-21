@@ -8,9 +8,9 @@
 #include <DirectXMath.h>
 
 #include "ConstBuffer.h"
+#include "CommandQueue.h"
 #include "DescriptorRange.h"
 #include "GraphicsCommandList.h"
-#include "GraphicsCommandQueue.h"
 #include "GraphicsDevice.h"
 #include "GraphicsPipelineState.h"
 #include "GpuResource.h"
@@ -111,7 +111,7 @@ void InitGraphicsPipeline(unique_ptr<sr::platform::PlatformWindow>& platformWind
 
 // TODO: Rendering Pipeline Class that contains below
 #pragma region Init Rendering Pipeline
-	constexpr uint32_t swapChainBufferNum = 2;
+	constexpr uint32_t swapChainBufferNum = 2; // TODO: change to 3
 	constexpr uint32_t infrastructureFlag = 0;
 	renderingPipeline = make_unique<sr::rendering::RenderingPipeline>(*platformWindow, swapChainBufferNum, infrastructureFlag);
 

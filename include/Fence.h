@@ -13,7 +13,7 @@ namespace sr
 		class Fence
 		{
 		public:
-			Fence(const GraphicsDevice& graphicsDevice) noexcept;
+			Fence() noexcept;
 			~Fence() = default;
 
 			inline ID3D12Fence* GetD3d12Fence() const noexcept

@@ -10,7 +10,7 @@ namespace sr
 		class GraphicsDevice;
 		class Fence;
 
-		enum class GraphicsCommandQueueType
+		enum class CommandQueueType
 		{
 			Graphics,
 			Compute,
@@ -18,10 +18,11 @@ namespace sr
 			Num
 		};
 
-		class GraphicsCommandQueue
+		// TODO: Change name to GraphicsCommandQueue -> CommandQueue
+		class CommandQueue
 		{
 		public:
-			GraphicsCommandQueue(GraphicsCommandQueueType commandQueueType, const GraphicsDevice& graphicsDevice) noexcept;
+			CommandQueue(CommandQueueType type) noexcept;
 
 			void QueueSetFenceValueCommand(const Fence& fence, const uint64_t value) const noexcept;
 

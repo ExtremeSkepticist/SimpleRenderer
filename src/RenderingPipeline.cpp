@@ -1,29 +1,37 @@
 #include "Fence.h"
 #include "GraphicsCommandList.h"
-#include "GraphicsCommandQueue.h"
+#include "CommandQueue.h"
 #include "GraphicsDevice.h"
 #include "PlatformWindow.h"
 #include "RenderingPipeline.h"
+#include "RenderTargetDescriptorHeap.h"
 #include "SwapChain.h"
 
 namespace sr
 {
 	namespace rendering
 	{
-		// TODO: remove const_cast
-		RenderingPipeline::RenderingPipeline(const platform::PlatformWindow& platformWindow, const uint32_t swapChainBufferNum, const uint32_t infrastructureFlag) noexcept
+		// TODO: Use Device to create d3d12 object, outside its constructor
+		// TODO: Redesign the following:
+		//	2. GraphicsCommandList -> CommandList: Separate command allocator? Could just pass different allocators that are not in recording
+		//  3. DescriptorHeap -> Separate resources from DescriptorHeap. Resources should go into Input struct/class and get bound later.
+		//	Refer to complete code; maybe have Gpu descriptor heap in RenderingPipeline class and copy from cpu descriptor heap in Update(
+		RenderingPipeline::RenderingPipeline(platform::PlatformWindow& platformWindow, const uint32_t swapChainBufferNum) noexcept
 			: mGraphicsDevice(make_unique<GraphicsDevice>())
-			, mGraphicsCommandQueue(make_unique<GraphicsCommandQueue>(GraphicsCommandQueueType::Graphics, *mGraphicsDevice))
+			, mGraphicsCommandQueue(make_unique<CommandQueue>(CommandQueueType::Graphics))
 			, mGraphicsCommandList(make_unique<GraphicsCommandList>(*mGraphicsDevice))
-			, mSwapChain(make_unique<SwapChain>(swapChainBufferNum, const_cast<sr::platform::PlatformWindow&>(platformWindow), *mGraphicsCommandQueue))
-			, mFence(make_unique<Fence>(*mGraphicsDevice))
+			, mSwapChain(make_unique<SwapChain>(swapChainBufferNum, platformWindow, *mGraphicsCommandQueue))
+			, mRenderTargetDescriptorHeap(make_unique<RenderTargetDescriptorHeap>(swapChainBufferNum))
+			, mFence(make_unique<Fence>())
 		{
-			Ensures(mGraphicsDevice != nullptr);
-			Ensures(mGraphicsCommandQueue != nullptr);
-			Ensures(mGraphicsCommandList != nullptr);
-			Ensures(mSwapChain != nullptr);
-			Ensures(mFence != nullptr);
+			mGraphicsDevice->CreateCommandQueue(*mGraphicsCommandQueue);
+			mGraphicsDevice->CreateCommandList(*mGraphicsCommandList);
+			mGraphicsDevice->CreateFence(*mFence);
 		}
 
+		void RenderingPipeline::Update()
+		{
+
+		}
 	}
 }

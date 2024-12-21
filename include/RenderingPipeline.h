@@ -11,16 +11,17 @@ namespace sr
 
 	namespace rendering
 	{
+		class CommandQueue;
 		class Fence;
 		class GraphicsCommandList;
-		class GraphicsCommandQueue;
 		class GraphicsDevice;
 		class SwapChain;
+		class RenderTargetDescriptorHeap;
 
 		class RenderingPipeline final
 		{
 		public:
-			RenderingPipeline(const platform::PlatformWindow& platformWindow, const uint32_t swapChainBufferNum, const uint32_t infrastructureFlag) noexcept;
+			RenderingPipeline(platform::PlatformWindow& platformWindow, const uint32_t swapChainBufferNum) noexcept;
 			RenderingPipeline() = delete;
 			RenderingPipeline(const RenderingPipeline&) = delete;
 			RenderingPipeline(RenderingPipeline&&) = delete;
@@ -29,35 +30,34 @@ namespace sr
 			RenderingPipeline& operator=(const RenderingPipeline&) = delete;
 			RenderingPipeline& operator=(RenderingPipeline&&) = delete;
 
+			void Update();
+
 			inline GraphicsDevice& GetGraphicsDevice() noexcept
 			{
-				Expects(mGraphicsDevice != nullptr);
 				return *mGraphicsDevice;
 			}
 
-			inline GraphicsCommandQueue& GetGraphicsCommandQueue() noexcept
+			inline CommandQueue& GetGraphicsCommandQueue() noexcept
 			{
-				Expects(mGraphicsCommandQueue != nullptr);
 				return *mGraphicsCommandQueue;
 			}
 
 			inline GraphicsCommandList& GetGraphicsCommandList() noexcept
 			{
-				Expects(mGraphicsCommandList != nullptr);
 				return *mGraphicsCommandList;
 			}
 
 			inline SwapChain& GetSwapChain() noexcept
 			{
-				Expects(mSwapChain != nullptr);
 				return *mSwapChain;
 			}
 
 		private:
 			unique_ptr<GraphicsDevice> mGraphicsDevice = nullptr;
-			unique_ptr<GraphicsCommandQueue> mGraphicsCommandQueue = nullptr;
+			unique_ptr<CommandQueue> mGraphicsCommandQueue = nullptr;
 			unique_ptr<GraphicsCommandList> mGraphicsCommandList = nullptr;
 			unique_ptr<SwapChain> mSwapChain = nullptr;
+			unique_ptr<RenderTargetDescriptorHeap> mRenderTargetDescriptorHeap = nullptr;
 			unique_ptr<Fence> mFence = nullptr;
 		};
 	}

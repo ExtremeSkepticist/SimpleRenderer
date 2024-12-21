@@ -1,11 +1,11 @@
 #include <dxgi1_6.h>
 
 #include "ConstBuffer.h"
+#include "CommandQueue.h"
 #include "DescriptorHeap.h"
 #include "Fence.h"
 #include "GpuResource.h"
 #include "GraphicsCommandList.h"
-#include "GraphicsCommandQueue.h"
 #include "GraphicsDevice.h"
 #include "GraphicsPipelineState.h"
 #include "RenderTargetDescriptorHeap.h"
@@ -60,7 +60,7 @@ namespace sr
 			Ensures(mD3d12Device != nullptr);
 		}
 
-		void GraphicsDevice::CreateCommandQueue(GraphicsCommandQueue& commandQueue) const noexcept
+		void GraphicsDevice::CreateCommandQueue(CommandQueue& commandQueue) const noexcept
 		{
 			ComPtr<ID3D12CommandQueue>& commandQueueOwnerShip = commandQueue.GetCommandQueueOwnership();
 

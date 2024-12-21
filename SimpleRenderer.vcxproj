@@ -158,6 +158,7 @@ msbuild DirectXTex_Desktop_2022.sln -property:Configuration=$(Configuration)</Co
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Camera.cpp" />
+    <ClCompile Include="src\CommandQueue.cpp" />
     <ClCompile Include="src\ConstBuffer.cpp" />
     <ClCompile Include="src\Fence.cpp" />
     <ClCompile Include="src\RenderingPipeline.cpp" />
@@ -166,7 +167,6 @@ msbuild DirectXTex_Desktop_2022.sln -property:Configuration=$(Configuration)</Co
     <ClCompile Include="src\DescriptorHeap.cpp" />
     <ClCompile Include="src\DescriptorRange.cpp" />
     <ClCompile Include="src\GpuResource.cpp" />
-    <ClCompile Include="src\GraphicsCommandQueue.cpp" />
     <ClCompile Include="src\GraphicsDevice.cpp" />
     <ClCompile Include="src\InputElementLayout.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -185,6 +185,7 @@ msbuild DirectXTex_Desktop_2022.sln -property:Configuration=$(Configuration)</Co
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Camera.h" />
+    <ClInclude Include="include\CommandQueue.h" />
     <ClInclude Include="include\ConstBuffer.h" />
     <ClInclude Include="include\Fence.h" />
     <ClInclude Include="include\RenderingPipeline.h" />
@@ -194,7 +195,6 @@ msbuild DirectXTex_Desktop_2022.sln -property:Configuration=$(Configuration)</Co
     <ClInclude Include="include\DescriptorHeap.h" />
     <ClInclude Include="include\DescriptorRange.h" />
     <ClInclude Include="include\GpuResource.h" />
-    <ClInclude Include="include\GraphicsCommandQueue.h" />
     <ClInclude Include="include\GraphicsDevice.h" />
     <ClInclude Include="include\InputElementLayout.h" />
     <ClInclude Include="include\Mesh.h" />

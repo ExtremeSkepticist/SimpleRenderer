@@ -29,7 +29,7 @@ namespace sr
 			mD3d12GraphicsPipelineStateDescription.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 			
 			// Only using 1 render target for simplicity
-			mD3d12GraphicsPipelineStateDescription.NumRenderTargets = 1;
+			mD3d12GraphicsPipelineStateDescription.NumRenderTargets = 1; // Is this okay?
 			mD3d12GraphicsPipelineStateDescription.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 			mD3d12GraphicsPipelineStateDescription.SampleDesc.Count = 1;
 

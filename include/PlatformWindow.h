@@ -16,9 +16,10 @@ namespace sr
 		class PlatformWindow
 		{
 		public:
-			PlatformWindow() = delete;
 			PlatformWindow(const uint16_t frameWidth, const uint16_t frameHeight
 				, const gsl::not_null<gsl::cwzstring> className, int nCmdShow) noexcept;
+
+			PlatformWindow() = delete;
 			PlatformWindow(const PlatformWindow&) = delete;
 			PlatformWindow(PlatformWindow&&) = delete;
 			PlatformWindow& operator=(const PlatformWindow&) = delete;
