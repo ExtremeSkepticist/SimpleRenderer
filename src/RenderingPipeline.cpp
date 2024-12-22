@@ -1,5 +1,6 @@
 #include "Fence.h"
-#include "GraphicsCommandList.h"
+#include "CommandList.h"
+#include "CommandType.h"
 #include "CommandQueue.h"
 #include "GraphicsDevice.h"
 #include "PlatformWindow.h"
@@ -13,13 +14,13 @@ namespace sr
 	{
 		// TODO: Use Device to create d3d12 object, outside its constructor
 		// TODO: Redesign the following:
-		//	2. GraphicsCommandList -> CommandList: Separate command allocator? Could just pass different allocators that are not in recording
+		//	Consider separating command allocator from command list? Could just pass different allocators that are not in recording
 		//  3. DescriptorHeap -> Separate resources from DescriptorHeap. Resources should go into Input struct/class and get bound later.
 		//	Refer to complete code; maybe have Gpu descriptor heap in RenderingPipeline class and copy from cpu descriptor heap in Update(
 		RenderingPipeline::RenderingPipeline(platform::PlatformWindow& platformWindow, const uint32_t swapChainBufferNum) noexcept
 			: mGraphicsDevice(make_unique<GraphicsDevice>())
-			, mGraphicsCommandQueue(make_unique<CommandQueue>(CommandQueueType::Graphics))
-			, mGraphicsCommandList(make_unique<GraphicsCommandList>(*mGraphicsDevice))
+			, mGraphicsCommandQueue(make_unique<CommandQueue>(CommandType::Graphics))
+			, mGraphicsCommandList(make_unique<CommandList>(CommandType::Graphics))
 			, mSwapChain(make_unique<SwapChain>(swapChainBufferNum, platformWindow, *mGraphicsCommandQueue))
 			, mRenderTargetDescriptorHeap(make_unique<RenderTargetDescriptorHeap>(swapChainBufferNum))
 			, mFence(make_unique<Fence>())

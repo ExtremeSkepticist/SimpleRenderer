@@ -158,12 +158,12 @@ msbuild DirectXTex_Desktop_2022.sln -property:Configuration=$(Configuration)</Co
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Camera.cpp" />
+    <ClCompile Include="src\CommandList.cpp" />
     <ClCompile Include="src\CommandQueue.cpp" />
     <ClCompile Include="src\ConstBuffer.cpp" />
     <ClCompile Include="src\Fence.cpp" />
     <ClCompile Include="src\RenderingPipeline.cpp" />
     <ClCompile Include="src\Texture.cpp" />
-    <ClCompile Include="src\GraphicsCommandList.cpp" />
     <ClCompile Include="src\DescriptorHeap.cpp" />
     <ClCompile Include="src\DescriptorRange.cpp" />
     <ClCompile Include="src\GpuResource.cpp" />
@@ -185,12 +185,13 @@ msbuild DirectXTex_Desktop_2022.sln -property:Configuration=$(Configuration)</Co
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Camera.h" />
+    <ClInclude Include="include\CommandList.h" />
     <ClInclude Include="include\CommandQueue.h" />
+    <ClInclude Include="include\CommandType.h" />
     <ClInclude Include="include\ConstBuffer.h" />
     <ClInclude Include="include\Fence.h" />
     <ClInclude Include="include\RenderingPipeline.h" />
     <ClInclude Include="include\Texture.h" />
-    <ClInclude Include="include\GraphicsCommandList.h" />
     <ClInclude Include="include\Common.h" />
     <ClInclude Include="include\DescriptorHeap.h" />
     <ClInclude Include="include\DescriptorRange.h" />

@@ -11,9 +11,9 @@ namespace sr
 
 	namespace rendering
 	{
+		class CommandList;
 		class CommandQueue;
 		class Fence;
-		class GraphicsCommandList;
 		class GraphicsDevice;
 		class SwapChain;
 		class RenderTargetDescriptorHeap;
@@ -42,7 +42,7 @@ namespace sr
 				return *mGraphicsCommandQueue;
 			}
 
-			inline GraphicsCommandList& GetGraphicsCommandList() noexcept
+			inline CommandList& GetGraphicsCommandList() noexcept
 			{
 				return *mGraphicsCommandList;
 			}
@@ -55,7 +55,7 @@ namespace sr
 		private:
 			unique_ptr<GraphicsDevice> mGraphicsDevice = nullptr;
 			unique_ptr<CommandQueue> mGraphicsCommandQueue = nullptr;
-			unique_ptr<GraphicsCommandList> mGraphicsCommandList = nullptr;
+			unique_ptr<CommandList> mGraphicsCommandList = nullptr;
 			unique_ptr<SwapChain> mSwapChain = nullptr;
 			unique_ptr<RenderTargetDescriptorHeap> mRenderTargetDescriptorHeap = nullptr;
 			unique_ptr<Fence> mFence = nullptr;

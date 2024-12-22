@@ -9,11 +9,11 @@ namespace sr
 	namespace rendering
 	{
 		class ConstBuffer;
+		class CommandList;
 		class CommandQueue;
 		class DescriptorHeap;
 		class Fence;
 		class GpuResource;
-		class GraphicsCommandList;
 		class GraphicsPipelineState;
 		class RenderTargetDescriptorHeap;
 		class RootSignature;
@@ -35,7 +35,7 @@ namespace sr
 			void CreateDescriptorHeap(DescriptorHeap& descriptorHeap) const noexcept;
 			void CreateRenderTargetView(RenderTargetDescriptorHeap& renderTargetHeap, gsl::index heapIndex) const noexcept;
 			void CreateRootSignature(RootSignature& rootSignature) const noexcept;
-			void CreateCommandList(GraphicsCommandList& graphicsCommandList) const noexcept;
+			void CreateCommandList(CommandList& commandList) const noexcept;
 			void CreateGraphicsPipelineState(GraphicsPipelineState& graphicsPipelineState) const noexcept;
 			void CreateFence(Fence& fence) const noexcept;
 			void CreateConstBufferView(ConstBuffer& constBuffer, ShaderResourceDescriptorHeap& shaderResourceDescriptorHeap

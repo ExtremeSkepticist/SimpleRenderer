@@ -6,32 +6,19 @@ namespace sr
 {
 	namespace rendering
 	{
-		class GraphicsCommandList;
+		class CommandList;
 		class GraphicsDevice;
 		class Fence;
+		enum class CommandType;
 
-		enum class CommandQueueType
-		{
-			Graphics,
-			Compute,
-			Copy,
-			Num
-		};
-
-		// TODO: Change name to GraphicsCommandQueue -> CommandQueue
 		class CommandQueue
 		{
 		public:
-			CommandQueue(CommandQueueType type) noexcept;
+			CommandQueue(const CommandType& type) noexcept;
 
 			void QueueSetFenceValueCommand(const Fence& fence, const uint64_t value) const noexcept;
 
-			inline D3D12_COMMAND_QUEUE_DESC& GetCommandQueueDescription() noexcept
-			{
-				return mCommandQueueDesc;
-			}
-
-			inline ComPtr<ID3D12CommandQueue>& GetCommandQueueOwnership() noexcept
+			inline ComPtr<ID3D12CommandQueue>& GetCommandQueueOwner() noexcept
 			{
 				return mD3d12CommandQueue;
 			}
@@ -41,10 +28,15 @@ namespace sr
 				return mD3d12CommandQueue.Get();
 			}
 
-			void ExecuteCommandList(GraphicsCommandList& graphicsCommandList) const noexcept;
+			inline CommandType GetCommandQueueType() const noexcept
+			{
+				return mType;
+			}
+
+			void ExecuteCommandList(const CommandList& commandList) const noexcept;
 
 		private:
-			D3D12_COMMAND_QUEUE_DESC mCommandQueueDesc = {};
+			CommandType mType;
 			ComPtr<ID3D12CommandQueue> mD3d12CommandQueue = nullptr;
 		};
 	}

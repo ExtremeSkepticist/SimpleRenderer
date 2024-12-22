@@ -1,6 +1,6 @@
 #include <dxgi1_6.h>
 
-#include "GraphicsCommandQueue.h"
+#include "CommandQueue.h"
 #include "PlatformWindow.h"
 #include "SwapChain.h"
 
@@ -8,7 +8,7 @@ namespace sr
 {
 	namespace rendering
 	{
-		SwapChain::SwapChain(const uint8_t bufferCount, sr::platform::PlatformWindow& platformWindow, const GraphicsCommandQueue& graphicsCommandQueue) noexcept
+		SwapChain::SwapChain(const uint8_t bufferCount, sr::platform::PlatformWindow& platformWindow, const CommandQueue& graphicsCommandQueue) noexcept
 			: mBufferCount(bufferCount)
 			, mBufferWidth(platformWindow.GetFrameWidth())
 			, mBufferHeight(platformWindow.GetFrameHeight())

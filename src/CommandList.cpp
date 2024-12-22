@@ -1,7 +1,8 @@
 #include <d3dx12.h>
 
 #include "GpuResource.h"
-#include "GraphicsCommandList.h"
+#include "CommandType.h"
+#include "CommandList.h"
 #include "GraphicsDevice.h"
 #include "GraphicsPipelineState.h"
 #include "RootSignature.h"
@@ -10,6 +11,23 @@ namespace sr
 {
 	namespace rendering
 	{
+		CommandList::CommandList(const CommandType& type) noexcept
+			: mType(type)
+		{
+			switch (mType)
+			{
+			case CommandType::Graphics:
+			case CommandType::Copy:
+			case CommandType::Compute:
+				break;
+			default:
+				assert(false);
+				break;
+			}
+
+			Ensures(type != CommandType::Num);
+		}
+
 		void CommandList::ResetCommandList() noexcept
 		{
 			mD3d12CommandAllocator->Reset();
@@ -27,13 +45,17 @@ namespace sr
 			mD3d12CommandList->Close();
 		}
 
-		void CommandList::SetPipelineState(GraphicsPipelineState& graphicsPipelineState) const noexcept
+		void CommandList::SetPipelineState(const GraphicsPipelineState& graphicsPipelineState) const noexcept
 		{
+			Expects(mD3d12CommandList != nullptr);
+
 			mD3d12CommandList->SetPipelineState(graphicsPipelineState.GetPipelineState());
 		}
 		
-		void CommandList::SetGraphicsRootSignature(RootSignature& rootSignature) const noexcept
+		void CommandList::SetGraphicsRootSignature(const RootSignature& rootSignature) const noexcept
 		{
+			Expects(mD3d12CommandList != nullptr);
+
 			mD3d12CommandList->SetGraphicsRootSignature(rootSignature.GetD3d12RootSignature());
 		}
 

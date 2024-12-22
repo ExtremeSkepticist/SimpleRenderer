@@ -13,25 +13,19 @@ namespace sr
 		class GraphicsPipelineState;
 		class RootSignature;
 		class GpuResource;
+		enum class CommandType;
 
-		// TODO: Change name to GraphicsCommandList -> CommandList
 		class CommandList
 		{
 		public:
-			enum class CommandListType
-			{
-				Direct
-				, Copy
-				, Compute
-				, Num
-			};
-
-			CommandList() noexcept = default;
+			CommandList(const CommandType& type) noexcept;
 
 			void ResetCommandList() noexcept;
 
 			inline void FinishRecordingCommands() noexcept
 			{
+				Expects(mD3d12CommandList != nullptr);
+
 				mD3d12CommandList->Close();
 			}
 
@@ -42,21 +36,27 @@ namespace sr
 				return mD3d12CommandAllocator;
 			}
 
-			inline ComPtr<ID3D12GraphicsCommandList>& GetD3d12GraphicsCommandListOwner() noexcept
+			inline ComPtr<ID3D12GraphicsCommandList>& GetD3d12CommandListOwner() noexcept
 			{
 				return mD3d12CommandList;
 			}
 
-			inline ID3D12GraphicsCommandList* GetGraphicsCommandList() const noexcept
+			inline ID3D12GraphicsCommandList* GetCommandList() const noexcept
 			{
 				return mD3d12CommandList.Get();
 			}
+			 
+			inline CommandType GetCommandListType() const noexcept
+			{
+				return mType;
+			}
 
-			void SetPipelineState(GraphicsPipelineState& graphicsPipelineState) const noexcept;
+			void SetPipelineState(const GraphicsPipelineState& graphicsPipelineState) const noexcept;
 
-			void SetGraphicsRootSignature(RootSignature& rootSignature) const noexcept;
+			void SetGraphicsRootSignature(const RootSignature& rootSignature) const noexcept;
 
 		private:
+			CommandType mType;
 			ComPtr<ID3D12CommandAllocator> mD3d12CommandAllocator = nullptr;
 			ComPtr<ID3D12GraphicsCommandList> mD3d12CommandList = nullptr;
 		};

@@ -10,7 +10,7 @@
 #include "ConstBuffer.h"
 #include "CommandQueue.h"
 #include "DescriptorRange.h"
-#include "GraphicsCommandList.h"
+#include "CommandList.h"
 #include "GraphicsDevice.h"
 #include "GraphicsPipelineState.h"
 #include "GpuResource.h"
@@ -241,7 +241,7 @@ void InitGraphicsPipeline(unique_ptr<sr::platform::PlatformWindow>& platformWind
 
 void Render(sr::rendering::RenderingPipeline& renderingPipeline)
 {
-	sr::rendering::GraphicsCommandList& graphicsCommandList = renderingPipeline.GetGraphicsCommandList();
+	sr::rendering::CommandList& graphicsCommandList = renderingPipeline.GetGraphicsCommandList();
 
 	graphicsCommandList.ResetCommandList();
 	graphicsCommandList.SetPipelineState(*g_graphicsPipelineState);
@@ -317,7 +317,7 @@ void LoadResources(gsl::not_null<gsl::czstring> modelPath, unique_ptr<sr::render
 	sr::rendering::Texture albedoTexture(gsl::make_not_null<gsl::cwzstring>(L"albedo"), make_unique<ScratchImage>(std::move(scratchImage)), graphicsDevice);
 	graphicsDevice.CreateShaderResourceView(albedoTexture, *g_shaderResourceDescriptorHeap, 1);
 
-	sr::rendering::GraphicsCommandList& graphicsCommandList = renderingPipeline.GetGraphicsCommandList();
+	sr::rendering::CommandList& graphicsCommandList = renderingPipeline.GetGraphicsCommandList();
 	graphicsCommandList.ResetCommandList();
 	graphicsCommandList.RecordCommandCopyResource(albedoTexture.GetDefaultHeapResource(), albedoTexture.GetUploadHeapResource(), albedoTexture.GetSubResourceData());
 	graphicsCommandList.FinishRecordingCommands();
