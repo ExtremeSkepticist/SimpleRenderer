@@ -18,6 +18,7 @@ namespace sr
 		public:
 			GraphicsPipelineState(const RootSignature& rootSignature, InputElementLayout& inputElementLayout
 				, const Shader& vertexShader, const Shader& pixelShader) noexcept;
+			~GraphicsPipelineState() = default;
 
 			inline D3D12_GRAPHICS_PIPELINE_STATE_DESC& GetGraphicsPipelineStateDescriptionOwner() noexcept
 			{

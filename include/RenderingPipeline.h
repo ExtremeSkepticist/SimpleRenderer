@@ -65,7 +65,7 @@ namespace sr
 			unique_ptr<CommandList> mGraphicsCommandList = nullptr;
 			unique_ptr<SwapChain> mSwapChain = nullptr;
 			unique_ptr<Fence> mFence = nullptr;
-			unique_ptr<FrameResource> mFrameResource = nullptr;
+			// unique_ptr<FrameResource> mFrameResource = nullptr;
 		};
 	}
 }

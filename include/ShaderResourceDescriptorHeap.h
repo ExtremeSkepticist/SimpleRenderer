@@ -9,7 +9,7 @@ namespace sr
 		class ShaderResourceDescriptorHeap : public DescriptorHeap
 		{
 		public:
-			ShaderResourceDescriptorHeap(const uint32_t numDescriptors) noexcept;
+			ShaderResourceDescriptorHeap() noexcept;
 			~ShaderResourceDescriptorHeap() = default;
 
 			void BindResource(GraphicsDevice& graphicsDevice) override final

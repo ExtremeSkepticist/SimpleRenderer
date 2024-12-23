@@ -20,7 +20,7 @@ namespace sr
 		{
 
 		public:
-			SwapChain(const uint8_t bufferCount, sr::platform::PlatformWindow& platformWindow, const CommandQueue& graphicsCommandQueue) noexcept;
+			SwapChain(const uint8_t bufferCount, sr::platform::PlatformWindow& platformWindow) noexcept;
 			SwapChain() = delete;
 			SwapChain(const SwapChain&) = delete;
 			SwapChain(SwapChain&&) = delete;
@@ -48,6 +48,12 @@ namespace sr
 				return mDxgiSwapChain.Get();
 			}
 
+			inline ComPtr<IDXGISwapChain3>& const GetDxgiSwapChainOwner() noexcept
+			{
+				return mDxgiSwapChain;
+			}
+
+
 			inline uint32_t GetBackBufferIndex() const noexcept
 			{
 				return mCurrentBufferIndex;
@@ -56,6 +62,11 @@ namespace sr
 			inline void UpdateCurrentBackBufferIndex() noexcept
 			{
 				mCurrentBufferIndex = mDxgiSwapChain->GetCurrentBackBufferIndex();
+			}
+
+			inline DXGI_SWAP_CHAIN_DESC1& GetDesc() noexcept
+			{
+				return mSwapChainDescription;
 			}
 
 		private:

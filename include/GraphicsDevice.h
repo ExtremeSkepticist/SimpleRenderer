@@ -6,6 +6,11 @@
 
 namespace sr
 {
+	namespace platform
+	{
+		class PlatformWindow;
+	}
+
 	namespace rendering
 	{
 		class ConstBuffer;
@@ -20,6 +25,7 @@ namespace sr
 		class ShaderResourceDescriptorHeap;
 		class Texture;
 		struct DescriptorHandle;
+		class SwapChain;
 
 		class GraphicsDevice
 		{
@@ -33,6 +39,7 @@ namespace sr
 			~GraphicsDevice() = default;
 
 			void CreateCommandQueue(CommandQueue& commandQueue) const noexcept;
+			void CreateSwapChain(SwapChain& swapChain, sr::platform::PlatformWindow& platformWindow, CommandQueue& commandQueue) const noexcept;
 			void CreateDescriptorHeap(DescriptorHeap& descriptorHeap) const noexcept;
 			void CreateRenderTargetView(const GpuResource& resource, DescriptorHandle& descriptorHandle) const noexcept;
 			void CreateRootSignature(RootSignature& rootSignature) const noexcept;

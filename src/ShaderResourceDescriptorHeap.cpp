@@ -8,7 +8,7 @@ namespace sr
 {
 	namespace rendering
 	{
-		ShaderResourceDescriptorHeap::ShaderResourceDescriptorHeap(const uint32_t numDescriptors) noexcept
+		ShaderResourceDescriptorHeap::ShaderResourceDescriptorHeap() noexcept
 			: DescriptorHeap()
 		{
 			D3D12_DESCRIPTOR_HEAP_DESC& heapDescription = DescriptorHeap::GetDescription();

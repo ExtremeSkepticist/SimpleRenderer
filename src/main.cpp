@@ -78,12 +78,12 @@ void InitGraphicsPipeline(unique_ptr<sr::platform::PlatformWindow>& platformWind
 	constexpr uint16_t frameWidth = 800;
 	constexpr uint16_t frameHeight = 600;
 	gsl::not_null<gsl::cwzstring> windowName = L"SimpleRenderer";
-	platformWindow = make_unique<sr::platform::PlatformWindow>(frameWidth, frameHeight, windowName, hInstance, nCmdShow);
+	platformWindow = make_unique<sr::platform::PlatformWindow>(frameWidth, frameHeight, windowName, nCmdShow);
 
 	// Init graphics pipeline
 	constexpr uint32_t swapChainBufferNum = 2; // TODO: change to 3
 	constexpr uint32_t infrastructureFlag = 0;
-	renderingPipeline = make_unique<sr::rendering::RenderingPipeline>(*platformWindow, swapChainBufferNum, infrastructureFlag);
+	renderingPipeline = make_unique<sr::rendering::RenderingPipeline>(*platformWindow, swapChainBufferNum);
 
 	Ensures(platformWindow != nullptr);
 	Ensures(renderingPipeline != nullptr);
@@ -139,7 +139,6 @@ void LoadResources(gsl::not_null<gsl::czstring> modelPath, unique_ptr<sr::render
 	XMMATRIX worldMatrix = XMMatrixMultiply(XMMatrixScaling(0.8f, 0.8f, 0.8f), XMMatrixRotationX(-0.8));
 	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixRotationY(-0.1));
 
-	constexpr XMFLOAT3 modelWorldPosition(0, 4, 2);
 	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(modelWorldPosition.x, modelWorldPosition.y, modelWorldPosition.z));
 	worldMatrix = XMMatrixTranspose(worldMatrix);
 
@@ -153,8 +152,6 @@ void LoadResources(gsl::not_null<gsl::czstring> modelPath, unique_ptr<sr::render
 
 	sr::rendering::DescriptorHandle descriptorHandle = frameResource->GetShaderResourceDescriptorHeap().GetHeapStartHandle();
 	device.CreateConstBufferView(constBuffer, descriptorHandle);
-
-	Expects(model == nullptr);
 
 	// Create and bind albedo texture
 	ScratchImage scratchImage = {};

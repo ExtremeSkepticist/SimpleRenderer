@@ -12,7 +12,6 @@ namespace sr
 		public:
 			RenderTargetDescriptorHeap() noexcept;
 
-			RenderTargetDescriptorHeap() = delete;
 			RenderTargetDescriptorHeap(const RenderTargetDescriptorHeap&) = delete;
 			RenderTargetDescriptorHeap& operator=(const RenderTargetDescriptorHeap&) = delete;
 			RenderTargetDescriptorHeap(RenderTargetDescriptorHeap&&) = delete;

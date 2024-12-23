@@ -14,6 +14,8 @@
 #include "ShaderResourceDescriptorHeap.h"
 #include "Texture.h"
 #include "DescriptorHandle.h"
+#include "PlatformWindow.h"
+#include "SwapChain.h"
 
 namespace sr
 {
@@ -88,6 +90,30 @@ namespace sr
 			mD3d12Device->CreateCommandQueue(&desc, IID_PPV_ARGS(&commandQueueOwnerShip));
 
 			Ensures(commandQueueOwnerShip != nullptr);
+		}
+
+		void GraphicsDevice::CreateSwapChain(SwapChain& swapChain, sr::platform::PlatformWindow& platformWindow, CommandQueue& commandQueue) const noexcept
+		{
+			UINT dxgiFactoryFlags = 0;
+#if defined(_DEBUG)
+			dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;
+#endif
+			ComPtr<IDXGIFactory6> dxgiFactory = nullptr;
+			CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&dxgiFactory));
+
+			const gsl::not_null<HWND> windowHandle = platformWindow.GetWindowHandle();
+
+			ComPtr<IDXGISwapChain1> tempSwapChain = nullptr;
+			dxgiFactory->MakeWindowAssociation(windowHandle, DXGI_MWA_NO_ALT_ENTER);
+			dxgiFactory->CreateSwapChainForHwnd(commandQueue.GetD3d12CommandQueue(), windowHandle, &swapChain.GetDesc(), nullptr, nullptr, &tempSwapChain);
+
+			ComPtr<IDXGISwapChain3>& swapChainOwner = swapChain.GetDxgiSwapChainOwner();
+			const HRESULT hasConversionSucceeded = tempSwapChain.As(&swapChainOwner);
+			assert(SUCCEEDED(hasConversionSucceeded));
+			
+			swapChain.UpdateCurrentBackBufferIndex();
+
+			Ensures(swapChainOwner != nullptr);
 		}
 
 		void GraphicsDevice::CreateDescriptorHeap(DescriptorHeap& descriptorHeap) const noexcept

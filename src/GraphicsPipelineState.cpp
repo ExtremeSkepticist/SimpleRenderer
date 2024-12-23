@@ -19,8 +19,7 @@ namespace sr
 			mD3d12GraphicsPipelineStateDescription.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
 			mD3d12GraphicsPipelineStateDescription.SampleMask = UINT_MAX;
 			mD3d12GraphicsPipelineStateDescription.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-			mD3d12GraphicsPipelineStateDescription.DepthStencilState.DepthEnable = FALSE;
-			mD3d12GraphicsPipelineStateDescription.DepthStencilState.StencilEnable = FALSE;
+			mD3d12GraphicsPipelineStateDescription.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
 
 			const std::vector<D3D12_INPUT_ELEMENT_DESC>& inputElementDescriptions = inputElementLayout.GetInputElementDescOwner();
 			const UINT numInputElements = gsl::narrow_cast<UINT>(inputElementDescriptions.size()); // size_t == unsigned long long/ UINT == unsigned int

@@ -4,9 +4,11 @@
 #include "CommandType.h"
 #include "CommandQueue.h"
 #include "GraphicsDevice.h"
+#include "GraphicsPipelineState.h"
 #include "PlatformWindow.h"
 #include "RenderingPipeline.h"
 #include "RenderTargetDescriptorHeap.h"
+#include "RootSignature.h"
 #include "ShaderResourceDescriptorHeap.h"
 #include "SwapChain.h"
 #include "Model.h"
@@ -26,12 +28,13 @@ namespace sr
 			: mGraphicsDevice(make_unique<GraphicsDevice>())
 			, mGraphicsCommandQueue(make_unique<CommandQueue>(CommandType::Graphics))
 			, mGraphicsCommandList(make_unique<CommandList>(CommandType::Graphics))
-			, mSwapChain(make_unique<SwapChain>(swapChainBufferNum, platformWindow, *mGraphicsCommandQueue))
+			, mSwapChain(make_unique<SwapChain>(swapChainBufferNum, platformWindow))
 			, mFence(make_unique<Fence>())
-			, mFrameResource(make_unique<FrameResource>())
+			// , mFrameResource(make_unique<FrameResource>())
 		{
 			mGraphicsDevice->CreateCommandQueue(*mGraphicsCommandQueue);
 			mGraphicsDevice->CreateCommandList(*mGraphicsCommandList);
+			mGraphicsDevice->CreateSwapChain(*mSwapChain, platformWindow, *mGraphicsCommandQueue);
 			mGraphicsDevice->CreateFence(*mFence);
 		}
 

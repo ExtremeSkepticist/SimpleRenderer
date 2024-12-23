@@ -1,6 +1,7 @@
 #include "DescriptorRange.h"
 #include "FrameResource.h"
 #include "GraphicsDevice.h"
+#include "GraphicsPipelineState.h"
 #include "RenderTargetDescriptorHeap.h"
 #include "RootSignature.h"
 #include "RootParameter.h"
@@ -12,6 +13,7 @@ namespace sr
 {
 	namespace rendering
 	{
+		// TODO: Create depth-stencil buffer and heap to bind
 		FrameResource::FrameResource(const GraphicsDevice& device)
 			: mRenderTargetDescriptorHeap(make_unique<RenderTargetDescriptorHeap>())
 			, mRootSignature(nullptr)
@@ -20,8 +22,9 @@ namespace sr
 			, mModel(nullptr)
 		{
 			device.CreateDescriptorHeap(*mRenderTargetDescriptorHeap);
+			device.CreateDescriptorHeap(*mShaderResourceDescriptorHeap);
 			createDefaultRootSignature(device);
-			createDefaultRootSignature(device);
+			createDefaultPipelineState(device);
 		}
 
 		RenderTargetDescriptorHeap& FrameResource::GetRenderTargetDescriptorHeap()

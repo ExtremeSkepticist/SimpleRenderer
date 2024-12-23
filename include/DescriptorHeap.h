@@ -19,8 +19,7 @@ namespace sr
 		{
 		public:
 			DescriptorHeap() noexcept;
-			
-			DescriptorHeap() = delete;
+
 			DescriptorHeap(DescriptorHeap&&) = delete;
 			DescriptorHeap& operator=(DescriptorHeap&&) = delete;
 			DescriptorHeap(const DescriptorHeap&) = delete;
