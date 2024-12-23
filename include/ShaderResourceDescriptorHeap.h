@@ -9,14 +9,8 @@ namespace sr
 		class ShaderResourceDescriptorHeap : public DescriptorHeap
 		{
 		public:
-			ShaderResourceDescriptorHeap(const uint32_t numDescriptors, const GraphicsDevice& graphicsDevice) noexcept;
+			ShaderResourceDescriptorHeap(const uint32_t numDescriptors) noexcept;
 			~ShaderResourceDescriptorHeap() = default;
-
-			inline D3D12_GPU_DESCRIPTOR_HANDLE GetHeapStartHandle() const noexcept
-			{
-				return GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart();
-			}
-
 
 			void BindResource(GraphicsDevice& graphicsDevice) override final
 			{

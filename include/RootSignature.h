@@ -10,12 +10,10 @@ namespace sr
 {
 	namespace rendering
 	{
-		class GraphicsDevice;
-
 		class RootSignature
 		{
 		public:
-			RootSignature(const gsl::span<RootParameter> rootParameters, const GraphicsDevice& graphicsDevice) noexcept;
+			RootSignature(const gsl::span<RootParameter> rootParameters) noexcept;
 			~RootSignature() = default;
 			RootSignature() = delete;
 
@@ -35,7 +33,6 @@ namespace sr
 			}
 
 		private:
-			std::vector<CD3DX12_ROOT_PARAMETER1> mD3dx12RootParameters;
 			ComPtr<ID3DBlob> mSerializedRootSignature = nullptr;
 			ComPtr<ID3D12RootSignature> mD3d12RootSignature = nullptr;
 		};

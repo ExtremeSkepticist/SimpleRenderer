@@ -19,6 +19,7 @@ namespace sr
 		class RootSignature;
 		class ShaderResourceDescriptorHeap;
 		class Texture;
+		struct DescriptorHandle;
 
 		class GraphicsDevice
 		{
@@ -33,13 +34,12 @@ namespace sr
 
 			void CreateCommandQueue(CommandQueue& commandQueue) const noexcept;
 			void CreateDescriptorHeap(DescriptorHeap& descriptorHeap) const noexcept;
-			void CreateRenderTargetView(RenderTargetDescriptorHeap& renderTargetHeap, gsl::index heapIndex) const noexcept;
+			void CreateRenderTargetView(const GpuResource& resource, DescriptorHandle& descriptorHandle) const noexcept;
 			void CreateRootSignature(RootSignature& rootSignature) const noexcept;
 			void CreateCommandList(CommandList& commandList) const noexcept;
 			void CreateGraphicsPipelineState(GraphicsPipelineState& graphicsPipelineState) const noexcept;
 			void CreateFence(Fence& fence) const noexcept;
-			void CreateConstBufferView(ConstBuffer& constBuffer, ShaderResourceDescriptorHeap& shaderResourceDescriptorHeap
-				, const gsl::index heapIndex) const noexcept;
+			void CreateConstBufferView(ConstBuffer& constBuffer, DescriptorHandle& descriptorHandle) const noexcept;
 			void CreateShaderResourceView(Texture& texture, ShaderResourceDescriptorHeap& shaderResourceDescriptorHeap, const gsl::index heapIndex) const noexcept;
 
 			void CreateGpuResource(GpuResource& gpuResource) const noexcept;

@@ -13,6 +13,7 @@
 #include "RootSignature.h"
 #include "ShaderResourceDescriptorHeap.h"
 #include "Texture.h"
+#include "DescriptorHandle.h"
 
 namespace sr
 {
@@ -100,18 +101,12 @@ namespace sr
 			Ensures(ownership != nullptr);
 		}
 
-		void GraphicsDevice::CreateRenderTargetView(RenderTargetDescriptorHeap& renderTargetHeap, gsl::index heapIndex) const noexcept
+		void GraphicsDevice::CreateRenderTargetView(const GpuResource& resource, DescriptorHandle& descriptorHandle) const noexcept
 		{
-			std::vector<GpuResource>& gpuResources = renderTargetHeap.GetGpuResources();
-			Expects(heapIndex < gpuResources.size());
-
-			const ComPtr<ID3D12Resource>& renderTargetResourceOwner = gsl::at(gpuResources, heapIndex).GetD3d12ResourceOwner();
+			const ComPtr<ID3D12Resource>& renderTargetResourceOwner = resource.GetD3d12Resource();
 			Expects(renderTargetResourceOwner.Get() != nullptr);
 
-			D3D12_CPU_DESCRIPTOR_HANDLE descriptorHandle = renderTargetHeap.GetCpuHeapStartHandle();
-			descriptorHandle.ptr += GetRenderTargetHeapHandleIncrementSize() * heapIndex;
-
-			mD3d12Device->CreateRenderTargetView(renderTargetResourceOwner.Get(), nullptr, descriptorHandle);
+			mD3d12Device->CreateRenderTargetView(renderTargetResourceOwner.Get(), nullptr, descriptorHandle.cpuHandle);
 		}
 
 		void GraphicsDevice::CreateRootSignature(RootSignature& rootSignature) const noexcept
@@ -181,20 +176,14 @@ namespace sr
 			Ensures(d3d12FenceOwner != nullptr);
 		}
 
-		void GraphicsDevice::CreateConstBufferView(ConstBuffer& constBuffer, ShaderResourceDescriptorHeap& shaderResourceDescriptorHeap
-			, const gsl::index heapIndex) const noexcept
+		void GraphicsDevice::CreateConstBufferView(ConstBuffer& constBuffer, DescriptorHandle& descriptorHandle) const noexcept
 		{
-			Expects(heapIndex < shaderResourceDescriptorHeap.GetDescriptorNum());
-
 			ID3D12Resource* const d3d12ResourceForConstBuffer = constBuffer.GetGpuResource().GetD3d12Resource();
 			D3D12_CONSTANT_BUFFER_VIEW_DESC constBufferDesc = { 0, };
 			constBufferDesc.BufferLocation = d3d12ResourceForConstBuffer->GetGPUVirtualAddress();
 			constBufferDesc.SizeInBytes = constBuffer.GetCpuConstBufferDataSize();
 
-			D3D12_CPU_DESCRIPTOR_HANDLE d3d12DescriptorHandle = shaderResourceDescriptorHeap.GetCpuHeapStartHandle();
-			d3d12DescriptorHandle.ptr += GetShaderResourceDescriptorHeapHandleIncrementSize() * heapIndex;
-
-			mD3d12Device->CreateConstantBufferView(&constBufferDesc, d3d12DescriptorHandle);
+			mD3d12Device->CreateConstantBufferView(&constBufferDesc, descriptorHandle.cpuHandle);
 		}
 
 		void GraphicsDevice::CreateShaderResourceView(Texture& texture, ShaderResourceDescriptorHeap& shaderResourceDescriptorHeap, const gsl::index heapIndex) const noexcept

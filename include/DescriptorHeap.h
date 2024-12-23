@@ -3,18 +3,22 @@
 #include <d3d12.h>
 
 #include "Common.h"
+#include "DescriptorHandle.h"
 #include "GpuResource.h"
 
 namespace sr
 {
 	namespace rendering
 	{
+		constexpr static size_t defaultNumDescriptor = 128;
+
 		class GraphicsDevice;
 		
+		// TODO: Separate GpuResource from DescriptorHeap
 		class DescriptorHeap
 		{
 		public:
-			DescriptorHeap(const uint32_t numDescriptors) noexcept;
+			DescriptorHeap() noexcept;
 			
 			DescriptorHeap() = delete;
 			DescriptorHeap(DescriptorHeap&&) = delete;
@@ -27,7 +31,7 @@ namespace sr
 
 			inline D3D12_DESCRIPTOR_HEAP_DESC& GetDescription() noexcept
 			{
-				return mDescriptorHeapDescription;
+				return mDesc;
 			}
 
 			inline ID3D12DescriptorHeap* const GetDescriptorHeap() const noexcept
@@ -40,31 +44,32 @@ namespace sr
 				return mD3d12DescriptorHeap;
 			}
 
-			inline std::vector<GpuResource>& GetGpuResources() noexcept
+
+			inline DescriptorHandle GetHeapStartHandle() const noexcept
 			{
-				return mGpuResources;
+				DescriptorHandle handle = { 
+					mD3d12DescriptorHeap->GetCPUDescriptorHandleForHeapStart()
+					, mD3d12DescriptorHeap->GetGPUDescriptorHandleForHeapStart()
+				};
+
+				return handle ;
 			}
 
-			inline D3D12_CPU_DESCRIPTOR_HANDLE GetCpuHeapStartHandle() const noexcept
+			inline size_t GetCapacity() const noexcept
 			{
-				return mD3d12DescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+				return mCapacity;
 			}
 
-			inline D3D12_GPU_DESCRIPTOR_HANDLE GetGpuHeapStartHandle() const noexcept
+			inline size_t GetSize() const noexcept
 			{
-				return mD3d12DescriptorHeap->GetGPUDescriptorHandleForHeapStart();
-			}
-
-			inline size_t GetDescriptorNum() const noexcept
-			{
-				return mNumDescriptors;
+				return mSize;
 			}
 
 		private:
-			D3D12_DESCRIPTOR_HEAP_DESC mDescriptorHeapDescription = {};
+			D3D12_DESCRIPTOR_HEAP_DESC mDesc = {};
 			ComPtr<ID3D12DescriptorHeap> mD3d12DescriptorHeap = nullptr;
-			std::vector<GpuResource> mGpuResources = {};
-			size_t mNumDescriptors = 0;
+			size_t mCapacity = defaultNumDescriptor;
+			size_t mSize = 0;
 		};
 	}
 }

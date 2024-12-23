@@ -14,6 +14,7 @@ namespace sr
 		class CommandList;
 		class CommandQueue;
 		class Fence;
+		class FrameResource;
 		class GraphicsDevice;
 		class SwapChain;
 		class RenderTargetDescriptorHeap;
@@ -30,7 +31,7 @@ namespace sr
 			RenderingPipeline& operator=(const RenderingPipeline&) = delete;
 			RenderingPipeline& operator=(RenderingPipeline&&) = delete;
 
-			void Update();
+			void Update(const FrameResource& frameResource);
 
 			inline GraphicsDevice& GetGraphicsDevice() noexcept
 			{
@@ -57,8 +58,8 @@ namespace sr
 			unique_ptr<CommandQueue> mGraphicsCommandQueue = nullptr;
 			unique_ptr<CommandList> mGraphicsCommandList = nullptr;
 			unique_ptr<SwapChain> mSwapChain = nullptr;
-			unique_ptr<RenderTargetDescriptorHeap> mRenderTargetDescriptorHeap = nullptr;
 			unique_ptr<Fence> mFence = nullptr;
+			unique_ptr<FrameResource> mFrameResource = nullptr;
 		};
 	}
 }

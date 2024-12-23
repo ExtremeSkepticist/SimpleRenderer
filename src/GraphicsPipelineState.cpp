@@ -9,7 +9,7 @@ namespace sr
 	namespace rendering
 	{
 		GraphicsPipelineState::GraphicsPipelineState(const RootSignature& rootSignature, InputElementLayout& inputElementLayout
-			, const Shader& vertexShader, const Shader& pixelShader, const GraphicsDevice& graphicsDevice) noexcept
+			, const Shader& vertexShader, const Shader& pixelShader) noexcept
 			: mD3d12GraphicsPipelineStateDescription({})
 			, mD3d12PipelineState(nullptr)
 		{
@@ -29,11 +29,9 @@ namespace sr
 			mD3d12GraphicsPipelineStateDescription.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 			
 			// Only using 1 render target for simplicity
-			mD3d12GraphicsPipelineStateDescription.NumRenderTargets = 1; // Is this okay?
+			mD3d12GraphicsPipelineStateDescription.NumRenderTargets = 2; // Changed to SwapChain.bufferCount
 			mD3d12GraphicsPipelineStateDescription.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 			mD3d12GraphicsPipelineStateDescription.SampleDesc.Count = 1;
-
-			graphicsDevice.CreateGraphicsPipelineState(*this);
 		}
 
 	}

@@ -92,9 +92,6 @@
     <ClCompile Include="src\InputElementLayout.cpp">
       <Filter>pipeline resources\src</Filter>
     </ClCompile>
-    <ClCompile Include="src\main.cpp">
-      <Filter>pipeline resources\src</Filter>
-    </ClCompile>
     <ClCompile Include="src\Mesh.cpp">
       <Filter>pipeline resources\src</Filter>
     </ClCompile>
@@ -127,6 +124,9 @@
     </ClCompile>
     <ClCompile Include="src\CommandList.cpp">
       <Filter>pipeline\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
+      <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

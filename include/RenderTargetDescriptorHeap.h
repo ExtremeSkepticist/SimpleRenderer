@@ -10,7 +10,7 @@ namespace sr
 		class RenderTargetDescriptorHeap : public DescriptorHeap
 		{
 		public:
-			RenderTargetDescriptorHeap(const uint32_t numDescriptors, SwapChain& swapChain) noexcept;
+			RenderTargetDescriptorHeap() noexcept;
 
 			RenderTargetDescriptorHeap() = delete;
 			RenderTargetDescriptorHeap(const RenderTargetDescriptorHeap&) = delete;

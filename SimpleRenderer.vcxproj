@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="packages\Microsoft.Direct3D.D3D12.1.614.1\build\native\Microsoft.Direct3D.D3D12.props" Condition="Exists('packages\Microsoft.Direct3D.D3D12.1.614.1\build\native\Microsoft.Direct3D.D3D12.props')" />
   <ItemGroup Label="ProjectConfigurations">
@@ -162,6 +162,7 @@ msbuild DirectXTex_Desktop_2022.sln -property:Configuration=$(Configuration)</Co
     <ClCompile Include="src\CommandQueue.cpp" />
     <ClCompile Include="src\ConstBuffer.cpp" />
     <ClCompile Include="src\Fence.cpp" />
+    <ClCompile Include="src\FrameResource.cpp" />
     <ClCompile Include="src\RenderingPipeline.cpp" />
     <ClCompile Include="src\Texture.cpp" />
     <ClCompile Include="src\DescriptorHeap.cpp" />
@@ -189,7 +190,9 @@ msbuild DirectXTex_Desktop_2022.sln -property:Configuration=$(Configuration)</Co
     <ClInclude Include="include\CommandQueue.h" />
     <ClInclude Include="include\CommandType.h" />
     <ClInclude Include="include\ConstBuffer.h" />
+    <ClInclude Include="include\DescriptorHandle.h" />
     <ClInclude Include="include\Fence.h" />
+    <ClInclude Include="include\FrameResource.h" />
     <ClInclude Include="include\RenderingPipeline.h" />
     <ClInclude Include="include\Texture.h" />
     <ClInclude Include="include\Common.h" />

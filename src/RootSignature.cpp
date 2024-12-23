@@ -5,9 +5,8 @@ namespace sr
 {
 	namespace rendering
 	{
-		RootSignature::RootSignature(const gsl::span<RootParameter> rootParameters, const GraphicsDevice& graphicsDevice) noexcept
-			: mD3dx12RootParameters({})
-			, mSerializedRootSignature(nullptr)
+		RootSignature::RootSignature(const gsl::span<RootParameter> rootParameters) noexcept
+			: mSerializedRootSignature(nullptr)
 			, mD3d12RootSignature(nullptr)
 		{
 			D3D12_STATIC_SAMPLER_DESC samplerDesc = {};
@@ -31,20 +30,12 @@ namespace sr
 				D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
 
 			const size_t numRootParameters = rootParameters.size();
-			mD3dx12RootParameters.reserve(numRootParameters);
-			for (gsl::index i = 0; i < numRootParameters; ++i)
-			{
-				mD3dx12RootParameters.emplace_back(rootParameters[i].GetD3dx12RootParameter());
-			}
 
 			CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc = {};
-			rootSignatureDesc.Init_1_1(numRootParameters, &gsl::at(mD3dx12RootParameters, 0), 1, &samplerDesc, rootSignautureFlags);
+			rootSignatureDesc.Init_1_1(numRootParameters, &rootParameters[0].GetD3dx12RootParameter(), 1, &samplerDesc, rootSignautureFlags);
 
 			D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1_1, &mSerializedRootSignature, nullptr);
-			assert(mSerializedRootSignature!= nullptr);
-
-			graphicsDevice.CreateRootSignature(*this);
-			Ensures(mD3d12RootSignature != nullptr);
+			Ensures(mSerializedRootSignature!= nullptr);
 		}
 	}
 }

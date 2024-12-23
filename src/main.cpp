@@ -25,6 +25,8 @@
 #include "SwapChain.h"
 #include "Texture.h"
 #include "RenderingPipeline.h"
+#include "FrameResource.h"
+#include "DescriptorHandle.h"
 
 #include <DirectXTex.h>
 
@@ -90,6 +92,8 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 	return 0;
 }
 
+// TODO: Shouldn't GraphicsDevice class just create the entire object, instead of only d3d12 interface?
+// e.g. initialize and return RootSignature object, instead of ID3D12RootSignature only
 void InitGraphicsPipeline(unique_ptr<sr::platform::PlatformWindow>& platformWindow, unique_ptr<sr::rendering::RenderingPipeline>& renderingPipeline, HINSTANCE hInstance, int nCmdShow)
 {
 	Expects(platformWindow == nullptr);
@@ -99,7 +103,7 @@ void InitGraphicsPipeline(unique_ptr<sr::platform::PlatformWindow>& platformWind
 	gsl::not_null<gsl::cwzstring> profilerPath = L"C:\\Program Files\\Microsoft PIX\\2405.15.002-OneBranch_release\\WinPixGpuCapturer.dll";
 	LoadLibrary(profilerPath);
 
-#pragma region Init Platform
+	// Init Platform
 	const HRESULT isComInitialized = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 	assert(SUCCEEDED(isComInitialized));
 
@@ -107,133 +111,11 @@ void InitGraphicsPipeline(unique_ptr<sr::platform::PlatformWindow>& platformWind
 	constexpr uint16_t frameHeight = 600;
 	gsl::not_null<gsl::cwzstring> windowName = L"SimpleRenderer";
 	platformWindow = make_unique<sr::platform::PlatformWindow>(frameWidth, frameHeight, windowName, hInstance, nCmdShow);
-#pragma endregion
 
-// TODO: Rendering Pipeline Class that contains below
-#pragma region Init Rendering Pipeline
+	// Init graphics pipeline
 	constexpr uint32_t swapChainBufferNum = 2; // TODO: change to 3
 	constexpr uint32_t infrastructureFlag = 0;
 	renderingPipeline = make_unique<sr::rendering::RenderingPipeline>(*platformWindow, swapChainBufferNum, infrastructureFlag);
-
-	const sr::rendering::GraphicsDevice& graphicsDevice = renderingPipeline->GetGraphicsDevice();
-	
-	// Create RenderTargetHeap
-	sr::rendering::RenderTargetDescriptorHeap renderTargetDescriptorHeap(swapChainBufferNum
-		, renderingPipeline->GetSwapChain(), graphicsDevice);
-	{
-		// TODO: to be removed
-		g_pRenderTargetViewHeap = renderTargetDescriptorHeap.GetDescriptorHeapOwnership();
-		g_pRenderTargets[0] = gsl::at(renderTargetDescriptorHeap.GetGpuResources(), 0).GetD3d12ResourceOwner();
-		g_pRenderTargets[1] = gsl::at(renderTargetDescriptorHeap.GetGpuResources(), 1).GetD3d12ResourceOwner();
-
-		assert(g_pRenderTargetViewHeap != nullptr);
-		assert(g_pRenderTargets[0] != nullptr);
-		assert(g_pRenderTargets[1] != nullptr);
-	}
-
-	// Initialize RootSignature
-	constexpr size_t numDescriptorRanges = 2;
-	constexpr size_t numConstBufferDescriptors = 1;
-	constexpr size_t numShaderResourceBufferDescriptors = 1;
-	sr::rendering::DescriptorRange descriptorRanges[numDescriptorRanges] = {
-		{ sr::rendering::DescriptorRange::RangeType::ConstBuffer, numConstBufferDescriptors }
-		, { sr::rendering::DescriptorRange::RangeType::ShaderResourceBuffer, numShaderResourceBufferDescriptors }
-	};
-
-	constexpr size_t numRootParameters = 1;
-	sr::rendering::RootParameter rootParameters[numRootParameters] = {
-		{ descriptorRanges }
-	};
-
-	sr::rendering::RootSignature rootSignature(rootParameters, graphicsDevice);
-	{
-		// TODO: to be removed
-		g_pRootSignature = rootSignature.GetD3d12RootSignatureOwner();
-		assert(g_pRootSignature != nullptr);
-
-		g_rootSignature = &rootSignature;
-	}
-#pragma endregion
-
-#pragma region Loading Graphics Resources
-
-	// Initialize Shader
-	//	- TODO: Use batch script instead to compile shaders
-	//	- TODO: Implement changing shaders upon using different effects
-	constexpr gsl::cwzstring vertexShaderPath = L"shaders\\BasicVertexShader.cso";
-	const sr::rendering::Shader vertexShader(vertexShaderPath);
-	constexpr gsl::cwzstring pixelShaderPath = L"shaders\\BasicPixelShader.cso";
-	const sr::rendering::Shader pixelShader(pixelShaderPath);
-
-	// Initialize input element layout
-	//	- TODO: Could this be moved into mesh class or somewhere else?
-	constexpr uint32_t inputSlot = 0;
-	sr::rendering::InputElementLayout inputElementLayout(inputSlot);
-	inputElementLayout.AddLayout("POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT);
-	inputElementLayout.AddLayout("TEXCOORDS", 0, DXGI_FORMAT_R32G32_FLOAT);
-	inputElementLayout.AddLayout("NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT);
-	inputElementLayout.AddLayout("TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT);
-	inputElementLayout.AddLayout("BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT);
-
-	sr::rendering::GraphicsPipelineState graphicsPipelineState(rootSignature, inputElementLayout, vertexShader, pixelShader, graphicsDevice);
-	{
-		// Todo: To be removed
-		g_pPipelineStateObj = graphicsPipelineState.GetPipelineStateOwner();
-		assert(g_pPipelineStateObj != nullptr);
-
-		g_graphicsPipelineState = &graphicsPipelineState;
-	}
-
-	// Create Shader Resource descriptor heap
-	constexpr uint32_t numDescriptors = 2;
-	sr::rendering::ShaderResourceDescriptorHeap shaderResourceDescriptorHeap(numDescriptors, graphicsDevice);
-	{
-		g_pDescriptorHeap = shaderResourceDescriptorHeap.GetDescriptorHeap();
-		assert(g_pDescriptorHeap != nullptr);
-
-		g_shaderResourceDescriptorHeap = &shaderResourceDescriptorHeap;
-	}
-
-	// Create Scene Camera
-	constexpr XMFLOAT3 cameraWorldPosition(0, 6, 0);
-	constexpr XMFLOAT3 worldUpDirection(0, 1, 0);
-	constexpr float fovAngle = 45.0f;
-	constexpr float nearZcoordinate = 0.01f;
-	constexpr float farZcoordinate = 100.0f;
-	const Camera sceneCamera(fovAngle, sr::platform::aspectRatio, nearZcoordinate, farZcoordinate, cameraWorldPosition);
-
-	// Create const buffer
-	XMMATRIX worldMatrix = XMMatrixMultiply(XMMatrixScaling(0.8f, 0.8f, 0.8f), XMMatrixRotationX(-0.8));
-	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixRotationY(-0.1));
-	
-	constexpr XMFLOAT3 modelWorldPosition(0, 4, 2);
-	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(modelWorldPosition.x, modelWorldPosition.y, modelWorldPosition.z));
-	worldMatrix = XMMatrixTranspose(worldMatrix);
-
-	const XMMATRIX viewMatrix = XMMatrixTranspose(sceneCamera.GetViewLookAtMatrixLh(cameraWorldPosition, modelWorldPosition, worldUpDirection));
-	const XMMATRIX projectionMatrix = XMMatrixTranspose(sceneCamera.GetProjectionMatrixLh());
-	const XMMATRIX unused = {};
-
-	const sr::rendering::CpuConstBufferData mappableConstBuffer{ worldMatrix, viewMatrix, projectionMatrix, unused };
-	sr::rendering::ConstBuffer constBuffer(L"Coord Transform Const buffer", mappableConstBuffer, graphicsDevice);
-	constexpr uint32_t constBufferViewDescriptorIndex = 0;
-	graphicsDevice.CreateConstBufferView(constBuffer, shaderResourceDescriptorHeap, constBufferViewDescriptorIndex);
-	{
-		g_pConstBuffer = constBuffer.GetGpuResource().GetD3d12ResourceOwner();
-		assert(g_pConstBuffer != nullptr);
-	}
-
-	// Create fence
-	sr::rendering::Fence fence(graphicsDevice);
-	{
-		g_pFence = fence.GetD3d12Fence();
-		g_FenceEvent = fence.GetFenceEventOwner();
-
-		assert(g_pFence != nullptr);
-		assert(g_FenceEvent != nullptr);
-	}
-
-#pragma endregion
 
 	Ensures(platformWindow != nullptr);
 	Ensures(renderingPipeline != nullptr);
@@ -287,10 +169,12 @@ void Render(sr::rendering::RenderingPipeline& renderingPipeline)
 	WaitForPreviousFrame();
 }
 
+// TODO: copy from cpuFrameResource to gpuFrameResource. For now, use only one FrameResource for simplicity
+// Create pipeline state object (a part of resource as well)
+// Load textures, create & bind resources to descriptor heap
 void LoadResources(gsl::not_null<gsl::czstring> modelPath, unique_ptr<sr::rendering::Model>& model, sr::rendering::RenderingPipeline& renderingPipeline)
 {
-	Expects(model == nullptr);
-
+	// Import Model
 	Assimp::Importer importer;
 	constexpr uint32_t importFlag = aiProcess_ConvertToLeftHanded | aiProcess_CalcTangentSpace;
 	const aiScene* scene = importer.ReadFile(modelPath, importFlag);
@@ -307,6 +191,56 @@ void LoadResources(gsl::not_null<gsl::czstring> modelPath, unique_ptr<sr::render
 	g_pCmdQueue = renderingPipeline.GetGraphicsCommandQueue().GetD3d12CommandQueue();
 	g_pSwapChain = renderingPipeline.GetSwapChain().GetDxgiSwapChain();
 	WaitForPreviousFrame();
+
+	sr::rendering::GraphicsDevice& device = renderingPipeline.GetGraphicsDevice();
+	sr::rendering::FrameResource cpuFrameResource(device);
+
+	// Create render target view
+	sr::rendering::SwapChain& swapChain = renderingPipeline.GetSwapChain();
+	sr::rendering::RenderTargetDescriptorHeap& renderTargetDescriptorHeap = cpuFrameResource.GetRenderTargetDescriptorHeap();
+	for (gsl::index i = 0; i < swapChain.GetBufferCount(); ++i)
+	{
+		sr::rendering::DescriptorHandle handle = renderTargetDescriptorHeap.GetHeapStartHandle();
+		sr::rendering::GpuResource resource;
+		swapChain.GetDxgiSwapChain()->GetBuffer(i, IID_PPV_ARGS(&resource.GetD3d12ResourceOwner()));
+		{
+			// TODO: replace this with better solution
+			std::wstring name(L"Render Target buffer %ld", i);
+			resource.GetD3d12Resource()->SetName(name.c_str());
+		}
+
+		device.CreateRenderTargetView(resource, handle);
+	}
+
+	// Create Scene Camera
+	constexpr XMFLOAT3 cameraWorldPosition(0, 6, 0);
+	constexpr XMFLOAT3 worldUpDirection(0, 1, 0);
+	constexpr float fovAngle = 45.0f;
+	constexpr float nearZcoordinate = 0.01f;
+	constexpr float farZcoordinate = 100.0f;
+	const Camera sceneCamera(fovAngle, sr::platform::aspectRatio, nearZcoordinate, farZcoordinate, cameraWorldPosition);
+
+	// Create const buffer
+	XMMATRIX worldMatrix = XMMatrixMultiply(XMMatrixScaling(0.8f, 0.8f, 0.8f), XMMatrixRotationX(-0.8));
+	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixRotationY(-0.1));
+
+	constexpr XMFLOAT3 modelWorldPosition(0, 4, 2);
+	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(modelWorldPosition.x, modelWorldPosition.y, modelWorldPosition.z));
+	worldMatrix = XMMatrixTranspose(worldMatrix);
+
+	const XMMATRIX viewMatrix = XMMatrixTranspose(sceneCamera.GetViewLookAtMatrixLh(cameraWorldPosition, modelWorldPosition, worldUpDirection));
+	const XMMATRIX projectionMatrix = XMMatrixTranspose(sceneCamera.GetProjectionMatrixLh());
+	const XMMATRIX unused = {};
+
+	const sr::rendering::CpuConstBufferData mappableConstBuffer{ worldMatrix, viewMatrix, projectionMatrix, unused };
+	sr::rendering::ConstBuffer constBuffer(L"Coord Transform Const buffer", mappableConstBuffer, device);
+	constexpr uint32_t constBufferViewDescriptorIndex = 0;
+
+	sr::rendering::DescriptorHandle descriptorHandle = cpuFrameResource.GetShaderResourceDescriptorHeap().GetHeapStartHandle();
+	device.CreateConstBufferView(constBuffer, descriptorHandle);
+
+	Expects(model == nullptr);
+
 
 #pragma region Create Albedo Texture
 	ScratchImage scratchImage = {};
