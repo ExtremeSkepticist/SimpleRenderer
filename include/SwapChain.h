@@ -48,6 +48,16 @@ namespace sr
 				return mDxgiSwapChain.Get();
 			}
 
+			inline uint32_t GetBackBufferIndex() const noexcept
+			{
+				return mCurrentBufferIndex;
+			}
+
+			inline void UpdateCurrentBackBufferIndex() noexcept
+			{
+				mCurrentBufferIndex = mDxgiSwapChain->GetCurrentBackBufferIndex();
+			}
+
 		private:
 			uint8_t mBufferCount = 0;
 			uint16_t mBufferWidth = 0;

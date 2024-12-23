@@ -40,7 +40,7 @@ namespace sr
 			void CreateGraphicsPipelineState(GraphicsPipelineState& graphicsPipelineState) const noexcept;
 			void CreateFence(Fence& fence) const noexcept;
 			void CreateConstBufferView(ConstBuffer& constBuffer, DescriptorHandle& descriptorHandle) const noexcept;
-			void CreateShaderResourceView(Texture& texture, ShaderResourceDescriptorHeap& shaderResourceDescriptorHeap, const gsl::index heapIndex) const noexcept;
+			void CreateShaderResourceView(Texture& texture, DescriptorHandle& descriptorHandle) const noexcept;
 
 			void CreateGpuResource(GpuResource& gpuResource) const noexcept;
 

@@ -31,7 +31,9 @@ namespace sr
 			RenderingPipeline& operator=(const RenderingPipeline&) = delete;
 			RenderingPipeline& operator=(RenderingPipeline&&) = delete;
 
-			void Update(const FrameResource& frameResource);
+			// TODO: Implement copy from CPU FrameResource to GPU FrameResource
+			void Update(const FrameResource& cpuFrameResource);
+			void Render(FrameResource& frameResource);
 
 			inline GraphicsDevice& GetGraphicsDevice() noexcept
 			{
@@ -53,7 +55,11 @@ namespace sr
 				return *mSwapChain;
 			}
 
+			void WaitForPreviousFrame() noexcept;
+
 		private:
+			void setupDefaultCommands(FrameResource& frameResource);
+
 			unique_ptr<GraphicsDevice> mGraphicsDevice = nullptr;
 			unique_ptr<CommandQueue> mGraphicsCommandQueue = nullptr;
 			unique_ptr<CommandList> mGraphicsCommandList = nullptr;

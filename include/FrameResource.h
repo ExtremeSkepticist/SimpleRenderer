@@ -13,6 +13,7 @@ namespace sr
 		class RenderTargetDescriptorHeap;
 		class RootSignature;
 		class ShaderResourceDescriptorHeap;
+		class Model;
 
 		struct DescriptorHandle;
 
@@ -22,6 +23,18 @@ namespace sr
 			FrameResource(const GraphicsDevice& device);
 			RenderTargetDescriptorHeap& GetRenderTargetDescriptorHeap();
 			ShaderResourceDescriptorHeap& GetShaderResourceDescriptorHeap();
+			GraphicsPipelineState& GetPipelineState();
+			RootSignature& GetRootSignature();
+
+			inline Model* getModel() const noexcept
+			{
+				return mModel;
+			}
+
+			inline void setModel(gsl::not_null<Model*> model) noexcept
+			{
+				mModel = model;
+			}
 
 		private:
 			void createDefaultRootSignature(const GraphicsDevice& device);
@@ -31,6 +44,8 @@ namespace sr
 			unique_ptr<RootSignature> mRootSignature = nullptr;
 			unique_ptr<GraphicsPipelineState> mPipelineState = nullptr;
 			unique_ptr<ShaderResourceDescriptorHeap> mShaderResourceDescriptorHeap = nullptr;
+
+			Model* mModel = nullptr;
 		};
 	}
 }

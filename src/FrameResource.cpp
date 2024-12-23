@@ -17,6 +17,7 @@ namespace sr
 			, mRootSignature(nullptr)
 			, mPipelineState(nullptr)
 			, mShaderResourceDescriptorHeap(make_unique< ShaderResourceDescriptorHeap>())
+			, mModel(nullptr)
 		{
 			device.CreateDescriptorHeap(*mRenderTargetDescriptorHeap);
 			createDefaultRootSignature(device);
@@ -27,9 +28,20 @@ namespace sr
 		{
 			return *mRenderTargetDescriptorHeap;
 		}
+		
 		ShaderResourceDescriptorHeap& FrameResource::GetShaderResourceDescriptorHeap()
 		{
 			return *mShaderResourceDescriptorHeap;
+		}
+
+		GraphicsPipelineState& FrameResource::GetPipelineState()
+		{
+			return *mPipelineState;
+		}
+
+		RootSignature& FrameResource::GetRootSignature()
+		{
+			return *mRootSignature;
 		}
 
 		void FrameResource::createDefaultRootSignature(const GraphicsDevice& device)

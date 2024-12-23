@@ -34,44 +34,11 @@
 #include "Common.h"
 #include "Model.h"
 
-using namespace Microsoft::WRL;
-
-// D3D12 resources
-const size_t g_FRAME_WIDTH = 800;
-const size_t g_FRAME_HEIGHT = 600;
-const size_t g_FRAME_COUNT = 2;
-size_t g_CurrentFrameIndex = 0;
-CD3DX12_VIEWPORT g_Viewport(0.0f, 0.0f, static_cast<float>(g_FRAME_WIDTH), static_cast<float>(g_FRAME_HEIGHT));
-CD3DX12_RECT g_ScissorRect(0, 0, static_cast<LONG>(g_FRAME_WIDTH), static_cast<LONG>(g_FRAME_HEIGHT));
-ComPtr<IDXGISwapChain3> g_pSwapChain = nullptr;
-ComPtr<ID3D12Resource> g_pRenderTargets[g_FRAME_COUNT];
-ComPtr<ID3D12DescriptorHeap> g_pRenderTargetViewHeap = nullptr;
-ComPtr<ID3D12DescriptorHeap> g_pDescriptorHeap = nullptr;
-ComPtr<ID3D12Resource> g_pConstBuffer = nullptr;
-ComPtr<ID3D12CommandAllocator> g_pCmdAllocator = nullptr;
-ComPtr<ID3D12GraphicsCommandList> g_pCmdList = nullptr;
-ComPtr<ID3D12CommandQueue> g_pCmdQueue = nullptr;
-ComPtr<ID3D12RootSignature> g_pRootSignature = nullptr;
-ComPtr<ID3D12PipelineState> g_pPipelineStateObj = nullptr;
-ComPtr<ID3D12Fence> g_pFence = nullptr;
-UINT64 g_FenceValue = 1;
-HANDLE g_FenceEvent = nullptr;
-sr::rendering::Model* g_Model = nullptr;
-
-ComPtr<ID3D12Resource> g_pAlbedoTexture = nullptr;
-ComPtr<ID3D12Resource> g_pAlbedoUploadHeap = nullptr;
-
-void WaitForPreviousFrame();
-
 void InitGraphicsPipeline(unique_ptr<sr::platform::PlatformWindow>& platformWindow, unique_ptr<sr::rendering::RenderingPipeline>& renderingPipeline, HINSTANCE hInstance, int nCmdShow);
-void LoadResources(gsl::not_null<gsl::czstring> modelPath, unique_ptr<sr::rendering::Model>& model, sr::rendering::RenderingPipeline& renderingPipeline);
+void LoadResources(gsl::not_null<gsl::czstring> modelPath, unique_ptr<sr::rendering::Model>& model
+	, sr::rendering::RenderingPipeline& renderingPipeline, unique_ptr<sr::rendering::FrameResource>& frameResource);
 void Update();
 void Render(sr::rendering::RenderingPipeline& renderingPipeline);
-
-// TODO: To be removed
-sr::rendering::ShaderResourceDescriptorHeap* g_shaderResourceDescriptorHeap = nullptr;
-sr::rendering::GraphicsPipelineState* g_graphicsPipelineState = nullptr;
-sr::rendering::RootSignature* g_rootSignature = nullptr;
 
 // TODO: deprecate d3dx12 and implement its own initialization
 int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int nCmdShow)
@@ -83,10 +50,11 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 
 	gsl::czstring modelPath = "resources\\DamagedHelmet.gltf";
 	unique_ptr<sr::rendering::Model> model = nullptr;
-	LoadResources(modelPath, model, *renderingPipeline);
+	unique_ptr<sr::rendering::FrameResource> frameResource = nullptr;
+	LoadResources(modelPath, model, *renderingPipeline, frameResource);
 
 	while (true) {
-		Render(*renderingPipeline);
+		renderingPipeline->Render(*frameResource);
 	}
 
 	return 0;
@@ -121,58 +89,11 @@ void InitGraphicsPipeline(unique_ptr<sr::platform::PlatformWindow>& platformWind
 	Ensures(renderingPipeline != nullptr);
 }
 
-void Render(sr::rendering::RenderingPipeline& renderingPipeline)
-{
-	sr::rendering::CommandList& graphicsCommandList = renderingPipeline.GetGraphicsCommandList();
-
-	graphicsCommandList.ResetCommandList();
-	graphicsCommandList.SetPipelineState(*g_graphicsPipelineState);
-	graphicsCommandList.SetGraphicsRootSignature(*g_rootSignature);
-
-	ID3D12DescriptorHeap* pArrayDescriptorHeaps[] = { g_pDescriptorHeap.Get() };
-	g_pCmdList->SetDescriptorHeaps(_countof(pArrayDescriptorHeaps), pArrayDescriptorHeaps);
-
-	g_pCmdList->SetGraphicsRootDescriptorTable(0, g_pDescriptorHeap->GetGPUDescriptorHandleForHeapStart());
-	g_pCmdList->RSSetViewports(1, &g_Viewport);
-	g_pCmdList->RSSetScissorRects(1, &g_ScissorRect);
-	
-	CD3DX12_RESOURCE_BARRIER resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(g_pRenderTargets[g_CurrentFrameIndex].Get()
-		, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
-	g_pCmdList->ResourceBarrier(1, &resourceBarrier);
-	{
-		CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(g_pRenderTargetViewHeap->GetCPUDescriptorHandleForHeapStart(), g_CurrentFrameIndex, renderingPipeline.GetGraphicsDevice().GetD3d12Device()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV));
-		g_pCmdList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
-
-		const FLOAT pClearingColor[] = { 0, 0, 0, 0 };
-		g_pCmdList->ClearRenderTargetView(rtvHandle, pClearingColor, 0, nullptr);
-		g_pCmdList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-		const size_t MESH_COUNT = g_Model->GetMeshes().size();
-		auto& meshes = g_Model->GetMeshes();
-		for (size_t i = 0; i < MESH_COUNT; ++i)
-		{
-			g_pCmdList->IASetVertexBuffers(0, 1, &meshes[i]->GetVertexBufferView());
-			g_pCmdList->IASetIndexBuffer(&meshes[i]->GetIndexBufferView());
-			g_pCmdList->DrawIndexedInstanced(meshes[i]->GetIndicesNum(), 1, 0, 0, 0);
-		}
-	}
-	resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(g_pRenderTargets[g_CurrentFrameIndex].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
-	g_pCmdList->ResourceBarrier(1, &resourceBarrier);
-	
-	g_pCmdList->Close();
-
-	ID3D12CommandList* cmdListArray[]  = { g_pCmdList.Get()};
-	g_pCmdQueue->ExecuteCommandLists(_countof(cmdListArray), cmdListArray);
-
-	g_pSwapChain->Present(1, 0);
-
-	WaitForPreviousFrame();
-}
-
 // TODO: copy from cpuFrameResource to gpuFrameResource. For now, use only one FrameResource for simplicity
 // Create pipeline state object (a part of resource as well)
 // Load textures, create & bind resources to descriptor heap
-void LoadResources(gsl::not_null<gsl::czstring> modelPath, unique_ptr<sr::rendering::Model>& model, sr::rendering::RenderingPipeline& renderingPipeline)
+void LoadResources(gsl::not_null<gsl::czstring> modelPath, unique_ptr<sr::rendering::Model>& model
+	, sr::rendering::RenderingPipeline& renderingPipeline, unique_ptr<sr::rendering::FrameResource>& frameResource)
 {
 	// Import Model
 	Assimp::Importer importer;
@@ -182,22 +103,16 @@ void LoadResources(gsl::not_null<gsl::czstring> modelPath, unique_ptr<sr::render
 
 	constexpr XMFLOAT3 modelWorldPosition(0, 4, 2);
 	model = make_unique<sr::rendering::Model>(*scene, modelWorldPosition, renderingPipeline.GetGraphicsDevice()); 	// TODO: Implement recursive initialization when needed
-	{
-		// To be removed
-		g_Model = model.get();
-	}
 
-	// TODO: to be removed
-	g_pCmdQueue = renderingPipeline.GetGraphicsCommandQueue().GetD3d12CommandQueue();
-	g_pSwapChain = renderingPipeline.GetSwapChain().GetDxgiSwapChain();
-	WaitForPreviousFrame();
+	renderingPipeline.WaitForPreviousFrame();
 
 	sr::rendering::GraphicsDevice& device = renderingPipeline.GetGraphicsDevice();
-	sr::rendering::FrameResource cpuFrameResource(device);
+	frameResource = make_unique<sr::rendering::FrameResource>(device);
+	frameResource->setModel(model.get());
 
 	// Create render target view
 	sr::rendering::SwapChain& swapChain = renderingPipeline.GetSwapChain();
-	sr::rendering::RenderTargetDescriptorHeap& renderTargetDescriptorHeap = cpuFrameResource.GetRenderTargetDescriptorHeap();
+	sr::rendering::RenderTargetDescriptorHeap& renderTargetDescriptorHeap = frameResource->GetRenderTargetDescriptorHeap();
 	for (gsl::index i = 0; i < swapChain.GetBufferCount(); ++i)
 	{
 		sr::rendering::DescriptorHandle handle = renderTargetDescriptorHeap.GetHeapStartHandle();
@@ -236,20 +151,19 @@ void LoadResources(gsl::not_null<gsl::czstring> modelPath, unique_ptr<sr::render
 	sr::rendering::ConstBuffer constBuffer(L"Coord Transform Const buffer", mappableConstBuffer, device);
 	constexpr uint32_t constBufferViewDescriptorIndex = 0;
 
-	sr::rendering::DescriptorHandle descriptorHandle = cpuFrameResource.GetShaderResourceDescriptorHeap().GetHeapStartHandle();
+	sr::rendering::DescriptorHandle descriptorHandle = frameResource->GetShaderResourceDescriptorHeap().GetHeapStartHandle();
 	device.CreateConstBufferView(constBuffer, descriptorHandle);
 
 	Expects(model == nullptr);
 
-
-#pragma region Create Albedo Texture
+	// Create and bind albedo texture
 	ScratchImage scratchImage = {};
 	const HRESULT hasLoaded = LoadFromDDSFile(L"resources\\albedo.dds", DDS_FLAGS_NONE, nullptr, scratchImage);
 	assert(SUCCEEDED(hasLoaded));
 
-	const sr::rendering::GraphicsDevice& graphicsDevice = renderingPipeline.GetGraphicsDevice();
-	sr::rendering::Texture albedoTexture(gsl::make_not_null<gsl::cwzstring>(L"albedo"), make_unique<ScratchImage>(std::move(scratchImage)), graphicsDevice);
-	graphicsDevice.CreateShaderResourceView(albedoTexture, *g_shaderResourceDescriptorHeap, 1);
+	sr::rendering::Texture albedoTexture(gsl::make_not_null<gsl::cwzstring>(L"albedo"), make_unique<ScratchImage>(std::move(scratchImage)), device);
+	descriptorHandle.cpuHandle.ptr += device.GetShaderResourceDescriptorHeapHandleIncrementSize();
+	device.CreateShaderResourceView(albedoTexture, descriptorHandle);
 
 	sr::rendering::CommandList& graphicsCommandList = renderingPipeline.GetGraphicsCommandList();
 	graphicsCommandList.ResetCommandList();
@@ -257,25 +171,7 @@ void LoadResources(gsl::not_null<gsl::czstring> modelPath, unique_ptr<sr::render
 	graphicsCommandList.FinishRecordingCommands();
 	renderingPipeline.GetGraphicsCommandQueue().ExecuteCommandList(graphicsCommandList);
 
-	WaitForPreviousFrame();
-#pragma endregion
+	renderingPipeline.WaitForPreviousFrame();
 
 	Ensures(model != nullptr);
-}
-
-//TODO: lOOK AT D3D12HellOFrameBuffering
-void WaitForPreviousFrame()
-{
-	const UINT CURRENT_FENCE_VALUE = g_FenceValue++;
-	g_pCmdQueue->Signal(g_pFence.Get(), CURRENT_FENCE_VALUE);
-
-	// Wait until fence-signalling command is run by command queue
-	if (g_pFence->GetCompletedValue() < CURRENT_FENCE_VALUE)
-	{
-		// Wait until fence event is run, after fence reached the specified value
-		g_pFence->SetEventOnCompletion(CURRENT_FENCE_VALUE, g_FenceEvent);
-		WaitForSingleObject(g_FenceEvent, INFINITE);
-	}
-
-	g_CurrentFrameIndex = g_pSwapChain->GetCurrentBackBufferIndex();
 }

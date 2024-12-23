@@ -186,10 +186,8 @@ namespace sr
 			mD3d12Device->CreateConstantBufferView(&constBufferDesc, descriptorHandle.cpuHandle);
 		}
 
-		void GraphicsDevice::CreateShaderResourceView(Texture& texture, ShaderResourceDescriptorHeap& shaderResourceDescriptorHeap, const gsl::index heapIndex) const noexcept
+		void GraphicsDevice::CreateShaderResourceView(Texture& texture, DescriptorHandle& descriptorHandle) const noexcept
 		{
-			Expects(heapIndex < shaderResourceDescriptorHeap.GetDescriptorNum());
-
 			const DirectX::TexMetadata textureMetaData = texture.GetMetaData();
 			D3D12_SHADER_RESOURCE_VIEW_DESC srvViewDesc = {};
 			{
@@ -199,11 +197,9 @@ namespace sr
 				srvViewDesc.Texture2D.MipLevels = 1;
 
 			}
-			D3D12_CPU_DESCRIPTOR_HANDLE srvHandle = shaderResourceDescriptorHeap.GetCpuHeapStartHandle();
-			srvHandle.ptr += mD3d12Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
 			ID3D12Resource* resource = texture.GetDefaultHeapResource().GetD3d12Resource();
-			mD3d12Device->CreateShaderResourceView(resource, &srvViewDesc, srvHandle);
+			mD3d12Device->CreateShaderResourceView(resource, &srvViewDesc, descriptorHandle.cpuHandle);
 		}
 
 
