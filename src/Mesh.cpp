@@ -52,11 +52,11 @@ namespace sr
 			assert(mVertices.size() == assimpMesh.mNumVertices);
 			assert(mIndices.size() == mIndicesNum);
 
-			// TODO: Use DEFAULT heap instead
+			// TODO: Create DEFAULT heap and copy thess to it
 			// Initialize vertex buffer
 			const size_t vertexDataSize = sizeof(sr::rendering::Mesh::Vertex) * mVerticesNum;
-			mVertexBufferResource = make_unique<GpuResource>(L"Vertex buffer resource", vertexDataSize
-				, ResourceHeapType::Upload, ResourceState::GenericRead, graphicsDevice);
+			mVertexBufferResource = make_unique<GpuResource>(L"Vertex buffer resource", vertexDataSize, ResourceHeapType::Upload, ResourceState::GenericRead);
+			graphicsDevice.CreateGpuResource(*mVertexBufferResource);
 			{
 				uint8_t* mappedMemoryForVertexBuffer = nullptr;
 				CD3DX12_RANGE readRange(0, 0);
@@ -73,8 +73,8 @@ namespace sr
 
 			// Initialize index buffer
 			const size_t indexDataSize = mIndicesNum * indexSize;
-			mIndexBufferResource = make_unique<GpuResource>(L"Index buffer resource", indexDataSize
-				, ResourceHeapType::Upload, ResourceState::GenericRead, graphicsDevice);
+			mIndexBufferResource = make_unique<GpuResource>(L"Index buffer resource", indexDataSize, ResourceHeapType::Upload, ResourceState::GenericRead);
+			graphicsDevice.CreateGpuResource(*mIndexBufferResource);
 			{
 				uint8_t* mappedMemoryForIndexBuffer = nullptr;
 				CD3DX12_RANGE readRange(0, 0);

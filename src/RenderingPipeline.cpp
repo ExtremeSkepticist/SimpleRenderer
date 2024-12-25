@@ -38,12 +38,6 @@ namespace sr
 			mGraphicsDevice->CreateFence(*mFence);
 		}
 
-		// TODO: Implement copy from CPU FrameResource to GPU FrameResource
-	/*	void RenderingPipeline::Update(const FrameResource& frameResource)
-		{
-
-		}*/
-
 		void RenderingPipeline::Render(FrameResource& frameResource)
 		{
 			setupDefaultCommands(frameResource);

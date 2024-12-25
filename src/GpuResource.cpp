@@ -6,8 +6,8 @@ namespace sr
 {
 	namespace rendering
 	{
-		GpuResource::GpuResource(gsl::not_null<gsl::cwzstring> resourceName, const size_t bufferSize, const ResourceHeapType& resourceHeapType
-			, const ResourceState& resourceState, const GraphicsDevice& graphicsDevice) noexcept
+		GpuResource::GpuResource(gsl::not_null<gsl::cwzstring> resourceName, const size_t bufferSize
+			, const ResourceHeapType& resourceHeapType, const ResourceState& resourceState) noexcept
 			: mResourceName(resourceName)
 			, mResourceState(resourceState)
 			, mResourceDesc({})
@@ -29,14 +29,10 @@ namespace sr
 				default:
 					assert(false);
 			}
-
-			graphicsDevice.CreateGpuResource(*this);
-
-			Ensures(mD3d12Resource != nullptr);
 		}
 
-		GpuResource::GpuResource(gsl::not_null<gsl::cwzstring> resourceName, const DirectX::Image& image, const ResourceHeapType& resourceHeapType
-			, const ResourceState& resourceState, const GraphicsDevice& graphicsDevice) noexcept
+		GpuResource::GpuResource(gsl::not_null<gsl::cwzstring> resourceName, const DirectX::Image& image
+			, const ResourceHeapType& resourceHeapType, const ResourceState& resourceState) noexcept
 			: mResourceName(resourceName)
 			, mResourceState(resourceState)
 			, mResourceDesc({})
@@ -56,10 +52,6 @@ namespace sr
 			default:
 				assert(false);
 			}
-
-			graphicsDevice.CreateGpuResource(*this);
-
-			Ensures(mD3d12Resource != nullptr);
 		}
 
 	}

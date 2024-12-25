@@ -39,7 +39,7 @@ void LoadResources(gsl::not_null<gsl::czstring> modelPath, unique_ptr<sr::render
 	, sr::rendering::RenderingPipeline& renderingPipeline
 	, unique_ptr<sr::rendering::FrameResource>& frameResource
 	, unique_ptr<sr::rendering::Texture>& albedo, unique_ptr<sr::rendering::ConstBuffer>& constBuffer);
-void Update();
+void Update(sr::rendering::FrameResource& frameResource);
 void Render(sr::rendering::RenderingPipeline& renderingPipeline);
 
 // TODO: deprecate d3dx12 and implement its own initialization
@@ -100,7 +100,7 @@ void LoadResources(gsl::not_null<gsl::czstring> modelPath, unique_ptr<sr::render
 	, unique_ptr<sr::rendering::FrameResource>& frameResource
 	, unique_ptr<sr::rendering::Texture>& albedo, unique_ptr<sr::rendering::ConstBuffer>& constBuffer)
 {
-	sr::rendering::GraphicsDevice& device = renderingPipeline.GetGraphicsDevice();
+	const sr::rendering::GraphicsDevice& device = renderingPipeline.GetGraphicsDevice();
 	frameResource = make_unique<sr::rendering::FrameResource>(device);
 	
 	// Import Model

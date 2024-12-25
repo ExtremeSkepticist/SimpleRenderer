@@ -35,11 +35,11 @@ namespace sr
 		public:
 			GpuResource() = default;
 			
-			GpuResource(gsl::not_null<gsl::cwzstring> resourceName, const size_t bufferSize, const ResourceHeapType& resourceHeapType
-				, const ResourceState& resourceState, const GraphicsDevice& graphicsDevice) noexcept;
+			GpuResource(gsl::not_null<gsl::cwzstring> resourceName, const size_t bufferSize
+				, const ResourceHeapType& resourceHeapType, const ResourceState& resourceState) noexcept;
 
-			GpuResource(gsl::not_null<gsl::cwzstring> resourceName, const DirectX::Image& image, const ResourceHeapType& resourceHeapType
-				, const ResourceState& resourceState, const GraphicsDevice& graphicsDevice) noexcept;
+			GpuResource(gsl::not_null<gsl::cwzstring> resourceName, const DirectX::Image& image
+				, const ResourceHeapType& resourceHeapType, const ResourceState& resourceState) noexcept;
 
 			inline gsl::not_null<gsl::cwzstring> GetResourceName() const noexcept
 			{

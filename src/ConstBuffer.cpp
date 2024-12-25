@@ -9,8 +9,10 @@ namespace sr
 			, const GraphicsDevice& graphicsDevice) noexcept
 			: mMappedMemoryForCpuConstBufferData(nullptr)
 			, mCpuConstBufferData({ cpuConstBufferData })
-			, mGpuResource(name, GetCpuConstBufferDataSize(), ResourceHeapType::Upload, ResourceState::GenericRead, graphicsDevice)
+			, mGpuResource(name, GetCpuConstBufferDataSize(), ResourceHeapType::Upload, ResourceState::GenericRead)
 		{
+			graphicsDevice.CreateGpuResource(mGpuResource);
+
 			// Map and initialize the constant buffer. We don't unmap this until the
 			// app closes. Keeping things mapped for the lifetime of the resource is okay.
 			const CD3DX12_RANGE constBufferReadRange(0, 0);
