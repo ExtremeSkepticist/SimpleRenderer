@@ -4,74 +4,212 @@
     <Filter Include="src">
       <UniqueIdentifier>{2dcd35c7-b496-49d4-acba-7aff0fd98e1a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="resources">
-      <UniqueIdentifier>{e3dba42a-c70c-4d3d-8e2c-a36e1be67fb1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include">
-      <UniqueIdentifier>{edfcbe41-9e8b-494b-85ff-04741d54ec5b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="shaders">
       <UniqueIdentifier>{9e547c3a-8de9-4f5b-a627-4ddec78671b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utility">
+      <UniqueIdentifier>{1be21562-b3a7-4295-ac44-4bc05ce2ae6e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="pipeline resources">
+      <UniqueIdentifier>{ee9605cc-698a-4d64-a31c-93d05dd4a85c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="pipeline resources\include">
+      <UniqueIdentifier>{10531fd8-930c-4e4e-a94e-162c7e98f831}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="pipeline resources\src">
+      <UniqueIdentifier>{bed7dcc8-2adc-441d-811f-a9b337a0948b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="pipeline">
+      <UniqueIdentifier>{78dd69fc-a1c2-4a1e-8594-321cf070a0ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="pipeline\include">
+      <UniqueIdentifier>{9f9b7591-886e-4764-be00-4dfe2a741214}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="pipeline\src">
+      <UniqueIdentifier>{1a67fca8-973c-4798-88a9-52b09df68181}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="assets">
+      <UniqueIdentifier>{e3dba42a-c70c-4d3d-8e2c-a36e1be67fb1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <Image Include="resources\albedo.jpg">
-      <Filter>resources</Filter>
+      <Filter>assets</Filter>
     </Image>
     <Image Include="resources\ambient_occlusion.jpg">
-      <Filter>resources</Filter>
+      <Filter>assets</Filter>
     </Image>
     <Image Include="resources\emissive.jpg">
-      <Filter>resources</Filter>
+      <Filter>assets</Filter>
     </Image>
     <Image Include="resources\metal_roughness.jpg">
-      <Filter>resources</Filter>
+      <Filter>assets</Filter>
     </Image>
     <Image Include="resources\normal.jpg">
-      <Filter>resources</Filter>
+      <Filter>assets</Filter>
     </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\DamagedHelmet.bin">
-      <Filter>resources</Filter>
+      <Filter>assets</Filter>
     </None>
     <None Include="resources\DamagedHelmet.gltf">
-      <Filter>resources</Filter>
+      <Filter>assets</Filter>
     </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Fence.cpp">
+      <Filter>pipeline\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GraphicsDevice.cpp">
+      <Filter>pipeline\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\RenderingPipeline.cpp">
+      <Filter>pipeline\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SwapChain.cpp">
+      <Filter>pipeline\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Camera.cpp">
+      <Filter>pipeline resources\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ConstBuffer.cpp">
+      <Filter>pipeline resources\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DescriptorHeap.cpp">
+      <Filter>pipeline resources\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\DescriptorRange.cpp">
+      <Filter>pipeline resources\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GpuResource.cpp">
+      <Filter>pipeline resources\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\GraphicsPipelineState.cpp">
+      <Filter>pipeline resources\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\InputElementLayout.cpp">
+      <Filter>pipeline resources\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Mesh.cpp">
+      <Filter>pipeline resources\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Model.cpp">
+      <Filter>pipeline resources\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PlatformWindow.cpp">
+      <Filter>pipeline resources\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\RenderTargetDescriptorHeap.cpp">
+      <Filter>pipeline resources\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\RootParameter.cpp">
+      <Filter>pipeline resources\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\RootSignature.cpp">
+      <Filter>pipeline resources\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Shader.cpp">
+      <Filter>pipeline resources\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ShaderResourceDescriptorHeap.cpp">
+      <Filter>pipeline resources\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Texture.cpp">
+      <Filter>pipeline resources\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CommandQueue.cpp">
+      <Filter>pipeline\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\CommandList.cpp">
+      <Filter>pipeline\src</Filter>
+    </ClCompile>
     <ClCompile Include="src\main.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\Mesh.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Model.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Camera.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\PlatformWindow.cpp">
-      <Filter>src</Filter>
+    <ClCompile Include="src\FrameResource.cpp" />
+    <ClCompile Include="src\DepthStencilDescriptorHeap.cpp">
+      <Filter>pipeline resources\src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\Mesh.h">
-      <Filter>include</Filter>
+    <ClInclude Include="include\Fence.h">
+      <Filter>pipeline\include</Filter>
     </ClInclude>
-    <ClInclude Include="include\Model.h">
-      <Filter>include</Filter>
+    <ClInclude Include="include\GraphicsDevice.h">
+      <Filter>pipeline\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\RenderingPipeline.h">
+      <Filter>pipeline\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\SwapChain.h">
+      <Filter>pipeline\include</Filter>
     </ClInclude>
     <ClInclude Include="include\Common.h">
-      <Filter>include</Filter>
+      <Filter>utility</Filter>
     </ClInclude>
     <ClInclude Include="include\Camera.h">
-      <Filter>include</Filter>
+      <Filter>pipeline resources\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ConstBuffer.h">
+      <Filter>pipeline resources\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\DescriptorHeap.h">
+      <Filter>pipeline resources\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\DescriptorRange.h">
+      <Filter>pipeline resources\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\GpuResource.h">
+      <Filter>pipeline resources\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\GraphicsPipelineState.h">
+      <Filter>pipeline resources\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\InputElementLayout.h">
+      <Filter>pipeline resources\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Mesh.h">
+      <Filter>pipeline resources\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Model.h">
+      <Filter>pipeline resources\include</Filter>
     </ClInclude>
     <ClInclude Include="include\PlatformWindow.h">
-      <Filter>include</Filter>
+      <Filter>pipeline resources\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\RenderTargetDescriptorHeap.h">
+      <Filter>pipeline resources\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\RootParameter.h">
+      <Filter>pipeline resources\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\RootSignature.h">
+      <Filter>pipeline resources\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Shader.h">
+      <Filter>pipeline resources\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ShaderResourceDescriptorHeap.h">
+      <Filter>pipeline resources\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Texture.h">
+      <Filter>pipeline resources\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\CommandQueue.h">
+      <Filter>pipeline\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\CommandType.h">
+      <Filter>pipeline\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\CommandList.h">
+      <Filter>pipeline\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\DescriptorHandle.h" />
+    <ClInclude Include="include\FrameResource.h" />
+    <ClInclude Include="include\DepthStencilDescriptorHeap.h">
+      <Filter>pipeline resources\include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

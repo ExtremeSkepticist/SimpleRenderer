@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="packages\Microsoft.Direct3D.D3D12.1.614.1\build\native\Microsoft.Direct3D.D3D12.props" Condition="Exists('packages\Microsoft.Direct3D.D3D12.1.614.1\build\native\Microsoft.Direct3D.D3D12.props')" />
   <ItemGroup Label="ProjectConfigurations">
@@ -73,6 +73,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnablePREfast>true</EnablePREfast>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -110,6 +111,7 @@ msbuild DirectXTex_Desktop_2022.sln -property:Configuration=$(Configuration)</Co
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <EnablePREfast>true</EnablePREfast>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -156,17 +158,61 @@ msbuild DirectXTex_Desktop_2022.sln -property:Configuration=$(Configuration)</Co
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Camera.cpp" />
+    <ClCompile Include="src\CommandList.cpp" />
+    <ClCompile Include="src\CommandQueue.cpp" />
+    <ClCompile Include="src\ConstBuffer.cpp" />
+    <ClCompile Include="src\DepthStencilDescriptorHeap.cpp" />
+    <ClCompile Include="src\Fence.cpp" />
+    <ClCompile Include="src\FrameResource.cpp" />
+    <ClCompile Include="src\RenderingPipeline.cpp" />
+    <ClCompile Include="src\Texture.cpp" />
+    <ClCompile Include="src\DescriptorHeap.cpp" />
+    <ClCompile Include="src\DescriptorRange.cpp" />
+    <ClCompile Include="src\GpuResource.cpp" />
+    <ClCompile Include="src\GraphicsDevice.cpp" />
+    <ClCompile Include="src\InputElementLayout.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\Model.cpp" />
+    <ClCompile Include="src\GraphicsPipelineState.cpp" />
     <ClCompile Include="src\PlatformWindow.cpp" />
+    <ClCompile Include="src\RenderTargetDescriptorHeap.cpp" />
+    <ClCompile Include="src\RootParameter.cpp" />
+    <ClCompile Include="src\RootSignature.cpp" />
+    <ClCompile Include="src\Shader.cpp">
+      <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</PreprocessToFile>
+    </ClCompile>
+    <ClCompile Include="src\ShaderResourceDescriptorHeap.cpp" />
+    <ClCompile Include="src\SwapChain.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Camera.h" />
+    <ClInclude Include="include\CommandList.h" />
+    <ClInclude Include="include\CommandQueue.h" />
+    <ClInclude Include="include\CommandType.h" />
+    <ClInclude Include="include\ConstBuffer.h" />
+    <ClInclude Include="include\DepthStencilDescriptorHeap.h" />
+    <ClInclude Include="include\DescriptorHandle.h" />
+    <ClInclude Include="include\Fence.h" />
+    <ClInclude Include="include\FrameResource.h" />
+    <ClInclude Include="include\RenderingPipeline.h" />
+    <ClInclude Include="include\Texture.h" />
     <ClInclude Include="include\Common.h" />
+    <ClInclude Include="include\DescriptorHeap.h" />
+    <ClInclude Include="include\DescriptorRange.h" />
+    <ClInclude Include="include\GpuResource.h" />
+    <ClInclude Include="include\GraphicsDevice.h" />
+    <ClInclude Include="include\InputElementLayout.h" />
     <ClInclude Include="include\Mesh.h" />
     <ClInclude Include="include\Model.h" />
+    <ClInclude Include="include\GraphicsPipelineState.h" />
     <ClInclude Include="include\PlatformWindow.h" />
+    <ClInclude Include="include\RenderTargetDescriptorHeap.h" />
+    <ClInclude Include="include\RootParameter.h" />
+    <ClInclude Include="include\RootSignature.h" />
+    <ClInclude Include="include\Shader.h" />
+    <ClInclude Include="include\ShaderResourceDescriptorHeap.h" />
+    <ClInclude Include="include\SwapChain.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\BasicPixelShader.hlsl">
