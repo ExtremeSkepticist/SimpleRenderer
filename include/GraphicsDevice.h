@@ -49,7 +49,7 @@ namespace sr
 			void CreateConstBufferView(ConstBuffer& constBuffer, DescriptorHandle& descriptorHandle) const noexcept;
 			void CreateShaderResourceView(Texture& texture, DescriptorHandle& descriptorHandle) const noexcept;
 
-			void CreateGpuResource(GpuResource& gpuResource) const noexcept;
+			void CreateGpuResource(GpuResource& gpuResource, const bool isDepthBuffer = false) const noexcept;
 
 			inline uint32_t GetRenderTargetHeapHandleIncrementSize() const noexcept
 			{

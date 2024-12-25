@@ -229,7 +229,7 @@ namespace sr
 		}
 
 
-		void GraphicsDevice::CreateGpuResource(GpuResource& gpuResource) const noexcept
+		void GraphicsDevice::CreateGpuResource(GpuResource& gpuResource, const bool isDepthBuffer) const noexcept
 		{
 			const CD3DX12_RESOURCE_DESC resourceDesc = gpuResource.GetResourceDescription();
 			const CD3DX12_HEAP_PROPERTIES resourceHeapProps = gpuResource.GetResourceHeapProperties();
@@ -250,8 +250,17 @@ namespace sr
 			case ResourceState::RenderTarget:
 				d3d12ResourceState = D3D12_RESOURCE_STATE_RENDER_TARGET;
 				break;
+			case ResourceState::DepthWrite:
+				d3d12ResourceState = D3D12_RESOURCE_STATE_DEPTH_WRITE;
+				break;
 			default:
 				assert(false);
+			}
+
+			// TODO: copy from FrameResource.cpp
+			if (isDepthBuffer)
+			{
+
 			}
 
 			ComPtr<ID3D12Resource>& d3d12ResourceOwner = gpuResource.GetD3d12ResourceOwner();

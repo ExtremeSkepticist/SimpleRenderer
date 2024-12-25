@@ -24,6 +24,7 @@ namespace sr
 		{
 			None
 			, Common
+			, DepthWrite
 			, GenericRead
 			, CopyDestination
 			, RenderTarget
