@@ -20,11 +20,43 @@ namespace sr
 			, mPipelineState(nullptr)
 			, mShaderResourceDescriptorHeap(make_unique< ShaderResourceDescriptorHeap>())
 			, mModel(nullptr)
+			, mDsvHeap(nullptr)
 		{
 			device.CreateDescriptorHeap(*mRenderTargetDescriptorHeap);
 			device.CreateDescriptorHeap(*mShaderResourceDescriptorHeap);
 			createDefaultRootSignature(device);
 			createDefaultPipelineState(device);
+
+			// TODO: abstract this
+			D3D12_DESCRIPTOR_HEAP_DESC dsvDesc = {};
+			dsvDesc.NumDescriptors = 1;
+			dsvDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+			dsvDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+			device.GetD3d12Device()->CreateDescriptorHeap(&dsvDesc, IID_PPV_ARGS(&mDsvHeap));
+			Ensures(mDsvHeap != nullptr);
+
+			D3D12_DEPTH_STENCIL_VIEW_DESC dsvViewDesc = {};
+			dsvViewDesc.Format = DXGI_FORMAT_D32_FLOAT;
+			dsvViewDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+			dsvViewDesc.Flags = D3D12_DSV_FLAG_NONE;
+
+			D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
+			depthOptimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
+			depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
+			depthOptimizedClearValue.DepthStencil.Stencil = 0;
+			
+			constexpr uint16_t frameWidth = 800;
+			constexpr uint16_t frameHeight = 600;
+			auto props = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+			auto desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, frameWidth, frameHeight, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+			device.GetD3d12Device()->CreateCommittedResource(
+				&props, D3D12_HEAP_FLAG_NONE, &desc
+				, D3D12_RESOURCE_STATE_DEPTH_WRITE, &depthOptimizedClearValue
+				, IID_PPV_ARGS(&mDsvBuffer)
+			);
+			assert(mDsvBuffer != nullptr);
+		
+			device.GetD3d12Device()->CreateDepthStencilView(mDsvBuffer.Get(), &dsvViewDesc, mDsvHeap->GetCPUDescriptorHandleForHeapStart());
 		}
 
 		RenderTargetDescriptorHeap& FrameResource::GetRenderTargetDescriptorHeap()

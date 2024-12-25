@@ -36,6 +36,10 @@ namespace sr
 				mModel = model;
 			}
 
+			// TODO: abstract this
+			ComPtr<ID3D12DescriptorHeap> mDsvHeap = nullptr;
+			ComPtr<ID3D12Resource> mDsvBuffer = nullptr;
+
 		private:
 			void createDefaultRootSignature(const GraphicsDevice& device);
 			void createDefaultPipelineState(const GraphicsDevice& device);

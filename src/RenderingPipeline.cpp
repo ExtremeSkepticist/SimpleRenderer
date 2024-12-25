@@ -88,11 +88,14 @@ namespace sr
 			{
 				ID3D12DescriptorHeap* rtvHeap = frameResource.GetRenderTargetDescriptorHeap().GetDescriptorHeap();
 				CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart(), currentBackBufferIndex, mGraphicsDevice->GetRenderTargetHeapHandleIncrementSize());
-				d3d12CommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
+				
+				DescriptorHandle dsvHandle = { frameResource.mDsvHeap->GetCPUDescriptorHandleForHeapStart(), 0 };
+				d3d12CommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle.cpuHandle);
 
 				const FLOAT pClearingColor[] = { 0, 0, 0, 0 };
 				d3d12CommandList->ClearRenderTargetView(rtvHandle, pClearingColor, 0, nullptr);
 				d3d12CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+				d3d12CommandList->ClearDepthStencilView(dsvHandle.cpuHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 				gsl::not_null<Model*> model = frameResource.getModel();
 				const size_t MESH_COUNT = model->GetMeshes().size();
