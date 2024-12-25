@@ -16,6 +16,16 @@ namespace sr
 			heapDescription.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 		}
 
+		DescriptorHandle ShaderResourceDescriptorHeap::GetHeapStartHandle() const noexcept
+		{
+			DescriptorHandle handle = {
+				GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart()
+				, GetDescriptorHeap()->GetGPUDescriptorHandleForHeapStart()
+			};
+
+			return handle;
+		}
+
 		//void ShaderResourceDescriptorHeap::BindResource(GraphicsDevice& graphicsDevice)
 		//{
 

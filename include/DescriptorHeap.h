@@ -44,15 +44,7 @@ namespace sr
 			}
 
 
-			inline DescriptorHandle GetHeapStartHandle() const noexcept
-			{
-				DescriptorHandle handle = { 
-					mD3d12DescriptorHeap->GetCPUDescriptorHandleForHeapStart()
-					, mD3d12DescriptorHeap->GetGPUDescriptorHandleForHeapStart()
-				};
-
-				return handle ;
-			}
+			virtual DescriptorHandle GetHeapStartHandle() const noexcept = 0;
 
 			inline size_t GetCapacity() const noexcept
 			{

@@ -16,8 +16,8 @@ namespace sr
 		class Model
 		{
 		public:
-			Model() = delete;
 			Model(const aiScene& assimpScene, const XMFLOAT3 worldCoords, const GraphicsDevice& graphicsDevice) noexcept;
+			Model() = delete;
 			~Model() = default;
 
 			inline vector<unique_ptr<Mesh>>& GetMeshes() noexcept

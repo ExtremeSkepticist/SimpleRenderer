@@ -17,5 +17,15 @@ namespace sr
 			heapDescription.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 			heapDescription.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 		}
+
+		DescriptorHandle RenderTargetDescriptorHeap::GetHeapStartHandle() const noexcept
+		{
+			DescriptorHandle handle = {
+				GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart()
+				, 0
+			};
+
+			return handle;
+		}
 	}
 }

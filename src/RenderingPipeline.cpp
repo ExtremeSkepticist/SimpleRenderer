@@ -39,10 +39,10 @@ namespace sr
 		}
 
 		// TODO: Implement copy from CPU FrameResource to GPU FrameResource
-		void RenderingPipeline::Update(const FrameResource& frameResource)
+	/*	void RenderingPipeline::Update(const FrameResource& frameResource)
 		{
 
-		}
+		}*/
 
 		void RenderingPipeline::Render(FrameResource& frameResource)
 		{
@@ -120,12 +120,14 @@ namespace sr
 		//TODO: lOOK AT D3D12HellOFrameBuffering
 		void RenderingPipeline::WaitForPreviousFrame() noexcept
 		{
-			const UINT currentFenceValue = mFence->GetCurrentFenceValue();
+			uint64_t currentFenceValue = mFence->GetCurrentFenceValue() + 1;
 			ID3D12Fence* d3d12Fence = mFence->GetD3d12Fence();
+
+			// TODO: abstract this
 			mGraphicsCommandQueue->GetD3d12CommandQueue()->Signal(d3d12Fence, currentFenceValue);
 
 			// Wait until fence-signalling command is run by command queue
-			if (d3d12Fence->GetCompletedValue() < currentFenceValue)
+			if (mFence->GetCurrentFenceValue() < currentFenceValue)
 			{
 				// Wait until fence event is run, after fence reached the specified value
 				HANDLE& event = mFence->GetFenceEventOwner();

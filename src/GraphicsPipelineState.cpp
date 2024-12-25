@@ -30,6 +30,7 @@ namespace sr
 			// Only using 1 render target for simplicity
 			mD3d12GraphicsPipelineStateDescription.NumRenderTargets = 2; // Changed to SwapChain.bufferCount
 			mD3d12GraphicsPipelineStateDescription.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+			mD3d12GraphicsPipelineStateDescription.RTVFormats[1] = DXGI_FORMAT_R8G8B8A8_UNORM;
 			mD3d12GraphicsPipelineStateDescription.SampleDesc.Count = 1;
 		}
 

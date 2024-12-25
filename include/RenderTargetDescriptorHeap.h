@@ -18,6 +18,8 @@ namespace sr
 			RenderTargetDescriptorHeap& operator=(RenderTargetDescriptorHeap&&) = delete;
 			~RenderTargetDescriptorHeap() = default;
 
+			DescriptorHandle GetHeapStartHandle() const noexcept override;
+
 			void BindResource(GraphicsDevice& graphicsDevice) override final
 			{
 			}

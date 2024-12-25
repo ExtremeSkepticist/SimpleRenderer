@@ -36,13 +36,11 @@ namespace sr
 
 		void CommandList::RecordCommandCopyResource(GpuResource& destResource, const GpuResource& srcResource, const D3D12_SUBRESOURCE_DATA& subResourceData) noexcept
 		{
-			const auto transitionBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
-				destResource.GetD3d12Resource(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-			mD3d12CommandList->ResourceBarrier(1, &transitionBarrier);
-			
 			UpdateSubresources(mD3d12CommandList.Get(), destResource.GetD3d12Resource(), srcResource.GetD3d12Resource(), 0, 0, 1, &subResourceData); // GraphicsDevice
-
-			mD3d12CommandList->Close();
+			
+			const auto transitionBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
+				destResource.GetD3d12Resource(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+			mD3d12CommandList->ResourceBarrier(1, &transitionBarrier);
 		}
 
 		void CommandList::SetPipelineState(const GraphicsPipelineState& graphicsPipelineState) const noexcept

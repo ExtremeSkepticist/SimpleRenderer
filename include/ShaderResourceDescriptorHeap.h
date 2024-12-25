@@ -12,6 +12,8 @@ namespace sr
 			ShaderResourceDescriptorHeap() noexcept;
 			~ShaderResourceDescriptorHeap() = default;
 
+			DescriptorHandle GetHeapStartHandle() const noexcept override;
+
 			void BindResource(GraphicsDevice& graphicsDevice) override final
 			{
 			}

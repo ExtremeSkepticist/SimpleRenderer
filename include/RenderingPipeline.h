@@ -32,7 +32,7 @@ namespace sr
 			RenderingPipeline& operator=(RenderingPipeline&&) = delete;
 
 			// TODO: Implement copy from CPU FrameResource to GPU FrameResource
-			void Update(const FrameResource& cpuFrameResource);
+			// void Update(const FrameResource& cpuFrameResource);
 			void Render(FrameResource& frameResource);
 
 			inline GraphicsDevice& GetGraphicsDevice() noexcept
