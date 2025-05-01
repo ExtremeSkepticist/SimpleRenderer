@@ -68,7 +68,7 @@ namespace sr
 			d3d12CommandList->RSSetViewports(1, &viewport);
 			d3d12CommandList->RSSetScissorRects(1, &scissorRect);
 
-			// Transition RT state
+			// Transition RTV state
 			ID3D12Resource* backBuffer = nullptr;
 			const uint32_t currentBackBufferIndex = mSwapChain->GetBackBufferIndex();
 			mSwapChain->GetDxgiSwapChain()->GetBuffer(currentBackBufferIndex, IID_PPV_ARGS(&backBuffer));

@@ -18,7 +18,7 @@ namespace sr
 			: mRenderTargetDescriptorHeap(make_unique<RenderTargetDescriptorHeap>())
 			, mRootSignature(nullptr)
 			, mPipelineState(nullptr)
-			, mShaderResourceDescriptorHeap(make_unique< ShaderResourceDescriptorHeap>())
+			, mShaderResourceDescriptorHeap(make_unique<ShaderResourceDescriptorHeap>())
 			, mModel(nullptr)
 			, mDsvHeap(nullptr)
 		{
@@ -84,10 +84,10 @@ namespace sr
 			// Initialize RootSignature
 			constexpr size_t numDescriptorRanges = 2;
 			constexpr size_t numConstBufferDescriptors = 1;
-			constexpr size_t numShaderResourceBufferDescriptors = 1;
+			constexpr size_t numShaderResourceDescriptors = 2; // albedo + normal
 			sr::rendering::DescriptorRange descriptorRanges[numDescriptorRanges] = {
 				{ sr::rendering::DescriptorRange::RangeType::ConstBuffer, numConstBufferDescriptors }
-				, { sr::rendering::DescriptorRange::RangeType::ShaderResourceBuffer, numShaderResourceBufferDescriptors }
+				, { sr::rendering::DescriptorRange::RangeType::ShaderResourceBuffer, numShaderResourceDescriptors }
 			};
 
 			constexpr size_t numRootParameters = 1;
@@ -113,7 +113,7 @@ namespace sr
 			constexpr uint32_t inputSlot = 0;
 			sr::rendering::InputElementLayout inputElementLayout(inputSlot);
 			inputElementLayout.AddLayout("POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT);
-			inputElementLayout.AddLayout("TEXCOORDS", 0, DXGI_FORMAT_R32G32_FLOAT);
+			inputElementLayout.AddLayout("TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT);
 			inputElementLayout.AddLayout("NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT);
 			inputElementLayout.AddLayout("TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT);
 			inputElementLayout.AddLayout("BINORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT);

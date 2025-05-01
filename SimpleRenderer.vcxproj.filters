@@ -211,6 +211,9 @@
     <ClInclude Include="include\DepthStencilDescriptorHeap.h">
       <Filter>pipeline resources\include</Filter>
     </ClInclude>
+    <ClInclude Include="include\LightSource.h">
+      <Filter>pipeline resources\include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\BasicVertexShader.hlsl">

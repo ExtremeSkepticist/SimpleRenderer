@@ -9,17 +9,21 @@ cbuffer ConstBuffer
 struct VS_INPUT
 {
     float3 mPosition : POSITION;
-    float2 mTexCoords : TEXCOORDS0;
-    float3 mNormal : NORMAL0;
-    float3 mTangent : NORMAL0;
-    float3 mBiNormal : NORMAL0;
+    float2 mTexCoords : TEXCOORD0;
+    float3 mNormal : NORMAL;
+    float3 mTangent : TANGENT;
+    float3 mBiNormal : BINORMAL;
 };
 
 struct VS_OUTPUT
 {
     float4 mPosition : SV_POSITION;
-    float2 mTexCoords : TEXCOORD0;
-    float mDiffuse : TEXCOORD1;
+    float2 mTexCoord : TEXCOORD0;
+    float3 mLightDir : TEXCOORD1;
+    float mLightDistance : TEXCOORD2;
+    float3 mNormal : TEXCOORD3;
+    float3 mTangent : TEXCOORD4;
+    float3 mBiNormal : TEXCOORD5;
 };
 
 // TODO: fixing calculating color
@@ -30,18 +34,19 @@ VS_OUTPUT main(VS_INPUT input)
     VS_OUTPUT output;
     output.mPosition = mul(vertex, mWorldMatrix);
     
-    float3 lightPosition = float3(0, 5, -1); // TODO: update light position in main.cpp
-    float3 lightDir = normalize(float3(lightPosition - output.mPosition.xyz));
+    float3 pointLightPosition = float3(0, 6, 2); // TODO: update light position in main.cpp
+    float3 surfaceToLightVector = float3(pointLightPosition - output.mPosition.xyz);
+    output.mLightDir = normalize(surfaceToLightVector);
+    output.mLightDistance = length(surfaceToLightVector);
     
     output.mPosition = mul(output.mPosition, mViewMatrix);
     output.mPosition = mul(output.mPosition, mProjectionMatrix);
 
-    float3x3 Tbn = float3x3(input.mTangent, input.mBiNormal, input.mNormal);
-    Tbn = transpose(Tbn);
-    float3 worldNormal = mul(Tbn, input.mNormal);
+    output.mTangent = input.mTangent;
+    output.mNormal = input.mNormal;
+    output.mBiNormal = input.mBiNormal;
 
-    output.mTexCoords = input.mTexCoords;
-    output.mDiffuse = dot(lightDir, worldNormal);
-    
+    output.mTexCoord = input.mTexCoords;
+
     return output;
 }

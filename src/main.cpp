@@ -27,6 +27,7 @@
 #include "RenderingPipeline.h"
 #include "FrameResource.h"
 #include "DescriptorHandle.h"
+#include "LightSource.h"
 
 #include <DirectXTex.h>
 
@@ -38,7 +39,9 @@ void InitGraphicsPipeline(unique_ptr<sr::platform::PlatformWindow>& platformWind
 void LoadResources(gsl::not_null<gsl::czstring> modelPath, unique_ptr<sr::rendering::Model>& model
 	, sr::rendering::RenderingPipeline& renderingPipeline
 	, unique_ptr<sr::rendering::FrameResource>& frameResource
-	, unique_ptr<sr::rendering::Texture>& albedo, unique_ptr<sr::rendering::ConstBuffer>& constBuffer);
+	, unique_ptr<sr::rendering::Texture>& albedo
+	, unique_ptr<sr::rendering::Texture>& normal
+	, unique_ptr<sr::rendering::ConstBuffer>& constBuffer);
 void Update(sr::rendering::FrameResource& frameResource);
 void Render(sr::rendering::RenderingPipeline& renderingPipeline);
 
@@ -53,9 +56,10 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 	gsl::czstring modelPath = "resources\\DamagedHelmet.gltf";
 	unique_ptr<sr::rendering::Model> model = nullptr;
 	unique_ptr<sr::rendering::FrameResource> frameResource = nullptr;
-	unique_ptr<sr::rendering::Texture> texture = nullptr;
+	unique_ptr<sr::rendering::Texture> albedo = nullptr;
+	unique_ptr<sr::rendering::Texture> normal = nullptr;
 	unique_ptr<sr::rendering::ConstBuffer> constBuffer = nullptr;
-	LoadResources(modelPath, model, *renderingPipeline, frameResource, texture, constBuffer);
+	LoadResources(modelPath, model, *renderingPipeline, frameResource, albedo, normal, constBuffer);
 
 	while (true) {
 		renderingPipeline->Render(*frameResource);
@@ -71,8 +75,8 @@ void InitGraphicsPipeline(unique_ptr<sr::platform::PlatformWindow>& platformWind
 	Expects(platformWindow == nullptr);
 	Expects(renderingPipeline == nullptr);
 
-	//gsl::not_null<gsl::cwzstring> profilerPath = L"C:\\Program Files\\Microsoft PIX\\2405.15.002-OneBranch_release\\WinPixGpuCapturer.dll";
-	//LoadLibrary(profilerPath);
+	gsl::not_null<gsl::cwzstring> profilerPath = L"C:\\Program Files\\Microsoft PIX\\2405.15.002-OneBranch_release\\WinPixGpuCapturer.dll";
+	LoadLibrary(profilerPath);
 
 	// Init Platform
 	const HRESULT isComInitialized = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
@@ -98,7 +102,8 @@ void InitGraphicsPipeline(unique_ptr<sr::platform::PlatformWindow>& platformWind
 void LoadResources(gsl::not_null<gsl::czstring> modelPath, unique_ptr<sr::rendering::Model>& model
 	, sr::rendering::RenderingPipeline& renderingPipeline
 	, unique_ptr<sr::rendering::FrameResource>& frameResource
-	, unique_ptr<sr::rendering::Texture>& albedo, unique_ptr<sr::rendering::ConstBuffer>& constBuffer)
+	, unique_ptr<sr::rendering::Texture>& albedo, unique_ptr<sr::rendering::Texture>& normal
+	, unique_ptr<sr::rendering::ConstBuffer>& constBuffer)
 {
 	const sr::rendering::GraphicsDevice& device = renderingPipeline.GetGraphicsDevice();
 	frameResource = make_unique<sr::rendering::FrameResource>(device);
@@ -150,6 +155,10 @@ void LoadResources(gsl::not_null<gsl::czstring> modelPath, unique_ptr<sr::render
 	const XMMATRIX viewMatrix = XMMatrixTranspose(sceneCamera.GetViewLookAtMatrixLh(cameraWorldPosition, modelWorldPosition, worldUpDirection));
 	const XMMATRIX projectionMatrix = XMMatrixTranspose(sceneCamera.GetProjectionMatrixLh());
 	const XMMATRIX unused = {};
+	
+	//constexpr XMFLOAT3 pointLightSourceWorldPosition(modelWorldPosition.x, modelWorldPosition.y + 3, modelWorldPosition.z);
+	// TODO: Store the max light intensity somewhere
+	// const sr::rendering::PointLight lightSource = { XMFLOAT3(1, 1, 1), 100, pointLightSourceWorldPosition };
 
 	const sr::rendering::CpuConstBufferData mappableConstBuffer{ worldMatrix, viewMatrix, projectionMatrix, unused };
 	constBuffer = make_unique<sr::rendering::ConstBuffer>(L"Coord Transform Const buffer", mappableConstBuffer, device);
@@ -159,7 +168,9 @@ void LoadResources(gsl::not_null<gsl::czstring> modelPath, unique_ptr<sr::render
 
 	// Create and bind albedo texture
 	ScratchImage scratchImage = {};
-	const HRESULT hasLoaded = LoadFromDDSFile(L"resources\\albedo.dds", DDS_FLAGS_NONE, nullptr, scratchImage);
+	// Pre-converted .dds file by texconv.exe
+	// TODO: automate the conversion process somehow
+	HRESULT hasLoaded = LoadFromDDSFile(L"resources\\albedo.dds", DDS_FLAGS_NONE, nullptr, scratchImage);
 	assert(SUCCEEDED(hasLoaded));
 
 	albedo = make_unique<sr::rendering::Texture>(gsl::make_not_null<gsl::cwzstring>(L"albedo"), make_unique<ScratchImage>(std::move(scratchImage)), device);
@@ -173,6 +184,22 @@ void LoadResources(gsl::not_null<gsl::czstring> modelPath, unique_ptr<sr::render
 	renderingPipeline.GetGraphicsCommandQueue().ExecuteCommandList(graphicsCommandList);
 
 	renderingPipeline.WaitForPreviousFrame();
+
+	// Create and bind Normal map
+	ScratchImage normalScratchImage = {};
+	hasLoaded = LoadFromDDSFile(L"resources\\normal.dds", DDS_FLAGS_NONE, nullptr, normalScratchImage);
+	assert(SUCCEEDED(hasLoaded));
+	
+	normal = make_unique<sr::rendering::Texture>(gsl::make_not_null<gsl::cwzstring>(L"normal")
+		, make_unique<ScratchImage>(std::move(normalScratchImage)), device);
+	descriptorHandle.cpuHandle.ptr += device.GetShaderResourceDescriptorHeapHandleIncrementSize();
+	device.CreateShaderResourceView(*normal, descriptorHandle);
+
+	graphicsCommandList.ResetCommandList();
+	graphicsCommandList.RecordCommandCopyResource(normal->GetDefaultHeapResource(),
+		normal->GetUploadHeapResource(), normal->GetSubResourceData());
+	graphicsCommandList.FinishRecordingCommands();
+	renderingPipeline.GetGraphicsCommandQueue().ExecuteCommandList(graphicsCommandList);
 
 	Ensures(model != nullptr);
 }

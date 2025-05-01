@@ -195,6 +195,7 @@ msbuild DirectXTex_Desktop_2022.sln -property:Configuration=$(Configuration)</Co
     <ClInclude Include="include\DescriptorHandle.h" />
     <ClInclude Include="include\Fence.h" />
     <ClInclude Include="include\FrameResource.h" />
+    <ClInclude Include="include\LightSource.h" />
     <ClInclude Include="include\RenderingPipeline.h" />
     <ClInclude Include="include\Texture.h" />
     <ClInclude Include="include\Common.h" />
