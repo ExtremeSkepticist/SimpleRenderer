@@ -16,13 +16,15 @@ struct PS_OUTPUT
 
 Texture2D g_Albedo : register(t0);
 Texture2D g_Normal : register(t1);
+Texture2D g_metallicRoughness : register(t2);
+
 SamplerState g_Sampler : register(s0);
 
 PS_OUTPUT main(PS_INPUT input)
 {
     PS_OUTPUT output;
     float4 lightColor = saturate(1.0f);
-    float lightIntensity = 5.0f;
+    float lightIntensity = 2.0f;
     lightIntensity *= rcp(input.mLightDistance * input.mLightDistance); // how to apply light intensity in rendering equation?
     
         
@@ -31,7 +33,7 @@ PS_OUTPUT main(PS_INPUT input)
     Tbn = transpose(Tbn);
     float3 worldNormal = mul(Tbn, normal);
     float lambert = dot(normal, input.mLightDir);
-    float4 albedo = g_Albedo.Sample(g_Sampler, input.mTexCoord);
+    float4 albedo = float4(g_metallicRoughness.Sample(g_Sampler, input.mTexCoord).xyz, 1.0f);
     
     albedo = albedo * lightColor * lightIntensity;
     albedo = albedo * lambert;

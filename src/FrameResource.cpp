@@ -84,7 +84,7 @@ namespace sr
 			// Initialize RootSignature
 			constexpr size_t numDescriptorRanges = 2;
 			constexpr size_t numConstBufferDescriptors = 1;
-			constexpr size_t numShaderResourceDescriptors = 2; // albedo + normal
+			constexpr size_t numShaderResourceDescriptors = 3; // albedo + normal + metallicRoughness
 			sr::rendering::DescriptorRange descriptorRanges[numDescriptorRanges] = {
 				{ sr::rendering::DescriptorRange::RangeType::ConstBuffer, numConstBufferDescriptors }
 				, { sr::rendering::DescriptorRange::RangeType::ShaderResourceBuffer, numShaderResourceDescriptors }

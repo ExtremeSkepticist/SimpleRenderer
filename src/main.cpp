@@ -41,6 +41,7 @@ void LoadResources(gsl::not_null<gsl::czstring> modelPath, unique_ptr<sr::render
 	, unique_ptr<sr::rendering::FrameResource>& frameResource
 	, unique_ptr<sr::rendering::Texture>& albedo
 	, unique_ptr<sr::rendering::Texture>& normal
+	, unique_ptr<sr::rendering::Texture>& metallicRoughness
 	, unique_ptr<sr::rendering::ConstBuffer>& constBuffer);
 void Update(sr::rendering::FrameResource& frameResource);
 void Render(sr::rendering::RenderingPipeline& renderingPipeline);
@@ -58,8 +59,9 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 	unique_ptr<sr::rendering::FrameResource> frameResource = nullptr;
 	unique_ptr<sr::rendering::Texture> albedo = nullptr;
 	unique_ptr<sr::rendering::Texture> normal = nullptr;
+	unique_ptr<sr::rendering::Texture> metallicRoughness = nullptr;
 	unique_ptr<sr::rendering::ConstBuffer> constBuffer = nullptr;
-	LoadResources(modelPath, model, *renderingPipeline, frameResource, albedo, normal, constBuffer);
+	LoadResources(modelPath, model, *renderingPipeline, frameResource, albedo, normal, metallicRoughness, constBuffer);
 
 	while (true) {
 		renderingPipeline->Render(*frameResource);
@@ -102,7 +104,9 @@ void InitGraphicsPipeline(unique_ptr<sr::platform::PlatformWindow>& platformWind
 void LoadResources(gsl::not_null<gsl::czstring> modelPath, unique_ptr<sr::rendering::Model>& model
 	, sr::rendering::RenderingPipeline& renderingPipeline
 	, unique_ptr<sr::rendering::FrameResource>& frameResource
-	, unique_ptr<sr::rendering::Texture>& albedo, unique_ptr<sr::rendering::Texture>& normal
+	, unique_ptr<sr::rendering::Texture>& albedo
+	, unique_ptr<sr::rendering::Texture>& normal
+	, unique_ptr<sr::rendering::Texture>& metallicRoughness
 	, unique_ptr<sr::rendering::ConstBuffer>& constBuffer)
 {
 	const sr::rendering::GraphicsDevice& device = renderingPipeline.GetGraphicsDevice();
@@ -114,7 +118,7 @@ void LoadResources(gsl::not_null<gsl::czstring> modelPath, unique_ptr<sr::render
 	const aiScene* scene = importer.ReadFile(modelPath, importFlag);
 	assert(scene != nullptr);
 
-	constexpr XMFLOAT3 modelWorldPosition(0, 4, 2);
+	constexpr XMFLOAT3 modelWorldPosition(0, 4, 2); // original: (0, 4, 2)
 	model = make_unique<sr::rendering::Model>(*scene, modelWorldPosition, device); 	// TODO: Implement recursive initialization when needed
 	frameResource->setModel(model.get());
 
@@ -200,6 +204,25 @@ void LoadResources(gsl::not_null<gsl::czstring> modelPath, unique_ptr<sr::render
 		normal->GetUploadHeapResource(), normal->GetSubResourceData());
 	graphicsCommandList.FinishRecordingCommands();
 	renderingPipeline.GetGraphicsCommandQueue().ExecuteCommandList(graphicsCommandList);
+
+	renderingPipeline.WaitForPreviousFrame();
+
+	ScratchImage metallicRoughnessScratchImage = {};
+	hasLoaded = LoadFromDDSFile(L"resources\\metal_roughness.dds", DDS_FLAGS_NONE, nullptr, metallicRoughnessScratchImage);
+	assert(SUCCEEDED(hasLoaded));
+
+	metallicRoughness = make_unique<sr::rendering::Texture>(gsl::make_not_null<gsl::cwzstring>(L"metallicRoughness")
+		, make_unique<ScratchImage>(std::move(metallicRoughnessScratchImage)), device);
+	descriptorHandle.cpuHandle.ptr += device.GetShaderResourceDescriptorHeapHandleIncrementSize();
+	device.CreateShaderResourceView(*metallicRoughness, descriptorHandle);
+
+	graphicsCommandList.ResetCommandList();
+	graphicsCommandList.RecordCommandCopyResource(metallicRoughness->GetDefaultHeapResource(),
+		metallicRoughness->GetUploadHeapResource(), metallicRoughness->GetSubResourceData());
+	graphicsCommandList.FinishRecordingCommands();
+	renderingPipeline.GetGraphicsCommandQueue().ExecuteCommandList(graphicsCommandList);
+
+	renderingPipeline.WaitForPreviousFrame();
 
 	Ensures(model != nullptr);
 }

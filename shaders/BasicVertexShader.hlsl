@@ -34,7 +34,7 @@ VS_OUTPUT main(VS_INPUT input)
     VS_OUTPUT output;
     output.mPosition = mul(vertex, mWorldMatrix);
     
-    float3 pointLightPosition = float3(0, 6, 2); // TODO: update light position in main.cpp
+    float3 pointLightPosition = float3(1, 5, 2); // TODO: update light position in main.cpp
     float3 surfaceToLightVector = float3(pointLightPosition - output.mPosition.xyz);
     output.mLightDir = normalize(surfaceToLightVector);
     output.mLightDistance = length(surfaceToLightVector);
