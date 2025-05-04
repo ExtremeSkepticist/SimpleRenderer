@@ -19,11 +19,10 @@ struct VS_OUTPUT
 {
     float4 mPosition : SV_POSITION;
     float2 mTexCoord : TEXCOORD0;
-    float3 mLightDir : TEXCOORD1;
-    float mLightDistance : TEXCOORD2;
     float3 mNormal : TEXCOORD3;
     float3 mTangent : TEXCOORD4;
     float3 mBiNormal : TEXCOORD5;
+    float3 mWorldPosition : TEXCOORD6;
 };
 
 // TODO: fixing calculating color
@@ -33,18 +32,14 @@ VS_OUTPUT main(VS_INPUT input)
 
     VS_OUTPUT output;
     output.mPosition = mul(vertex, mWorldMatrix);
-    
-    float3 pointLightPosition = float3(1, 5, 2); // TODO: update light position in main.cpp
-    float3 surfaceToLightVector = float3(pointLightPosition - output.mPosition.xyz);
-    output.mLightDir = normalize(surfaceToLightVector);
-    output.mLightDistance = length(surfaceToLightVector);
+    output.mWorldPosition = output.mPosition.xyz;
     
     output.mPosition = mul(output.mPosition, mViewMatrix);
     output.mPosition = mul(output.mPosition, mProjectionMatrix);
 
-    output.mTangent = input.mTangent;
-    output.mNormal = input.mNormal;
-    output.mBiNormal = input.mBiNormal;
+    output.mTangent = mul(input.mTangent, (float3x3)mWorldMatrix);
+    output.mNormal = mul(input.mNormal, (float3x3)mWorldMatrix);
+    output.mBiNormal = mul(input.mBiNormal, (float3x3)mWorldMatrix);
 
     output.mTexCoord = input.mTexCoords;
 
