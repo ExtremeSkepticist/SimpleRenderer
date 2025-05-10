@@ -7,6 +7,7 @@
 #include <dxgi1_6.h>
 #include <DirectXMath.h>
 
+#include "Application.h"
 #include "ConstBuffer.h"
 #include "CommandQueue.h"
 #include "DescriptorRange.h"
@@ -25,7 +26,7 @@
 #include "SwapChain.h"
 #include "Texture.h"
 #include "RenderingPipeline.h"
-#include "FrameResource.h"
+#include "FrameBuilder.h"
 #include "DescriptorHandle.h"
 #include "LightSource.h"
 
@@ -35,20 +36,28 @@
 #include "Common.h"
 #include "Model.h"
 
+void Update();
+void Render();
+
 void InitGraphicsPipeline(unique_ptr<sr::platform::PlatformWindow>& platformWindow, unique_ptr<sr::rendering::RenderingPipeline>& renderingPipeline, int nCmdShow);
 void LoadResources(gsl::not_null<gsl::czstring> modelPath, unique_ptr<sr::rendering::Model>& model
 	, sr::rendering::RenderingPipeline& renderingPipeline
-	, unique_ptr<sr::rendering::FrameResource>& frameResource
+	, unique_ptr<sr::rendering::FrameBuilder>& FrameBuilder
 	, unique_ptr<sr::rendering::Texture>& albedo
 	, unique_ptr<sr::rendering::Texture>& normal
 	, unique_ptr<sr::rendering::Texture>& metallicRoughness
 	, unique_ptr<sr::rendering::ConstBuffer>& constBuffer);
-void Update(sr::rendering::FrameResource& frameResource);
-void Render(sr::rendering::RenderingPipeline& renderingPipeline);
 
 // TODO: deprecate d3dx12 and implement its own initialization
 int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int nCmdShow)
 {
+	constexpr uint32_t width = 800;
+	constexpr uint32_t height = 600;
+	gsl::cwzstring name = L"SimpleRenderer"; // TODO: Concatenate sample name e.g. SimpleRenderer - DamagedHelmet
+
+	unique_ptr<sr::Application> app = make_unique<sr::Application>(width, height, name, nCmdShow);
+	app->Run();
+
 	unique_ptr<sr::platform::PlatformWindow> platformWindow = nullptr;
 	unique_ptr<sr::rendering::RenderingPipeline> renderingPipeline = nullptr;
 
@@ -56,15 +65,63 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 
 	gsl::czstring modelPath = "resources\\DamagedHelmet.gltf";
 	unique_ptr<sr::rendering::Model> model = nullptr;
-	unique_ptr<sr::rendering::FrameResource> frameResource = nullptr;
+	unique_ptr<sr::rendering::FrameBuilder> FrameBuilder = nullptr;
 	unique_ptr<sr::rendering::Texture> albedo = nullptr;
 	unique_ptr<sr::rendering::Texture> normal = nullptr;
 	unique_ptr<sr::rendering::Texture> metallicRoughness = nullptr;
 	unique_ptr<sr::rendering::ConstBuffer> constBuffer = nullptr;
-	LoadResources(modelPath, model, *renderingPipeline, frameResource, albedo, normal, metallicRoughness, constBuffer);
+	LoadResources(modelPath, model, *renderingPipeline, FrameBuilder, albedo, normal, metallicRoughness, constBuffer);
 
+
+	// TODO: update() function
+	// - FrameBuilder::UpdateShaderResource(), etc.
+	// - ConstBuffer::update()
+	float angle = 0;
 	while (true) {
-		renderingPipeline->Render(*frameResource);
+		Update();
+		Render();
+
+		// Update light position
+		// Duplicate from LoadResources
+		const XMFLOAT3 modelWorldPosition = model->GetWorldCoords();
+		XMMATRIX worldMatrix = XMMatrixMultiply(XMMatrixScaling(0.8f, 0.8f, 0.8f), XMMatrixRotationX(-0.8));
+		worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixRotationY(1));
+		worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(modelWorldPosition.x, modelWorldPosition.y, modelWorldPosition.z));
+		worldMatrix = XMMatrixTranspose(worldMatrix);
+
+		// Update Camera
+		constexpr XMFLOAT3 cameraWorldPosition(0, 6, 0);
+		constexpr XMFLOAT3 worldUpDirection(0, 1, 0);
+		constexpr float fovAngle = 45.0f;
+		constexpr float nearZcoordinate = 0.01f;
+		constexpr float farZcoordinate = 100.0f;
+		const Camera sceneCamera(fovAngle, sr::platform::aspectRatio, nearZcoordinate, farZcoordinate, cameraWorldPosition);
+
+		const XMMATRIX viewMatrix = XMMatrixTranspose(sceneCamera.GetViewLookAtMatrixLh(cameraWorldPosition, modelWorldPosition, worldUpDirection));
+		const XMMATRIX projectionMatrix = XMMatrixTranspose(sceneCamera.GetProjectionMatrixLh());
+		XMMATRIX lightPositions = {};
+		{
+			XMFLOAT4 lightPos = { 0, 6 ,1, 1 };
+			XMVECTOR vec = XMLoadFloat4(&lightPos);
+			XMMATRIX rotate = XMMatrixRotationZ(angle);
+			vec = XMVector4Transform(vec, rotate);
+
+			XMStoreFloat4(&lightPos, vec);
+			lightPositions.r[0] = XMLoadFloat4(&lightPos);
+			lightPositions = XMMatrixTranspose(lightPositions);
+		}
+
+		//constexpr XMFLOAT3 pointLightSourceWorldPosition(modelWorldPosition.x, modelWorldPosition.y + 3, modelWorldPosition.z);
+		// TODO: Store the max light intensity somewhere
+		// const sr::rendering::PointLight lightSource = { XMFLOAT3(1, 1, 1), 100, pointLightSourceWorldPosition };
+
+		const sr::rendering::CpuConstBufferData mappableConstBuffer{ worldMatrix, viewMatrix, projectionMatrix, lightPositions };
+		constBuffer->Update(mappableConstBuffer);
+
+		renderingPipeline->Render(*FrameBuilder);
+
+		angle = angle + 0.01 > 360 ? 0 : angle + 0.01;
+
 	}
 
 	return 0;
@@ -98,19 +155,19 @@ void InitGraphicsPipeline(unique_ptr<sr::platform::PlatformWindow>& platformWind
 	Ensures(renderingPipeline != nullptr);
 }
 
-// TODO: copy from cpuFrameResource to gpuFrameResource. For now, use only one FrameResource for simplicity
+// TODO: copy from cpuFrameResource to gpuFrameResource. For now, use only one FrameBuilder for simplicity
 // Create pipeline state object (a part of resource as well)
 // Load textures, create & bind resources to descriptor heap
 void LoadResources(gsl::not_null<gsl::czstring> modelPath, unique_ptr<sr::rendering::Model>& model
 	, sr::rendering::RenderingPipeline& renderingPipeline
-	, unique_ptr<sr::rendering::FrameResource>& frameResource
+	, unique_ptr<sr::rendering::FrameBuilder>& FrameBuilder
 	, unique_ptr<sr::rendering::Texture>& albedo
 	, unique_ptr<sr::rendering::Texture>& normal
 	, unique_ptr<sr::rendering::Texture>& metallicRoughness
 	, unique_ptr<sr::rendering::ConstBuffer>& constBuffer)
 {
 	const sr::rendering::GraphicsDevice& device = renderingPipeline.GetGraphicsDevice();
-	frameResource = make_unique<sr::rendering::FrameResource>(device);
+	FrameBuilder = make_unique<sr::rendering::FrameBuilder>(device);
 	
 	// Import Model
 	Assimp::Importer importer;
@@ -120,11 +177,11 @@ void LoadResources(gsl::not_null<gsl::czstring> modelPath, unique_ptr<sr::render
 
 	constexpr XMFLOAT3 modelWorldPosition(0, 4, 2); // original: (0, 4, 2)
 	model = make_unique<sr::rendering::Model>(*scene, modelWorldPosition, device); 	// TODO: Implement recursive initialization when needed
-	frameResource->setModel(model.get());
+	FrameBuilder->setModel(model.get());
 
 	// Create render target view
 	sr::rendering::SwapChain& swapChain = renderingPipeline.GetSwapChain();
-	sr::rendering::RenderTargetDescriptorHeap& renderTargetDescriptorHeap = frameResource->GetRenderTargetDescriptorHeap();
+	sr::rendering::RenderTargetDescriptorHeap& renderTargetDescriptorHeap = FrameBuilder->GetRenderTargetDescriptorHeap();
 	for (gsl::index i = 0; i < swapChain.GetBufferCount(); ++i)
 	{
 		sr::rendering::DescriptorHandle handle = renderTargetDescriptorHeap.GetHeapStartHandle();
@@ -151,23 +208,27 @@ void LoadResources(gsl::not_null<gsl::czstring> modelPath, unique_ptr<sr::render
 
 	// Create const buffer
 	XMMATRIX worldMatrix = XMMatrixMultiply(XMMatrixScaling(0.8f, 0.8f, 0.8f), XMMatrixRotationX(-0.8));
-	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixRotationY(-0.1));
+	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixRotationY(1));
 
 	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(modelWorldPosition.x, modelWorldPosition.y, modelWorldPosition.z));
 	worldMatrix = XMMatrixTranspose(worldMatrix);
 
 	const XMMATRIX viewMatrix = XMMatrixTranspose(sceneCamera.GetViewLookAtMatrixLh(cameraWorldPosition, modelWorldPosition, worldUpDirection));
 	const XMMATRIX projectionMatrix = XMMatrixTranspose(sceneCamera.GetProjectionMatrixLh());
-	const XMMATRIX unused = {};
-	
+	XMMATRIX lightDirections = {};
+	{
+		const XMFLOAT3 lightDir = { 0, 6 ,2 };
+		lightDirections.r[0] = XMLoadFloat3(&lightDir);
+	}
+
 	//constexpr XMFLOAT3 pointLightSourceWorldPosition(modelWorldPosition.x, modelWorldPosition.y + 3, modelWorldPosition.z);
 	// TODO: Store the max light intensity somewhere
 	// const sr::rendering::PointLight lightSource = { XMFLOAT3(1, 1, 1), 100, pointLightSourceWorldPosition };
 
-	const sr::rendering::CpuConstBufferData mappableConstBuffer{ worldMatrix, viewMatrix, projectionMatrix, unused };
+	const sr::rendering::CpuConstBufferData mappableConstBuffer{ worldMatrix, viewMatrix, projectionMatrix, lightDirections };
 	constBuffer = make_unique<sr::rendering::ConstBuffer>(L"Coord Transform Const buffer", mappableConstBuffer, device);
 	
-	sr::rendering::DescriptorHandle descriptorHandle = frameResource->GetShaderResourceDescriptorHeap().GetHeapStartHandle();
+	sr::rendering::DescriptorHandle descriptorHandle = FrameBuilder->GetShaderResourceDescriptorHeap().GetHeapStartHandle();
 	device.CreateConstBufferView(*constBuffer, descriptorHandle);
 
 	// Create and bind albedo texture

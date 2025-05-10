@@ -2,11 +2,14 @@
 
 #include <DirectXMath.h>
 #include <d3d12.h>
+#include <map>
 
 #include "Common.h"
 #include "GpuResource.h"
+#include "Texture.h"
 
 struct aiMesh;
+struct aiMaterial;
 
 using namespace DirectX;
 namespace sr
@@ -36,6 +39,10 @@ namespace sr
 
 
 			Mesh() = delete;
+
+			Mesh(const aiMesh& assimpMesh, const aiMaterial& material) noexcept;
+
+			// TODO: deprecate this
 			Mesh(const aiMesh& assimpMesh, const GraphicsDevice& graphicsDevice) noexcept;
 
 			inline vector<Vertex>& GetVerticeDataOwner() noexcept
@@ -78,6 +85,13 @@ namespace sr
 				return mIndicesNum;
 			}
 
+			std::string& GetName()
+			{
+				return mName;
+			}
+
+			gsl::not_null<gsl::czstring> GetTextureName(Texture::TextureType type);
+
 		private:
 			std::string mName = "";
 			size_t mVerticesNum = 0;
@@ -85,6 +99,9 @@ namespace sr
 			vector<Vertex> mVertices = {};
 			vector<IndexType> mIndices = {};
 
+			std::map<Texture::TextureType, std::string> mTextureNameMap = {};
+
+			// TODO: deprecate theses
 			unique_ptr<GpuResource> mVertexBufferResource = nullptr;
 			unique_ptr<GpuResource> mIndexBufferResource = nullptr;
 			D3D12_VERTEX_BUFFER_VIEW mVertexBufferView;

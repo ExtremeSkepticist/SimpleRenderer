@@ -157,14 +157,16 @@ msbuild DirectXTex_Desktop_2022.sln -property:Configuration=$(Configuration)</Co
     <None Include="resources\DamagedHelmet.gltf" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Application.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\CommandList.cpp" />
     <ClCompile Include="src\CommandQueue.cpp" />
     <ClCompile Include="src\ConstBuffer.cpp" />
     <ClCompile Include="src\DepthStencilDescriptorHeap.cpp" />
     <ClCompile Include="src\Fence.cpp" />
-    <ClCompile Include="src\FrameResource.cpp" />
+    <ClCompile Include="src\FrameBuilder.cpp" />
     <ClCompile Include="src\RenderingPipeline.cpp" />
+    <ClCompile Include="src\Scene.cpp" />
     <ClCompile Include="src\Texture.cpp" />
     <ClCompile Include="src\DescriptorHeap.cpp" />
     <ClCompile Include="src\DescriptorRange.cpp" />
@@ -184,8 +186,10 @@ msbuild DirectXTex_Desktop_2022.sln -property:Configuration=$(Configuration)</Co
     </ClCompile>
     <ClCompile Include="src\ShaderResourceDescriptorHeap.cpp" />
     <ClCompile Include="src\SwapChain.cpp" />
+    <ClCompile Include="src\TextureGroup.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\Application.h" />
     <ClInclude Include="include\Camera.h" />
     <ClInclude Include="include\CommandList.h" />
     <ClInclude Include="include\CommandQueue.h" />
@@ -194,9 +198,10 @@ msbuild DirectXTex_Desktop_2022.sln -property:Configuration=$(Configuration)</Co
     <ClInclude Include="include\DepthStencilDescriptorHeap.h" />
     <ClInclude Include="include\DescriptorHandle.h" />
     <ClInclude Include="include\Fence.h" />
-    <ClInclude Include="include\FrameResource.h" />
+    <ClInclude Include="include\FrameBuilder.h" />
     <ClInclude Include="include\LightSource.h" />
     <ClInclude Include="include\RenderingPipeline.h" />
+    <ClInclude Include="include\Scene.h" />
     <ClInclude Include="include\Texture.h" />
     <ClInclude Include="include\Common.h" />
     <ClInclude Include="include\DescriptorHeap.h" />
@@ -214,6 +219,7 @@ msbuild DirectXTex_Desktop_2022.sln -property:Configuration=$(Configuration)</Co
     <ClInclude Include="include\Shader.h" />
     <ClInclude Include="include\ShaderResourceDescriptorHeap.h" />
     <ClInclude Include="include\SwapChain.h" />
+    <ClInclude Include="include\TextureGroup.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\BasicPixelShader.hlsl">

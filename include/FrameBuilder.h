@@ -14,13 +14,14 @@ namespace sr
 		class RootSignature;
 		class ShaderResourceDescriptorHeap;
 		class Model;
+		class GpuResource;
 
 		struct DescriptorHandle;
 
-		class FrameResource
+		class FrameBuilder
 		{
 		public:
-			FrameResource(const GraphicsDevice& device);
+			FrameBuilder(const GraphicsDevice& device);
 			RenderTargetDescriptorHeap& GetRenderTargetDescriptorHeap();
 			ShaderResourceDescriptorHeap& GetShaderResourceDescriptorHeap();
 			GraphicsPipelineState& GetPipelineState();
@@ -43,11 +44,14 @@ namespace sr
 		private:
 			void createDefaultRootSignature(const GraphicsDevice& device);
 			void createDefaultPipelineState(const GraphicsDevice& device);
+			void recordCommands();
 
-			unique_ptr<RenderTargetDescriptorHeap> mRenderTargetDescriptorHeap = nullptr;
 			unique_ptr<RootSignature> mRootSignature = nullptr;
 			unique_ptr<GraphicsPipelineState> mPipelineState = nullptr;
+			unique_ptr<RenderTargetDescriptorHeap> mRenderTargetDescriptorHeap = nullptr;
 			unique_ptr<ShaderResourceDescriptorHeap> mShaderResourceDescriptorHeap = nullptr;
+			unique_ptr<GpuResource> mVertexBufferResource = nullptr;
+			unique_ptr<GpuResource> mIndexBufferResource = nullptr;
 
 			Model* mModel = nullptr;
 		};

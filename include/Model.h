@@ -16,7 +16,11 @@ namespace sr
 		class Model
 		{
 		public:
+			Model(const aiScene& assimpScene, const XMFLOAT3 worldCoords) noexcept;
+
+			// TODO: deprecate this
 			Model(const aiScene& assimpScene, const XMFLOAT3 worldCoords, const GraphicsDevice& graphicsDevice) noexcept;
+			
 			Model() = delete;
 			~Model() = default;
 

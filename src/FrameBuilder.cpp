@@ -1,5 +1,5 @@
 #include "DescriptorRange.h"
-#include "FrameResource.h"
+#include "FrameBuilder.h"
 #include "GraphicsDevice.h"
 #include "GraphicsPipelineState.h"
 #include "RenderTargetDescriptorHeap.h"
@@ -13,11 +13,10 @@ namespace sr
 {
 	namespace rendering
 	{
-		// TODO: Create depth-stencil buffer and heap to bind
-		FrameResource::FrameResource(const GraphicsDevice& device)
-			: mRenderTargetDescriptorHeap(make_unique<RenderTargetDescriptorHeap>())
-			, mRootSignature(nullptr)
+		FrameBuilder::FrameBuilder(const GraphicsDevice& device)
+			: mRootSignature(nullptr)
 			, mPipelineState(nullptr)
+			, mRenderTargetDescriptorHeap(make_unique<RenderTargetDescriptorHeap>())
 			, mShaderResourceDescriptorHeap(make_unique<ShaderResourceDescriptorHeap>())
 			, mModel(nullptr)
 			, mDsvHeap(nullptr)
@@ -59,27 +58,27 @@ namespace sr
 			device.GetD3d12Device()->CreateDepthStencilView(mDsvBuffer.Get(), &dsvViewDesc, mDsvHeap->GetCPUDescriptorHandleForHeapStart());
 		}
 
-		RenderTargetDescriptorHeap& FrameResource::GetRenderTargetDescriptorHeap()
+		RenderTargetDescriptorHeap& FrameBuilder::GetRenderTargetDescriptorHeap()
 		{
 			return *mRenderTargetDescriptorHeap;
 		}
 		
-		ShaderResourceDescriptorHeap& FrameResource::GetShaderResourceDescriptorHeap()
+		ShaderResourceDescriptorHeap& FrameBuilder::GetShaderResourceDescriptorHeap()
 		{
 			return *mShaderResourceDescriptorHeap;
 		}
 
-		GraphicsPipelineState& FrameResource::GetPipelineState()
+		GraphicsPipelineState& FrameBuilder::GetPipelineState()
 		{
 			return *mPipelineState;
 		}
 
-		RootSignature& FrameResource::GetRootSignature()
+		RootSignature& FrameBuilder::GetRootSignature()
 		{
 			return *mRootSignature;
 		}
 
-		void FrameResource::createDefaultRootSignature(const GraphicsDevice& device)
+		void FrameBuilder::createDefaultRootSignature(const GraphicsDevice& device)
 		{
 			// Initialize RootSignature
 			constexpr size_t numDescriptorRanges = 2;
@@ -99,7 +98,7 @@ namespace sr
 			device.CreateRootSignature(*mRootSignature);
 		}
 
-		void FrameResource::createDefaultPipelineState(const GraphicsDevice& device)
+		void FrameBuilder::createDefaultPipelineState(const GraphicsDevice& device)
 		{
 			// TODO: Use batch script instead to compile shaders
 			// TODO: Implement changing shaders upon using different effects

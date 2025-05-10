@@ -3,7 +3,7 @@ cbuffer ConstBuffer
     float4x4 mWorldMatrix;
     float4x4 mViewMatrix;
     float4x4 mProjectionMatrix;
-    float4x4 mUnused;
+    float4x4 mLightPositions;
 };
 
 struct VS_INPUT
@@ -23,6 +23,7 @@ struct VS_OUTPUT
     float3 mTangent : TEXCOORD4;
     float3 mBiNormal : TEXCOORD5;
     float3 mWorldPosition : TEXCOORD6;
+    float3 mLightPosition : TEXCOORD7;
 };
 
 // TODO: fixing calculating color
@@ -40,6 +41,8 @@ VS_OUTPUT main(VS_INPUT input)
     output.mTangent = mul(input.mTangent, (float3x3)mWorldMatrix);
     output.mNormal = mul(input.mNormal, (float3x3)mWorldMatrix);
     output.mBiNormal = mul(input.mBiNormal, (float3x3)mWorldMatrix);
+
+    output.mLightPosition = mLightPositions[0].xyz;
 
     output.mTexCoord = input.mTexCoords;
 

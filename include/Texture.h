@@ -17,6 +17,16 @@ namespace sr
 		class Texture
 		{
 		public:
+			enum class TextureType
+			{
+				Albedo,
+				MetalRoughness,
+				Emissive,
+				Normal,
+				AmbientOcclusion,
+				Num
+			};
+
 			Texture(gsl::not_null<gsl::cwzstring> textureName, unique_ptr<DirectX::ScratchImage> rawImage
 			, const GraphicsDevice& graphicsDevice) noexcept;
 			~Texture() = default;

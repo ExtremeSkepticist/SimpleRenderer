@@ -257,7 +257,7 @@ namespace sr
 				assert(false);
 			}
 
-			// TODO: copy from FrameResource.cpp
+			// TODO: copy from FrameBuilder.cpp
 			if (isDepthBuffer)
 			{
 
