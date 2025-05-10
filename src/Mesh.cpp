@@ -76,9 +76,9 @@ namespace sr
 			Ensures(mTextureNameMap.size() == static_cast<size_t>(Texture::TextureType::Num));
 		}
 
-		gsl::not_null<gsl::czstring> Mesh::GetTextureName(Texture::TextureType type)
+		std::string& Mesh::GetTextureName(Texture::TextureType type)
 		{
-			return mTextureNameMap.find(type)->second.c_str();
+			return mTextureNameMap.find(type)->second;
 		}
 
 		Mesh::Mesh(const aiMesh& assimpMesh, const GraphicsDevice& graphicsDevice) noexcept

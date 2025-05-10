@@ -90,7 +90,7 @@ namespace sr
 				return mName;
 			}
 
-			gsl::not_null<gsl::czstring> GetTextureName(Texture::TextureType type);
+			std::string& GetTextureName(Texture::TextureType type);
 
 		private:
 			std::string mName = "";

@@ -41,12 +41,11 @@ namespace sr
 			auto& meshes = model.GetMeshes();
 			for (const auto& mesh : meshes)
 			{
-				const std::string& meshName = mesh->GetName();
-				mTextureGroup->AddMesh(meshName.c_str());
-				mTextureGroup->LoadAllTexturesFromMesh(meshName.c_str())
+				mTextureGroup->AddMesh(*mesh);
 			}
 		}
-		// mTextureGroup
+		mTextureGroup->LoadAllTexturesFromMesh(*mPipeline);
+
 		assert(scene != nullptr);
 	}
 }
