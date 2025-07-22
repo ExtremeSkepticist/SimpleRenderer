@@ -22,6 +22,13 @@ namespace sr
 		{
 			Expects(mTextureMap.find(&mesh) == mTextureMap.end());
 
+			const std::string& meshName = mesh.GetName();
+			const auto isExists = std::find(mTextureMap.begin(), mTextureMap.end(), [&](Mesh* mesh) -> bool{
+				return mesh->GetName() == meshName;
+			});
+
+			Expects(isExists != mTextureMap.end());
+
 			mTextureMap.emplace(make_pair(&mesh, std::vector<Texture>()));
 		}
 

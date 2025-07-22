@@ -1,28 +1,37 @@
+#include "Camera.h"
+#include "ConstBuffer.h"
 #include "DescriptorRange.h"
 #include "FrameBuilder.h"
 #include "GraphicsDevice.h"
 #include "GraphicsPipelineState.h"
+#include "Model.h"
 #include "RenderTargetDescriptorHeap.h"
+#include "RenderingPipeline.h"
 #include "RootSignature.h"
 #include "RootParameter.h"
+#include "Scene.h"
 #include "Shader.h"
 #include "ShaderResourceDescriptorHeap.h"
+#include "SwapChain.h"
 #include "InputElementLayout.h"
 
 namespace sr
 {
 	namespace rendering
 	{
-		FrameBuilder::FrameBuilder(const GraphicsDevice& device)
+		FrameBuilder::FrameBuilder(RenderingPipeline& pipeline, Scene& scene)
 			: mRootSignature(nullptr)
 			, mPipelineState(nullptr)
 			, mRenderTargetDescriptorHeap(make_unique<RenderTargetDescriptorHeap>())
 			, mShaderResourceDescriptorHeap(make_unique<ShaderResourceDescriptorHeap>())
 			, mModel(nullptr)
 			, mDsvHeap(nullptr)
+			, mConstBuffer(nullptr)
 		{
+			const GraphicsDevice& device = pipeline.GetGraphicsDevice();
 			device.CreateDescriptorHeap(*mRenderTargetDescriptorHeap);
 			device.CreateDescriptorHeap(*mShaderResourceDescriptorHeap);
+			createDefaultResources(pipeline, scene);
 			createDefaultRootSignature(device);
 			createDefaultPipelineState(device);
 
@@ -76,6 +85,56 @@ namespace sr
 		RootSignature& FrameBuilder::GetRootSignature()
 		{
 			return *mRootSignature;
+		}
+
+		void FrameBuilder::createDefaultResources(RenderingPipeline& pipeline, Scene& scene)
+		{
+			// Create render target view
+			sr::rendering::GraphicsDevice& device = pipeline.GetGraphicsDevice();
+			sr::rendering::SwapChain& swapChain = pipeline.GetSwapChain();
+			for (gsl::index i = 0; i < swapChain.GetBufferCount(); ++i)
+			{
+				sr::rendering::DescriptorHandle handle = mRenderTargetDescriptorHeap->GetHeapStartHandle();
+				handle.cpuHandle.ptr += i * device.GetRenderTargetHeapHandleIncrementSize();
+
+				sr::rendering::GpuResource resource;
+				swapChain.GetDxgiSwapChain()->GetBuffer(i, IID_PPV_ARGS(&resource.GetD3d12ResourceOwner()));
+				{
+					// TODO: replace this with better solution
+					std::wstring name(L"Render Target buffer %ld", i);
+					resource.GetD3d12Resource()->SetName(name.c_str());
+				}
+
+				device.CreateRenderTargetView(resource, handle);
+			}
+
+			// TODO: set the following values with the .gltf provided values
+			// Create const buffer
+			const DirectX::XMFLOAT3 modelWorldPosition = scene.GetModel().GetWorldCoords();
+			XMMATRIX worldMatrix = XMMatrixMultiply(XMMatrixScaling(0.8f, 0.8f, 0.8f), XMMatrixRotationX(-0.8));
+			worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixRotationY(1));
+
+			worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(modelWorldPosition.x, modelWorldPosition.y, modelWorldPosition.z));
+			worldMatrix = XMMatrixTranspose(worldMatrix);
+
+			sr::rendering::Camera& camera = scene.GetCamera();
+			const XMMATRIX viewMatrix = XMMatrixTranspose(camera.GetViewLookAtMatrixLh(camera.GetWorldCoords(), modelWorldPosition, sr::rendering::worldUpDirection));
+			const XMMATRIX projectionMatrix = XMMatrixTranspose(camera.GetProjectionMatrixLh());
+			XMMATRIX lightDirections = {};
+			{
+				const XMFLOAT3 lightDir = { 0, 6 ,2 };
+				lightDirections.r[0] = XMLoadFloat3(&lightDir);
+			}
+
+			//constexpr XMFLOAT3 pointLightSourceWorldPosition(modelWorldPosition.x, modelWorldPosition.y + 3, modelWorldPosition.z);
+			// TODO: Store the max light intensity somewhere
+			// const sr::rendering::PointLight lightSource = { XMFLOAT3(1, 1, 1), 100, pointLightSourceWorldPosition };
+
+			const sr::rendering::CpuConstBufferData mappableConstBuffer{ worldMatrix, viewMatrix, projectionMatrix, lightDirections };
+			mConstBuffer = make_unique<sr::rendering::ConstBuffer>(L"Coord Transform Const buffer", mappableConstBuffer, pipeline.GetGraphicsDevice());
+
+			sr::rendering::DescriptorHandle descriptorHandle = mShaderResourceDescriptorHeap->GetHeapStartHandle();
+			device.CreateConstBufferView(*mConstBuffer, descriptorHandle);
 		}
 
 		void FrameBuilder::createDefaultRootSignature(const GraphicsDevice& device)

@@ -8,10 +8,13 @@ namespace sr
 {
 	namespace rendering
 	{
+		class ConstBuffer;
 		class GraphicsDevice;
 		class GraphicsPipelineState;
 		class RenderTargetDescriptorHeap;
+		class RenderingPipeline;
 		class RootSignature;
+		class Scene;
 		class ShaderResourceDescriptorHeap;
 		class Model;
 		class GpuResource;
@@ -21,7 +24,7 @@ namespace sr
 		class FrameBuilder
 		{
 		public:
-			FrameBuilder(const GraphicsDevice& device);
+			FrameBuilder(RenderingPipeline& pipeline, Scene& scene);
 			RenderTargetDescriptorHeap& GetRenderTargetDescriptorHeap();
 			ShaderResourceDescriptorHeap& GetShaderResourceDescriptorHeap();
 			GraphicsPipelineState& GetPipelineState();
@@ -42,6 +45,7 @@ namespace sr
 			ComPtr<ID3D12Resource> mDsvBuffer = nullptr;
 
 		private:
+			void createDefaultResources(RenderingPipeline& pipeline, Scene& scene);
 			void createDefaultRootSignature(const GraphicsDevice& device);
 			void createDefaultPipelineState(const GraphicsDevice& device);
 			void recordCommands();
@@ -52,7 +56,7 @@ namespace sr
 			unique_ptr<ShaderResourceDescriptorHeap> mShaderResourceDescriptorHeap = nullptr;
 			unique_ptr<GpuResource> mVertexBufferResource = nullptr;
 			unique_ptr<GpuResource> mIndexBufferResource = nullptr;
-
+			unique_ptr<ConstBuffer> mConstBuffer = nullptr;
 			Model* mModel = nullptr;
 		};
 	}

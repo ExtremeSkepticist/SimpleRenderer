@@ -3,49 +3,85 @@
 #include <assimp/postprocess.h>
 
 #include "Application.h"
+#include "Camera.h"
+#include "RenderTargetDescriptorHeap.h"
 #include "FrameBuilder.h"
+#include "GraphicsDevice.h"
+#include "Model.h"
 #include "PlatformWindow.h"
 #include "RenderingPipeline.h"
 #include "Scene.h"
+#include "SwapChain.h"
 #include "TextureGroup.h"
-#include "Model.h"
+#include "ConstBuffer.h"
 
 namespace sr
 {
 	Application::Application(uint16_t width, uint16_t height, gsl::not_null<gsl::cwzstring> name, gsl::czstring sampleName, int nCmdShow)
-		: mSampleName(sampleName)
-		, mPlatformWindow(make_unique<rendering::PlatformWindow>(width, height, name, nCmdShow))
-		, mPipeline(make_unique<rendering::RenderingPipeline>(*mPlatformWindow, 2))
-		, mFrameResource(make_unique<rendering::FrameBuilder>(mPipeline->GetGraphicsDevice()))
-		, mTextureGroup(make_unique<rendering::TextureGroup>())
+		: mWidth(width)
+		, mHeight(height)
+		, mName(name)
+		, mCmdShow(nCmdShow)
+		, mSampleName(sampleName)
+		, mIsInit(false)
 	{
+	}
+
+	void Application::Init()
+	{
+		Expects(!mIsInit);
+		Expects(!mPlatformWindow && !mPipeline && !mFrameBuilder && !mTextureGroup);
+
+		mPlatformWindow = make_unique<rendering::PlatformWindow>(mWidth, mHeight, mName, mCmdShow);
+		mPipeline = make_unique<rendering::RenderingPipeline>(*mPlatformWindow, 2);
+		mFrameBuilder = make_unique<rendering::FrameBuilder>(mPipeline->GetGraphicsDevice());
+		mTextureGroup = make_unique<rendering::TextureGroup>();
+
+		mIsInit = true;
+
+		Ensures(mPlatformWindow && mPipeline && mFrameBuilder && mTextureGroup);
 	}
 
 	void Application::Run()
 	{
+		Expects(mIsInit);
+
 		loadAssets();
+
+		while (true)
+		{
+			update();
+			render();
+		}
 	}
 
 	void Application::loadAssets()
 	{
-		// Import Model
+		// Import Model & Create Scene
 		Assimp::Importer importer;
 		const std::string modelPath("resources\\%s", mSampleName);
 		constexpr uint32_t importFlag = aiProcess_ConvertToLeftHanded | aiProcess_CalcTangentSpace;
 		const aiScene* scene = importer.ReadFile(modelPath, importFlag);
+		assert(scene != nullptr);
+
 		mScene = make_unique<rendering::Scene>(*scene);
 
 		// Load all textures from each model mesh
-		for (auto& model : mScene->GetModels())
+		auto& meshes = mScene->GetModel().GetMeshes();
+		for (const auto& mesh : meshes)
 		{
-			auto& meshes = model.GetMeshes();
-			for (const auto& mesh : meshes)
-			{
-				mTextureGroup->AddMesh(*mesh);
-			}
+			mTextureGroup->AddMesh(*mesh);
 		}
 		mTextureGroup->LoadAllTexturesFromMesh(*mPipeline);
+	}
 
-		assert(scene != nullptr);
+	void Application::update()
+	{
+		// TODO: move code in main()
+	}
+
+	void Application::render()
+	{
+		// TODO: move code in main()
 	}
 }

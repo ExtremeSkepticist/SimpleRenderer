@@ -1,5 +1,7 @@
 #pragma once
 
+#include <DirectXMath.h>
+
 #include "Common.h"
 
 struct aiScene;
@@ -8,6 +10,8 @@ namespace sr
 {
 	namespace rendering
 	{
+		static constexpr DirectX::XMFLOAT3 worldUpDirection(0, 1, 0);
+
 		class Model;
 		class Camera;
 
@@ -17,15 +21,19 @@ namespace sr
 			Scene(const aiScene& scene) noexcept;
 			~Scene() = default;
 
-			std::vector<Model>& GetModels()
+			Model& GetModel()
 			{
-				return mModels;
+				return *mModel;
+			}
+			Camera& GetCamera()
+			{
+				return *mCamera;
 			}
 
 			void Update();
 
 		private:
-			std::vector<Model> mModels = {};
+			unique_ptr<Model> mModel = nullptr;
 			unique_ptr<Camera> mCamera = nullptr;
 
 			bool mIsDirty;
