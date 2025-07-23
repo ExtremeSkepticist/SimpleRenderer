@@ -65,6 +65,7 @@ namespace sr
 		assert(scene != nullptr);
 
 		mScene = make_unique<rendering::Scene>(*scene);
+		mFrameBuilder->setModel(&mScene->GetModel());
 
 		// Load all textures from each model mesh
 		auto& meshes = mScene->GetModel().GetMeshes();
@@ -78,6 +79,8 @@ namespace sr
 	void Application::update()
 	{
 		// TODO: move code in main()
+		mScene->Update();
+		mFrameBuilder->Update();
 	}
 
 	void Application::render()

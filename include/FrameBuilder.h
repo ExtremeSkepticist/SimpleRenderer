@@ -30,6 +30,8 @@ namespace sr
 			GraphicsPipelineState& GetPipelineState();
 			RootSignature& GetRootSignature();
 
+			void Update();
+
 			inline Model* getModel() const noexcept
 			{
 				return mModel;

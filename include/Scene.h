@@ -35,6 +35,7 @@ namespace sr
 		private:
 			unique_ptr<Model> mModel = nullptr;
 			unique_ptr<Camera> mCamera = nullptr;
+			XMFLOAT3 mLightPosition;
 
 			bool mIsDirty;
 		};

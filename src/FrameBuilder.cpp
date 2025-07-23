@@ -87,6 +87,11 @@ namespace sr
 			return *mRootSignature;
 		}
 
+		void FrameBuilder::Update()
+		{
+
+		}
+
 		void FrameBuilder::createDefaultResources(RenderingPipeline& pipeline, Scene& scene)
 		{
 			// Create render target view
