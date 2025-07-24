@@ -24,9 +24,9 @@ namespace sr
 			, mPipelineState(nullptr)
 			, mRenderTargetDescriptorHeap(make_unique<RenderTargetDescriptorHeap>())
 			, mShaderResourceDescriptorHeap(make_unique<ShaderResourceDescriptorHeap>())
-			, mModel(nullptr)
 			, mDsvHeap(nullptr)
 			, mConstBuffer(nullptr)
+			, mCpuConstBufferData(nullptr)
 		{
 			const GraphicsDevice& device = pipeline.GetGraphicsDevice();
 			device.CreateDescriptorHeap(*mRenderTargetDescriptorHeap);
@@ -87,9 +87,11 @@ namespace sr
 			return *mRootSignature;
 		}
 
-		void FrameBuilder::Update()
+		void FrameBuilder::Update(gsl::not_null<Scene*> scene)
 		{
-
+			// TODO: how to automatically set w-component to 1?
+			mCpuConstBufferData->mLightPosition.r[0] = scene->GetLightPos();
+			mConstBuffer->Update(*mCpuConstBufferData);
 		}
 
 		void FrameBuilder::createDefaultResources(RenderingPipeline& pipeline, Scene& scene)
@@ -135,8 +137,8 @@ namespace sr
 			// TODO: Store the max light intensity somewhere
 			// const sr::rendering::PointLight lightSource = { XMFLOAT3(1, 1, 1), 100, pointLightSourceWorldPosition };
 
-			const sr::rendering::CpuConstBufferData mappableConstBuffer{ worldMatrix, viewMatrix, projectionMatrix, lightDirections };
-			mConstBuffer = make_unique<sr::rendering::ConstBuffer>(L"Coord Transform Const buffer", mappableConstBuffer, pipeline.GetGraphicsDevice());
+			mCpuConstBufferData = make_unique<CpuConstBufferData>(worldMatrix, viewMatrix, projectionMatrix, lightDirections);
+			mConstBuffer = make_unique<sr::rendering::ConstBuffer>(L"Coord Transform Const buffer", *mCpuConstBufferData, pipeline.GetGraphicsDevice());
 
 			sr::rendering::DescriptorHandle descriptorHandle = mShaderResourceDescriptorHeap->GetHeapStartHandle();
 			device.CreateConstBufferView(*mConstBuffer, descriptorHandle);

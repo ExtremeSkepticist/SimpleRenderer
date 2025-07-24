@@ -18,6 +18,7 @@ namespace sr
 			: mModel()
 			, mCamera(nullptr)
 			, mLightPosition({0, 6, 1})
+			, mAngle(0)
 		{
 			constexpr XMFLOAT3 modelWorldPosition(0, 4, 2);
 			mModel = make_unique<Model>(scene, modelWorldPosition);
@@ -30,21 +31,21 @@ namespace sr
 			mCamera = make_unique<Camera>(fovAngle, platform::aspectRatio, nearZcoordinate, farZcoordinate, cameraWorldPosition);
 		}
 
+		DirectX::XMVECTOR Scene::GetLightPos() const
+		{
+			return XMVector4Transform(XMLoadFloat3(&mLightPosition), XMMatrixRotationZ(mAngle));
+		}
+
 		void Scene::Update()
 		{
-			static float angle = 0;
 			// TODO: Add camera movement and update camera position
 			// TODO: Add proper LightSource class
 			//		- mLightPosition is XMMATRIX just to follow const buffer size constraints
-			XMMATRIX lightPositions = {};
-			const XMVECTOR rotatedVector = XMVector4Transform(XMLoadFloat3(&mLightPosition), XMMatrixRotationZ(angle));
-			XMStoreFloat3(&mLightPosition, rotatedVector);
-
-			if (angle >= 360) {
-				angle = 0;
+			if (mAngle >= 360) {
+				mAngle = 0;
 				return;
 			}
-			angle += 0.01f;
+			mAngle += 1;
 		}
 	}
 }

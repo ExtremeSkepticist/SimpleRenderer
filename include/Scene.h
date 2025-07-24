@@ -21,21 +21,23 @@ namespace sr
 			Scene(const aiScene& scene) noexcept;
 			~Scene() = default;
 
-			Model& GetModel()
+			inline Model& GetModel()
 			{
 				return *mModel;
 			}
-			Camera& GetCamera()
+			inline Camera& GetCamera()
 			{
 				return *mCamera;
 			}
+			DirectX::XMVECTOR GetLightPos() const;
 
 			void Update();
 
 		private:
 			unique_ptr<Model> mModel = nullptr;
 			unique_ptr<Camera> mCamera = nullptr;
-			XMFLOAT3 mLightPosition;
+			const DirectX::XMFLOAT3 mLightPosition;
+			float mAngle = 0;
 
 			bool mIsDirty;
 		};

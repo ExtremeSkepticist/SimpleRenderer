@@ -9,6 +9,7 @@ namespace sr
 	namespace rendering
 	{
 		class ConstBuffer;
+		class CpuConstBufferData;
 		class GraphicsDevice;
 		class GraphicsPipelineState;
 		class RenderTargetDescriptorHeap;
@@ -30,17 +31,7 @@ namespace sr
 			GraphicsPipelineState& GetPipelineState();
 			RootSignature& GetRootSignature();
 
-			void Update();
-
-			inline Model* getModel() const noexcept
-			{
-				return mModel;
-			}
-
-			inline void setModel(gsl::not_null<Model*> model) noexcept
-			{
-				mModel = model;
-			}
+			void Update(gsl::not_null<Scene*> scene);
 
 			// TODO: abstract this
 			ComPtr<ID3D12DescriptorHeap> mDsvHeap = nullptr;
@@ -59,7 +50,7 @@ namespace sr
 			unique_ptr<GpuResource> mVertexBufferResource = nullptr;
 			unique_ptr<GpuResource> mIndexBufferResource = nullptr;
 			unique_ptr<ConstBuffer> mConstBuffer = nullptr;
-			Model* mModel = nullptr;
+			unique_ptr<CpuConstBufferData> mCpuConstBufferData = nullptr;
 		};
 	}
 }
