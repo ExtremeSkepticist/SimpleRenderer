@@ -7,7 +7,6 @@ namespace sr
 	namespace rendering
 	{
 		class Scene;
-
 		class FrameBuilder;
 		class PlatformWindow;
 		class RenderingPipeline;

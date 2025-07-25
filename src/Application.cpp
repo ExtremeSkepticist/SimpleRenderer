@@ -77,13 +77,12 @@ namespace sr
 
 	void Application::update()
 	{
-		// TODO: move code in main()
 		mScene->Update();
 		mFrameBuilder->Update(mScene.get());
 	}
 
 	void Application::render()
 	{
-		// TODO: move code in main()
+		mPipeline->Render(*mFrameBuilder);
 	}
 }
