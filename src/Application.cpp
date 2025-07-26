@@ -65,7 +65,7 @@ namespace sr
 		assert(scene != nullptr);
 
 		mScene = make_unique<rendering::Scene>(*scene);
-
+		
 		// Load all textures from each model mesh
 		auto& meshes = mScene->GetModel().GetMeshes();
 		for (const auto& mesh : meshes)
@@ -83,6 +83,11 @@ namespace sr
 
 	void Application::render()
 	{
-		mPipeline->Render(*mFrameBuilder);
+		auto& meshes = mScene->GetModel().GetMeshes();
+		for (auto& mesh : meshes)
+		{
+			mFrameBuilder->SetMesh(mesh.get(), mPipeline->GetGraphicsDevice());
+			mPipeline->Render(*mFrameBuilder);
+		}
 	}
 }

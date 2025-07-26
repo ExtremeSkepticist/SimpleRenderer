@@ -31,7 +31,7 @@ namespace sr
 			RenderingPipeline& operator=(const RenderingPipeline&) = delete;
 			RenderingPipeline& operator=(RenderingPipeline&&) = delete;
 
-			void Render(FrameBuilder& FrameBuilder);
+			void Render(FrameBuilder& frameBuilder);
 
 			inline GraphicsDevice& GetGraphicsDevice() noexcept
 			{
@@ -56,7 +56,7 @@ namespace sr
 			void WaitForPreviousFrame() noexcept;
 
 		private:
-			void setupDefaultCommands(FrameBuilder& FrameBuilder);
+			void setupDefaultCommands(FrameBuilder& frameBuilder);
 
 			unique_ptr<GraphicsDevice> mGraphicsDevice = nullptr;
 			unique_ptr<CommandQueue> mGraphicsCommandQueue = nullptr;

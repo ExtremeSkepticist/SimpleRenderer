@@ -4,7 +4,7 @@
 #include "FrameBuilder.h"
 #include "GraphicsDevice.h"
 #include "GraphicsPipelineState.h"
-#include "Model.h"
+#include "Mesh.h"
 #include "RenderTargetDescriptorHeap.h"
 #include "RenderingPipeline.h"
 #include "RootSignature.h"
@@ -27,6 +27,13 @@ namespace sr
 			, mDsvHeap(nullptr)
 			, mConstBuffer(nullptr)
 			, mCpuConstBufferData(nullptr)
+			, mMesh(nullptr)
+			, mVertexBufferResource(nullptr)
+			, mIndexBufferResource(nullptr)
+			, mVertexBufferView()
+			, mIndexBufferView()
+			, mIsDirty(false)
+			, mIndexNum(0)
 		{
 			const GraphicsDevice& device = pipeline.GetGraphicsDevice();
 			device.CreateDescriptorHeap(*mRenderTargetDescriptorHeap);
@@ -186,5 +193,57 @@ namespace sr
 			mPipelineState = make_unique<GraphicsPipelineState>(*mRootSignature, inputElementLayout, vertexShader, pixelShader);
 			device.CreateGraphicsPipelineState(*mPipelineState);
 		}
+
+		void FrameBuilder::createMeshResources(const GraphicsDevice& device) noexcept
+		{
+			if (!mIsDirty)
+			{
+				return;
+			}
+
+			// TODO: Create DEFAULT heap and copy these to it
+			// Initialize vertex buffer
+			const size_t vertexDataSize = sizeof(Mesh::Vertex) * mMesh->GetVerticeNum();
+			mVertexBufferResource = make_unique<GpuResource>(L"Vertex buffer resource", vertexDataSize, ResourceHeapType::Upload, ResourceState::GenericRead);
+			device.CreateGpuResource(*mVertexBufferResource);
+			{
+				const auto& vertices = mMesh->GetVertice();
+
+				uint8_t* mappedMemoryForVertexBuffer = nullptr;
+				CD3DX12_RANGE readRange(0, 0);
+				ComPtr<ID3D12Resource>& vertexBufferOwner = mVertexBufferResource->GetD3d12ResourceOwner();
+
+				vertexBufferOwner->Map(0, &readRange, reinterpret_cast<void**>(&mappedMemoryForVertexBuffer));
+				memcpy(mappedMemoryForVertexBuffer, &vertices[0], vertexDataSize);
+				vertexBufferOwner->Unmap(0, nullptr);
+
+				mVertexBufferView.BufferLocation = vertexBufferOwner->GetGPUVirtualAddress();
+				mVertexBufferView.StrideInBytes = sizeof(Mesh::Vertex);
+				mVertexBufferView.SizeInBytes = vertexDataSize;
+			}
+
+			// Initialize index buffer
+			const size_t indexDataSize = mMesh->GetIndicesNum() * indexSize;
+			mIndexBufferResource = make_unique<GpuResource>(L"Index buffer resource", indexDataSize, ResourceHeapType::Upload, ResourceState::GenericRead);
+			device.CreateGpuResource(*mIndexBufferResource);
+			{
+				const auto& indices = mMesh->GetIndice();
+
+				uint8_t* mappedMemoryForIndexBuffer = nullptr;
+				CD3DX12_RANGE readRange(0, 0);
+				ComPtr<ID3D12Resource>& indexBufferOwner = mIndexBufferResource->GetD3d12ResourceOwner();
+
+				indexBufferOwner->Map(0, &readRange, reinterpret_cast<void**>(&mappedMemoryForIndexBuffer));
+				memcpy(mappedMemoryForIndexBuffer, &indices[0], indexDataSize);
+				indexBufferOwner->Unmap(0, nullptr);
+
+				mIndexBufferView.BufferLocation = indexBufferOwner->GetGPUVirtualAddress();
+				mIndexBufferView.SizeInBytes = indexDataSize;
+				mIndexBufferView.Format = indexFormat;
+			}
+
+			mIsDirty = false;
+		}
+
 	}
 }

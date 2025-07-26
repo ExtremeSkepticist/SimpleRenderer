@@ -1,3 +1,5 @@
+#define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
+
 #include <assimp/scene.h>
 #include <codecvt>
 #include <locale>
@@ -9,11 +11,12 @@
 #include "TextureGroup.h"
 #include "RenderingPipeline.h"
 
+
 namespace sr
 {
 	namespace rendering
 	{
-		TextureGroup::TextureGroup()
+		TextureGroup::TextureGroup() noexcept
 			: mTextureMap()
 		{
 		}
@@ -22,14 +25,8 @@ namespace sr
 		{
 			Expects(mTextureMap.find(&mesh) == mTextureMap.end());
 
-			const std::string& meshName = mesh.GetName();
-			const auto isExists = std::find(mTextureMap.begin(), mTextureMap.end(), [&](Mesh* mesh) -> bool{
-				return mesh->GetName() == meshName;
-			});
-
-			Expects(isExists != mTextureMap.end());
-
-			mTextureMap.emplace(make_pair(&mesh, std::vector<Texture>()));
+			const auto pair = make_pair(&mesh, std::vector<Texture>());
+			mTextureMap.emplace(pair);
 		}
 
 		void TextureGroup::LoadAllTexturesFromMesh(RenderingPipeline& pipeline) noexcept

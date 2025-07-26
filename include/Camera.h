@@ -2,21 +2,21 @@
 
 #include <DirectXMath.h>
 
-using namespace DirectX;
-
 namespace sr
 {
 	namespace rendering
 	{
+		using namespace DirectX;
+
 		class Camera
 		{
 		public:
-			Camera(const float fovAngle, const float aspectRatio, const float nearZCoords, const float farZCoords, const DirectX::XMFLOAT3& worldCoords) noexcept;
+			Camera(const float fovAngle, const float aspectRatio, const float nearZCoords, const float farZCoords, const XMFLOAT3& worldCoords) noexcept;
 
-			XMMATRIX GetViewLookAtMatrixLh(const XMFLOAT3& eyeCoords, const XMFLOAT3& targetCoords, const XMFLOAT3& upDireciton) const;
-			XMMATRIX GetProjectionMatrixLh() const;
+			XMMATRIX GetViewLookAtMatrixLh(const XMFLOAT3& eyeCoords, const XMFLOAT3& targetCoords, const XMFLOAT3& upDireciton) const noexcept;
+			XMMATRIX GetProjectionMatrixLh() const noexcept;
 
-			inline XMFLOAT3 GetWorldCoords() const
+			inline DirectX::XMFLOAT3 GetWorldCoords() const noexcept
 			{
 				return mWorldCoords;
 			}

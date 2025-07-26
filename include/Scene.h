@@ -21,6 +21,9 @@ namespace sr
 			Scene(const aiScene& scene) noexcept;
 			~Scene() = default;
 
+			DirectX::XMVECTOR GetLightPos() const noexcept;
+			void Update() noexcept;
+
 			inline Model& GetModel()
 			{
 				return *mModel;
@@ -29,17 +32,12 @@ namespace sr
 			{
 				return *mCamera;
 			}
-			DirectX::XMVECTOR GetLightPos() const;
-
-			void Update();
-
+			
 		private:
 			unique_ptr<Model> mModel = nullptr;
 			unique_ptr<Camera> mCamera = nullptr;
 			const DirectX::XMFLOAT3 mLightPosition;
 			float mAngle = 0;
-
-			bool mIsDirty;
 		};
 	}
 }

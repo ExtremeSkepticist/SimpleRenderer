@@ -17,14 +17,10 @@ namespace sr
 		{
 		public:
 			Model(const aiScene& assimpScene, const XMFLOAT3 worldCoords) noexcept;
-
-			// TODO: deprecate this
-			Model(const aiScene& assimpScene, const XMFLOAT3 worldCoords, const GraphicsDevice& graphicsDevice) noexcept;
-			
 			Model() = delete;
 			~Model() = default;
 
-			inline vector<unique_ptr<Mesh>>& GetMeshes() noexcept
+			inline std::vector<unique_ptr<Mesh>>& GetMeshes() noexcept
 			{
 				return mMeshes;
 			}

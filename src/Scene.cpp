@@ -15,7 +15,7 @@ namespace sr
 		// - assumes rendering only one DamagedHelmet, so ignoring recursive node-processing
 		// TODO: Switch to scene graph when needed
 		Scene::Scene(const aiScene& scene) noexcept
-			: mModel()
+			: mModel(nullptr)
 			, mCamera(nullptr)
 			, mLightPosition({0, 6, 1})
 			, mAngle(0)
@@ -31,12 +31,12 @@ namespace sr
 			mCamera = make_unique<Camera>(fovAngle, platform::aspectRatio, nearZcoordinate, farZcoordinate, cameraWorldPosition);
 		}
 
-		DirectX::XMVECTOR Scene::GetLightPos() const
+		DirectX::XMVECTOR Scene::GetLightPos() const noexcept
 		{
 			return XMVector4Transform(XMLoadFloat3(&mLightPosition), XMMatrixRotationZ(mAngle));
 		}
 
-		void Scene::Update()
+		void Scene::Update() noexcept
 		{
 			// TODO: Add camera movement and update camera position
 			// TODO: Add proper LightSource class
