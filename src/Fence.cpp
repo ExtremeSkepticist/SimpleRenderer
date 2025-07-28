@@ -1,5 +1,4 @@
 #include "Fence.h"
-#include "GraphicsDevice.h"
 
 namespace sr
 {

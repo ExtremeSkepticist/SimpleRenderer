@@ -1,14 +1,17 @@
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
 
+#include <Windows.h> // To fix "byte is ambiguous"
+
 #include <assimp/scene.h>
 #include <codecvt>
 #include <locale>
+
+#include "TextureGroup.h"
 
 #include "CommandList.h"
 #include "CommandQueue.h"
 #include "GraphicsDevice.h"
 #include "Mesh.h"
-#include "TextureGroup.h"
 #include "RenderingPipeline.h"
 
 
@@ -25,8 +28,7 @@ namespace sr
 		{
 			Expects(mTextureMap.find(&mesh) == mTextureMap.end());
 
-			const auto pair = make_pair(&mesh, std::vector<Texture>());
-			mTextureMap.emplace(pair);
+			mTextureMap.insert(std::make_pair(&mesh, std::vector<Texture>()));
 		}
 
 		void TextureGroup::LoadAllTexturesFromMesh(RenderingPipeline& pipeline) noexcept

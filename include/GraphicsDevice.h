@@ -20,9 +20,7 @@ namespace sr
 		class Fence;
 		class GpuResource;
 		class GraphicsPipelineState;
-		class RenderTargetDescriptorHeap;
 		class RootSignature;
-		class ShaderResourceDescriptorHeap;
 		class Texture;
 		struct DescriptorHandle;
 		class SwapChain;
@@ -36,7 +34,7 @@ namespace sr
 			GraphicsDevice(GraphicsDevice&&) = delete;
 			GraphicsDevice& operator=(const GraphicsDevice&&) = delete;
 			GraphicsDevice& operator=(GraphicsDevice&&) = delete;
-			~GraphicsDevice() = default;
+			~GraphicsDevice();
 
 			void CreateCommandQueue(CommandQueue& commandQueue) const noexcept;
 			void CreateSwapChain(SwapChain& swapChain, sr::platform::PlatformWindow& platformWindow, CommandQueue& commandQueue) const noexcept;

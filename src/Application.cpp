@@ -1,15 +1,20 @@
+#include <Windows.h>
+
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
 #include "Application.h"
+
+// Definition order
+#include "GraphicsDevice.h"
+#include "RenderingPipeline.h"
+
 #include "Camera.h"
 #include "RenderTargetDescriptorHeap.h"
 #include "FrameBuilder.h"
-#include "GraphicsDevice.h"
 #include "Model.h"
 #include "PlatformWindow.h"
-#include "RenderingPipeline.h"
 #include "Scene.h"
 #include "SwapChain.h"
 #include "TextureGroup.h"
@@ -26,20 +31,20 @@ namespace sr
 		, mIsInit(false)
 	{
 	}
+	Application::~Application() = default;
 
 	void Application::Init()
 	{
 		Expects(!mIsInit);
-		Expects(!mPlatformWindow && !mPipeline && !mFrameBuilder && !mTextureGroup);
+		Expects(!mPlatformWindow && !mPipeline && !mTextureGroup);
 
-		mPlatformWindow = make_unique<rendering::PlatformWindow>(mWidth, mHeight, mName, mCmdShow);
+		mPlatformWindow = make_unique<platform::PlatformWindow>(mWidth, mHeight, mName, mCmdShow);
 		mPipeline = make_unique<rendering::RenderingPipeline>(*mPlatformWindow, 2);
-		mFrameBuilder = make_unique<rendering::FrameBuilder>(mPipeline->GetGraphicsDevice());
 		mTextureGroup = make_unique<rendering::TextureGroup>();
 
 		mIsInit = true;
 
-		Ensures(mPlatformWindow && mPipeline && mFrameBuilder && mTextureGroup);
+		Ensures(mPlatformWindow && mPipeline && mTextureGroup);
 	}
 
 	void Application::Run()
@@ -65,7 +70,8 @@ namespace sr
 		assert(scene != nullptr);
 
 		mScene = make_unique<rendering::Scene>(*scene);
-		
+		mFrameBuilder = make_unique<rendering::FrameBuilder>(*mPipeline, *mScene);
+
 		// Load all textures from each model mesh
 		auto& meshes = mScene->GetModel().GetMeshes();
 		for (const auto& mesh : meshes)

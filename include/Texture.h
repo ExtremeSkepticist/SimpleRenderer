@@ -34,7 +34,10 @@ namespace sr
 			Texture(gsl::not_null<gsl::cwzstring> textureName, unique_ptr<DirectX::ScratchImage> rawImage
 			, const GraphicsDevice& graphicsDevice) noexcept;
 			
-			~Texture() = default;
+			Texture(const Texture& texture) = delete;
+			Texture(Texture&& other);
+
+			~Texture();
 
 			inline GpuResource& GetDefaultHeapResource() noexcept
 			{

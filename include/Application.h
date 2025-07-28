@@ -4,11 +4,14 @@
 
 namespace sr
 {
+	namespace platform
+	{
+		class PlatformWindow;
+	}
 	namespace rendering
 	{
 		class Scene;
 		class FrameBuilder;
-		class PlatformWindow;
 		class RenderingPipeline;
 		class TextureGroup;
 	}
@@ -17,6 +20,8 @@ namespace sr
 	{
 	public:
 		Application(uint16_t width, uint16_t height, gsl::not_null<gsl::cwzstring> name, gsl::czstring sampleName, int nCmdShow);
+		~Application();
+
 		void Init();
 		void Run();
 
@@ -34,7 +39,7 @@ namespace sr
 
 		unique_ptr<rendering::Scene> mScene = nullptr;
 		unique_ptr<rendering::TextureGroup> mTextureGroup = nullptr;
-		unique_ptr<rendering::PlatformWindow> mPlatformWindow = nullptr;
+		unique_ptr<platform::PlatformWindow> mPlatformWindow = nullptr;
 		unique_ptr<rendering::RenderingPipeline> mPipeline = nullptr;
 		unique_ptr<rendering::FrameBuilder> mFrameBuilder = nullptr;
 	};

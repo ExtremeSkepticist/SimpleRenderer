@@ -1,17 +1,19 @@
+#include "FrameBuilder.h"
+
 #include "Camera.h"
 #include "ConstBuffer.h"
 #include "DescriptorRange.h"
-#include "FrameBuilder.h"
 #include "GraphicsDevice.h"
 #include "GraphicsPipelineState.h"
 #include "Mesh.h"
+#include "Model.h"
 #include "RenderTargetDescriptorHeap.h"
+#include "ShaderResourceDescriptorHeap.h" // Definition order for unique_ptr
 #include "RenderingPipeline.h"
 #include "RootSignature.h"
 #include "RootParameter.h"
 #include "Scene.h"
 #include "Shader.h"
-#include "ShaderResourceDescriptorHeap.h"
 #include "SwapChain.h"
 #include "InputElementLayout.h"
 
@@ -73,6 +75,8 @@ namespace sr
 		
 			device.GetD3d12Device()->CreateDepthStencilView(mDsvBuffer.Get(), &dsvViewDesc, mDsvHeap->GetCPUDescriptorHandleForHeapStart());
 		}
+
+		FrameBuilder::~FrameBuilder() = default;
 
 		RenderTargetDescriptorHeap& FrameBuilder::GetRenderTargetDescriptorHeap()
 		{
@@ -144,7 +148,8 @@ namespace sr
 			// TODO: Store the max light intensity somewhere
 			// const sr::rendering::PointLight lightSource = { XMFLOAT3(1, 1, 1), 100, pointLightSourceWorldPosition };
 
-			mCpuConstBufferData = make_unique<CpuConstBufferData>(worldMatrix, viewMatrix, projectionMatrix, lightDirections);
+			CpuConstBufferData data = { worldMatrix, viewMatrix, projectionMatrix, lightDirections };
+			mCpuConstBufferData = make_unique<CpuConstBufferData>(data);
 			mConstBuffer = make_unique<sr::rendering::ConstBuffer>(L"Coord Transform Const buffer", *mCpuConstBufferData, pipeline.GetGraphicsDevice());
 
 			sr::rendering::DescriptorHandle descriptorHandle = mShaderResourceDescriptorHeap->GetHeapStartHandle();

@@ -3,13 +3,15 @@
 #include <d3d12.h>
 
 #include "Common.h"
+#include "Mesh.h"
 
 namespace sr
 {
 	namespace rendering
 	{
+		struct CpuConstBufferData;
+		
 		class ConstBuffer;
-		class CpuConstBufferData;
 		class GraphicsDevice;
 		class GraphicsPipelineState;
 		class RenderTargetDescriptorHeap;
@@ -30,6 +32,7 @@ namespace sr
 			ShaderResourceDescriptorHeap& GetShaderResourceDescriptorHeap();
 			GraphicsPipelineState& GetPipelineState();
 			RootSignature& GetRootSignature();
+			~FrameBuilder();
 
 			void Update(gsl::not_null<Scene*> scene);
 

@@ -58,6 +58,8 @@ namespace sr
 			ShowWindow(mHwnd, nCmdShow);
 		}
 
+		PlatformWindow::~PlatformWindow() noexcept = default;
+
 		LRESULT CALLBACK PlatformWindow::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) noexcept
 		{
 			// TODO: process user input with PlatformWindow

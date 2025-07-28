@@ -37,6 +37,8 @@ namespace sr
 			mGraphicsDevice->CreateFence(*mFence);
 		}
 
+		RenderingPipeline::~RenderingPipeline() = default;
+
 		void RenderingPipeline::Render(FrameBuilder& frameBuilder)
 		{
 			setupDefaultCommands(frameBuilder);

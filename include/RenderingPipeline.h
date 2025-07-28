@@ -26,7 +26,7 @@ namespace sr
 			RenderingPipeline() = delete;
 			RenderingPipeline(const RenderingPipeline&) = delete;
 			RenderingPipeline(RenderingPipeline&&) = delete;
-			~RenderingPipeline() = default;
+			~RenderingPipeline();
 
 			RenderingPipeline& operator=(const RenderingPipeline&) = delete;
 			RenderingPipeline& operator=(RenderingPipeline&&) = delete;

@@ -34,6 +34,15 @@ namespace sr
 			mSubResourceData.SlicePitch = image->height * mSubResourceData.RowPitch;
 		}
 
+		Texture::~Texture() = default;
+		Texture::Texture(Texture&& other)
+			: mType(other.mType)
+			, mDefaultHeap(std::move(other.mDefaultHeap))
+			, mMappedMemoryForUploadHeap(std::move(other.mMappedMemoryForUploadHeap))
+			, mRawImage(std::move(other.mRawImage))
+			, mSubResourceData(other.mSubResourceData)
+		{
+		}
 
 		// TODO: deprecate this
 		// TODO: Load image outside and pass into this, then initialize GpuResource
