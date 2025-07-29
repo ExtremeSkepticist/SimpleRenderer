@@ -16,6 +16,7 @@ namespace sr
 
 			void BindResource(GraphicsDevice& graphicsDevice) override final
 			{
+
 			}
 		};
 	}

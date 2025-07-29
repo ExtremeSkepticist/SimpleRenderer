@@ -72,7 +72,7 @@ namespace sr
 			Ensures(mTextureNameMap.size() == static_cast<size_t>(Texture::TextureType::Num));
 		}
 
-		std::string& Mesh::GetTextureName(Texture::TextureType type)
+		const std::string& Mesh::GetTextureName(Texture::TextureType type) const
 		{
 			return mTextureNameMap.find(type)->second;
 		}

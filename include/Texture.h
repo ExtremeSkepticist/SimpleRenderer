@@ -21,8 +21,8 @@ namespace sr
 			{
 				Albedo,
 				MetalRoughness,
-				Emissive,
 				Normal,
+				Emissive,
 				AmbientOcclusion,
 				Num
 			};

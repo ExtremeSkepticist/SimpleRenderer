@@ -16,6 +16,7 @@
 #include "Shader.h"
 #include "SwapChain.h"
 #include "InputElementLayout.h"
+#include "TextureGroup.h";
 
 namespace sr
 {
@@ -151,9 +152,6 @@ namespace sr
 			CpuConstBufferData data = { worldMatrix, viewMatrix, projectionMatrix, lightDirections };
 			mCpuConstBufferData = make_unique<CpuConstBufferData>(data);
 			mConstBuffer = make_unique<sr::rendering::ConstBuffer>(L"Coord Transform Const buffer", *mCpuConstBufferData, pipeline.GetGraphicsDevice());
-
-			sr::rendering::DescriptorHandle descriptorHandle = mShaderResourceDescriptorHeap->GetHeapStartHandle();
-			device.CreateConstBufferView(*mConstBuffer, descriptorHandle);
 		}
 
 		void FrameBuilder::createDefaultRootSignature(const GraphicsDevice& device)
@@ -246,8 +244,27 @@ namespace sr
 				mIndexBufferView.SizeInBytes = indexDataSize;
 				mIndexBufferView.Format = indexFormat;
 			}
+		}
 
-			mIsDirty = false;
+		void FrameBuilder::bindSrvResources(gsl::not_null<TextureGroup*> textureGroup, const GraphicsDevice& device) noexcept
+		{
+			Expects(mConstBuffer != nullptr);
+			Expects(mMesh != nullptr);
+
+			sr::rendering::DescriptorHandle descriptorHandle = mShaderResourceDescriptorHeap->GetHeapStartHandle();
+			device.CreateConstBufferView(*mConstBuffer, descriptorHandle);
+			descriptorHandle.cpuHandle.ptr += device.GetShaderResourceDescriptorHeapHandleIncrementSize();
+
+			// TODO: add emissive & AO map
+			constexpr size_t textureNum = static_cast<size_t>(Texture::TextureType::Num) - 2;
+			for (gsl::index i = 0; i < textureNum; ++i)
+			{
+				Texture& texture = textureGroup->GetTexture(mMesh, static_cast<Texture::TextureType>(i));
+				
+				device.CreateShaderResourceView(texture, descriptorHandle);
+
+				descriptorHandle.cpuHandle.ptr += device.GetShaderResourceDescriptorHeapHandleIncrementSize();
+			}
 		}
 
 	}

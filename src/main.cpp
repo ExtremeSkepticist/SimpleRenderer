@@ -12,6 +12,7 @@ int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 	gsl::czstring sampleName = "DamagedHelmet.gltf";
 
 	unique_ptr<sr::Application> app = make_unique<sr::Application>(width, height, name, sampleName, nCmdShow);
+	app->Init();
 	app->Run();
 
 	return 0;

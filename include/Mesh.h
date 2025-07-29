@@ -65,7 +65,7 @@ namespace sr
 				return mName;
 			}
 
-			std::string& GetTextureName(Texture::TextureType type);
+			const std::string& GetTextureName(Texture::TextureType type) const;
 
 		private:
 			std::string mName = "";

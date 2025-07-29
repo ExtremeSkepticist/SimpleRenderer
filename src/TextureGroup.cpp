@@ -5,6 +5,7 @@
 #include <assimp/scene.h>
 #include <codecvt>
 #include <locale>
+#include <filesystem>
 
 #include "TextureGroup.h"
 
@@ -33,30 +34,48 @@ namespace sr
 
 		void TextureGroup::LoadAllTexturesFromMesh(RenderingPipeline& pipeline) noexcept
 		{
-			const gsl::index textureTypeNum = static_cast<gsl::index>(Texture::TextureType::Num);
+			// TODO: add emissive map
+			// TODO: add AO map
+			const gsl::index textureTypeNum = static_cast<gsl::index>(Texture::TextureType::Num) - 2;
 			for (auto& entry : mTextureMap)
 			{
 				entry.second.reserve(textureTypeNum);
 
 				for (gsl::index i = 0; i < textureTypeNum; ++i)
 				{
-					auto& mesh = *entry.first;
+					const Mesh& mesh = *entry.first;
 					loadTexture(mesh, static_cast<Texture::TextureType>(i), pipeline.GetGraphicsDevice());
+				}
+				for (gsl::index i = 0; i < textureTypeNum; ++i)
+				{
+					auto& mesh = *entry.first;
 					copyTextureIntoGpu(mTextureMap[&mesh][i], pipeline);
 				}
+				
 			}
 		}
 
-		void TextureGroup::loadTexture(Mesh& mesh, Texture::TextureType type, GraphicsDevice& device)
+		Texture& TextureGroup::GetTexture(const Mesh* mesh, Texture::TextureType type) noexcept
+		{
+			return mTextureMap[mesh][static_cast<gsl::index>(type)];
+		}
+
+		void TextureGroup::loadTexture(const Mesh& mesh, Texture::TextureType type, GraphicsDevice& device)
 		{
 			std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
 			std::wstring fileName = converter.from_bytes(mesh.GetTextureName(type));
-			const std::wstring path = L"resources\\" + fileName;
-
+			std::filesystem::path newPath(std::wstring(L"resources\\" + fileName));
+			newPath.replace_extension("dds");
+			// TODO: add emissive map
+			// TODO: add AO map
+			if (type == Texture::TextureType::Emissive || type == Texture::TextureType::AmbientOcclusion)
+			{
+				return;
+			}
 			unique_ptr<ScratchImage> scratchImage = make_unique<ScratchImage>();
 			// Pre-converted .dds file by texconv.exe
 			// TODO: automate the conversion process somehow
-			HRESULT hasLoaded = LoadFromDDSFile(path.c_str(), DDS_FLAGS_NONE, nullptr, *scratchImage);
+			HRESULT hasLoaded = LoadFromDDSFile(newPath.generic_wstring().c_str(), DDS_FLAGS_NONE, nullptr, *scratchImage);
 			assert(SUCCEEDED(hasLoaded));
 
 			mTextureMap[&mesh].emplace_back(type, fileName.c_str(), std::move(scratchImage), device);

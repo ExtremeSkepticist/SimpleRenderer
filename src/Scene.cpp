@@ -45,7 +45,7 @@ namespace sr
 				mAngle = 0;
 				return;
 			}
-			mAngle += 1;
+			mAngle += 0.01;
 		}
 	}
 }

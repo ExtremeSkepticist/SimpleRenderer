@@ -21,6 +21,7 @@ namespace sr
 		class ShaderResourceDescriptorHeap;
 		class Mesh;
 		class GpuResource;
+		class TextureGroup;
 
 		struct DescriptorHandle;
 
@@ -40,13 +41,18 @@ namespace sr
 			ComPtr<ID3D12DescriptorHeap> mDsvHeap = nullptr;
 			ComPtr<ID3D12Resource> mDsvBuffer = nullptr;
 			
-			inline void SetMesh(gsl::not_null<Mesh*> mesh, const GraphicsDevice& device)
-			{
-				mIsDirty = true;
 
-				mMesh = mesh.get();
-				mIndexNum = mMesh->GetIndicesNum();
-				createMeshResources(device);
+			inline void SetMesh(gsl::not_null<Mesh*> mesh, gsl::not_null<TextureGroup*> textureGroup, const GraphicsDevice& device)
+			{
+				if (!mIsDirty)
+				{
+					mMesh = mesh.get();
+					mIsDirty = true;
+					mIndexNum = mMesh->GetIndicesNum();
+					
+					createMeshResources(device);
+					bindSrvResources(textureGroup, device);
+				}
 			}
 
 			inline D3D12_VERTEX_BUFFER_VIEW& GetVertexView() noexcept
@@ -67,6 +73,7 @@ namespace sr
 			void createDefaultRootSignature(const GraphicsDevice& device);
 			void createDefaultPipelineState(const GraphicsDevice& device);
 			void createMeshResources(const GraphicsDevice& device) noexcept;
+			void bindSrvResources(gsl::not_null<TextureGroup*> textureGroup, const GraphicsDevice& device) noexcept;
 
 			void recordCommands();
 

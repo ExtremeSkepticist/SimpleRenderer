@@ -64,7 +64,7 @@ namespace sr
 	{
 		// Import Model & Create Scene
 		Assimp::Importer importer;
-		const std::string modelPath("resources\\%s", mSampleName);
+		const std::string modelPath = std::string("resources\\") + mSampleName;
 		constexpr uint32_t importFlag = aiProcess_ConvertToLeftHanded | aiProcess_CalcTangentSpace;
 		const aiScene* scene = importer.ReadFile(modelPath, importFlag);
 		assert(scene != nullptr);
@@ -92,7 +92,7 @@ namespace sr
 		auto& meshes = mScene->GetModel().GetMeshes();
 		for (auto& mesh : meshes)
 		{
-			mFrameBuilder->SetMesh(mesh.get(), mPipeline->GetGraphicsDevice());
+			mFrameBuilder->SetMesh(mesh.get(), mTextureGroup.get(), mPipeline->GetGraphicsDevice());
 			mPipeline->Render(*mFrameBuilder);
 		}
 	}
