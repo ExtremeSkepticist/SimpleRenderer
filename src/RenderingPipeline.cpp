@@ -1,5 +1,5 @@
 #include "Fence.h"
-#include "FrameResource.h"
+#include "FrameBuilder.h"
 #include "CommandList.h"
 #include "CommandType.h"
 #include "CommandQueue.h"
@@ -17,7 +17,7 @@ namespace sr
 {
 	namespace rendering
 	{
-		// TODO: Separeate SwapChain and DescriptorHeap from Pipeline. They should be FrameResource, and pipeline should be just "tools"
+		// TODO: Separeate SwapChain and DescriptorHeap from Pipeline. They should be FrameBuilder, and pipeline should be just "tools"
 		// TODO: Use Device to create d3d12 object, outside its constructor
 		// TODO: investigate scene graph
 		//  - Separate resources from DescriptorHeap. Resources should go into Input struct/class and get bound later.
@@ -30,7 +30,6 @@ namespace sr
 			, mGraphicsCommandList(make_unique<CommandList>(CommandType::Graphics))
 			, mSwapChain(make_unique<SwapChain>(swapChainBufferNum, platformWindow))
 			, mFence(make_unique<Fence>())
-			// , mFrameResource(make_unique<FrameResource>())
 		{
 			mGraphicsDevice->CreateCommandQueue(*mGraphicsCommandQueue);
 			mGraphicsDevice->CreateCommandList(*mGraphicsCommandList);
@@ -38,24 +37,26 @@ namespace sr
 			mGraphicsDevice->CreateFence(*mFence);
 		}
 
-		void RenderingPipeline::Render(FrameResource& frameResource)
+		RenderingPipeline::~RenderingPipeline() = default;
+
+		void RenderingPipeline::Render(FrameBuilder& frameBuilder)
 		{
-			setupDefaultCommands(frameResource);
+			setupDefaultCommands(frameBuilder);
 		}
 
-		void RenderingPipeline::setupDefaultCommands(FrameResource& frameResource)
+		void RenderingPipeline::setupDefaultCommands(FrameBuilder& frameBuilder)
 		{
 			sr::rendering::CommandList& graphicsCommandList = GetGraphicsCommandList();
 
 			graphicsCommandList.ResetCommandList();
-			graphicsCommandList.SetPipelineState(frameResource.GetPipelineState());
-			graphicsCommandList.SetGraphicsRootSignature(frameResource.GetRootSignature());
+			graphicsCommandList.SetPipelineState(frameBuilder.GetPipelineState());
+			graphicsCommandList.SetGraphicsRootSignature(frameBuilder.GetRootSignature());
 			
 			// TODO: Encapsulate all d3d12 functions into CommandList class
 
 			// Bind SRV heap
 			gsl::not_null<ID3D12GraphicsCommandList*> d3d12CommandList = graphicsCommandList.GetCommandList();
-			gsl::not_null<ID3D12DescriptorHeap*> srvHeap = frameResource.GetShaderResourceDescriptorHeap().GetDescriptorHeap();
+			gsl::not_null<ID3D12DescriptorHeap*> srvHeap = frameBuilder.GetShaderResourceDescriptorHeap().GetDescriptorHeap();
 			ID3D12DescriptorHeap* arr[] = { srvHeap };
 			d3d12CommandList->SetDescriptorHeaps(1, arr);
 			d3d12CommandList->SetGraphicsRootDescriptorTable(0, srvHeap->GetGPUDescriptorHandleForHeapStart());
@@ -80,10 +81,10 @@ namespace sr
 
 			d3d12CommandList->ResourceBarrier(1, &resourceBarrier);
 			{
-				ID3D12DescriptorHeap* rtvHeap = frameResource.GetRenderTargetDescriptorHeap().GetDescriptorHeap();
+				ID3D12DescriptorHeap* rtvHeap = frameBuilder.GetRenderTargetDescriptorHeap().GetDescriptorHeap();
 				CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart(), currentBackBufferIndex, mGraphicsDevice->GetRenderTargetHeapHandleIncrementSize());
 				
-				DescriptorHandle dsvHandle = { frameResource.mDsvHeap->GetCPUDescriptorHandleForHeapStart(), 0 };
+				DescriptorHandle dsvHandle = { frameBuilder.mDsvHeap->GetCPUDescriptorHandleForHeapStart(), 0 };
 				d3d12CommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle.cpuHandle);
 
 				const FLOAT pClearingColor[] = { 0, 0, 0, 0 };
@@ -91,15 +92,9 @@ namespace sr
 				d3d12CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 				d3d12CommandList->ClearDepthStencilView(dsvHandle.cpuHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
-				gsl::not_null<Model*> model = frameResource.getModel();
-				const size_t MESH_COUNT = model->GetMeshes().size();
-				auto& meshes = model->GetMeshes();
-				for (size_t i = 0; i < MESH_COUNT; ++i)
-				{
-					d3d12CommandList->IASetVertexBuffers(0, 1, &meshes[i]->GetVertexBufferView());
-					d3d12CommandList->IASetIndexBuffer(&meshes[i]->GetIndexBufferView());
-					d3d12CommandList->DrawIndexedInstanced(meshes[i]->GetIndicesNum(), 1, 0, 0, 0);
-				}
+				d3d12CommandList->IASetVertexBuffers(0, 1, &frameBuilder.GetVertexView());
+				d3d12CommandList->IASetIndexBuffer(&frameBuilder.GetIndexView());
+				d3d12CommandList->DrawIndexedInstanced(frameBuilder.GetIndexNum(), 1, 0, 0, 0);
 			}
 			resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(backBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 			d3d12CommandList->ResourceBarrier(1, &resourceBarrier);

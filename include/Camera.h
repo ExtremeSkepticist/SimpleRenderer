@@ -2,21 +2,32 @@
 
 #include <DirectXMath.h>
 
-using namespace DirectX;
-
-class Camera
+namespace sr
 {
-public:
-	Camera(const float fovAngle, const float aspectRatio, const float nearZCoords, const float farZCoords, const DirectX::XMFLOAT3& worldCoords) noexcept;
+	namespace rendering
+	{
+		using namespace DirectX;
 
-	XMMATRIX GetViewLookAtMatrixLh(const XMFLOAT3& eyeCoords, const XMFLOAT3& targetCoords, const XMFLOAT3& upDireciton) const;
-	XMMATRIX GetProjectionMatrixLh() const;
+		class Camera
+		{
+		public:
+			Camera(const float fovAngle, const float aspectRatio, const float nearZCoords, const float farZCoords, const XMFLOAT3& worldCoords) noexcept;
 
-private:
-	float mFovAngle = 0.0f;
-	float mAspectRatio = 0.0f;
-	float mNearZCoords = 0.0f;
-	float mFarZCoords = 0.0f;
+			XMMATRIX GetViewLookAtMatrixLh(const XMFLOAT3& eyeCoords, const XMFLOAT3& targetCoords, const XMFLOAT3& upDireciton) const noexcept;
+			XMMATRIX GetProjectionMatrixLh() const noexcept;
 
-	XMFLOAT3 mWorldCoords = {};
-};
+			inline DirectX::XMFLOAT3 GetWorldCoords() const noexcept
+			{
+				return mWorldCoords;
+			}
+
+		private:
+			float mFovAngle = 0.0f;
+			float mAspectRatio = 0.0f;
+			float mNearZCoords = 0.0f;
+			float mFarZCoords = 0.0f;
+
+			XMFLOAT3 mWorldCoords = {};
+		};
+	}
+}

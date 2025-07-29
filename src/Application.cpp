@@ -1,0 +1,99 @@
+#include <Windows.h>
+
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
+#include "Application.h"
+
+// Definition order
+#include "GraphicsDevice.h"
+#include "RenderingPipeline.h"
+
+#include "Camera.h"
+#include "RenderTargetDescriptorHeap.h"
+#include "FrameBuilder.h"
+#include "Model.h"
+#include "PlatformWindow.h"
+#include "Scene.h"
+#include "SwapChain.h"
+#include "TextureGroup.h"
+#include "ConstBuffer.h"
+
+namespace sr
+{
+	Application::Application(uint16_t width, uint16_t height, gsl::not_null<gsl::cwzstring> name, gsl::czstring sampleName, int nCmdShow)
+		: mWidth(width)
+		, mHeight(height)
+		, mName(name)
+		, mCmdShow(nCmdShow)
+		, mSampleName(sampleName)
+		, mIsInit(false)
+	{
+	}
+	Application::~Application() = default;
+
+	void Application::Init()
+	{
+		Expects(!mIsInit);
+		Expects(!mPlatformWindow && !mPipeline && !mTextureGroup);
+
+		mPlatformWindow = make_unique<platform::PlatformWindow>(mWidth, mHeight, mName, mCmdShow);
+		mPipeline = make_unique<rendering::RenderingPipeline>(*mPlatformWindow, 2);
+		mTextureGroup = make_unique<rendering::TextureGroup>();
+
+		mIsInit = true;
+
+		Ensures(mPlatformWindow && mPipeline && mTextureGroup);
+	}
+
+	void Application::Run()
+	{
+		Expects(mIsInit);
+
+		loadAssets();
+
+		while (true)
+		{
+			update();
+			render();
+		}
+	}
+
+	void Application::loadAssets()
+	{
+		// Import Model & Create Scene
+		Assimp::Importer importer;
+		const std::string modelPath = std::string("resources\\") + mSampleName;
+		constexpr uint32_t importFlag = aiProcess_ConvertToLeftHanded | aiProcess_CalcTangentSpace;
+		const aiScene* scene = importer.ReadFile(modelPath, importFlag);
+		assert(scene != nullptr);
+
+		mScene = make_unique<rendering::Scene>(*scene);
+		mFrameBuilder = make_unique<rendering::FrameBuilder>(*mPipeline, *mScene);
+
+		// Load all textures from each model mesh
+		auto& meshes = mScene->GetModel().GetMeshes();
+		for (const auto& mesh : meshes)
+		{
+			mTextureGroup->AddMesh(*mesh);
+		}
+		mTextureGroup->LoadAllTexturesFromMesh(*mPipeline);
+	}
+
+	void Application::update()
+	{
+		mScene->Update();
+		mFrameBuilder->Update(mScene.get());
+	}
+
+	void Application::render()
+	{
+		auto& meshes = mScene->GetModel().GetMeshes();
+		for (auto& mesh : meshes)
+		{
+			mFrameBuilder->SetMesh(mesh.get(), mTextureGroup.get(), mPipeline->GetGraphicsDevice());
+			mPipeline->Render(*mFrameBuilder);
+		}
+	}
+}

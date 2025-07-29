@@ -1,8 +1,8 @@
 #include <d3dx12.h>
 
+
 #include "GpuResource.h"
-#include "GraphicsDevice.h"
-#include "ShaderResourceDescriptorHeap.h"
+#include "ShaderResourceDescriptorHeap.h" // Definition order for unique_ptr
 
 namespace sr
 {

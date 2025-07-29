@@ -14,7 +14,7 @@ namespace sr
 		class CommandList;
 		class CommandQueue;
 		class Fence;
-		class FrameResource;
+		class FrameBuilder;
 		class GraphicsDevice;
 		class SwapChain;
 		class RenderTargetDescriptorHeap;
@@ -26,12 +26,12 @@ namespace sr
 			RenderingPipeline() = delete;
 			RenderingPipeline(const RenderingPipeline&) = delete;
 			RenderingPipeline(RenderingPipeline&&) = delete;
-			~RenderingPipeline() = default;
+			~RenderingPipeline();
 
 			RenderingPipeline& operator=(const RenderingPipeline&) = delete;
 			RenderingPipeline& operator=(RenderingPipeline&&) = delete;
 
-			void Render(FrameResource& frameResource);
+			void Render(FrameBuilder& frameBuilder);
 
 			inline GraphicsDevice& GetGraphicsDevice() noexcept
 			{
@@ -56,7 +56,7 @@ namespace sr
 			void WaitForPreviousFrame() noexcept;
 
 		private:
-			void setupDefaultCommands(FrameResource& frameResource);
+			void setupDefaultCommands(FrameBuilder& frameBuilder);
 
 			unique_ptr<GraphicsDevice> mGraphicsDevice = nullptr;
 			unique_ptr<CommandQueue> mGraphicsCommandQueue = nullptr;

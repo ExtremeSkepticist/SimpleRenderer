@@ -8,8 +8,6 @@ namespace sr
 {
 	namespace rendering
 	{
-		class GraphicsDevice;
-
 		class Fence
 		{
 		public:

@@ -24,7 +24,7 @@ namespace sr
 			PlatformWindow(PlatformWindow&&) = delete;
 			PlatformWindow& operator=(const PlatformWindow&) = delete;
 			PlatformWindow& operator=(PlatformWindow&&) = delete;
-			~PlatformWindow() = default;
+			~PlatformWindow() noexcept;
 
 			static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) noexcept;
 

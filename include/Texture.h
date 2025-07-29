@@ -17,9 +17,27 @@ namespace sr
 		class Texture
 		{
 		public:
+			enum class TextureType
+			{
+				Albedo,
+				MetalRoughness,
+				Normal,
+				Emissive,
+				AmbientOcclusion,
+				Num
+			};
+
+			Texture(TextureType type, gsl::not_null<gsl::cwzstring> textureName, unique_ptr<DirectX::ScratchImage> rawImage
+				, const GraphicsDevice& graphicsDevice) noexcept;
+
+			// TODO: deprecate this
 			Texture(gsl::not_null<gsl::cwzstring> textureName, unique_ptr<DirectX::ScratchImage> rawImage
 			, const GraphicsDevice& graphicsDevice) noexcept;
-			~Texture() = default;
+			
+			Texture(const Texture& texture) = delete;
+			Texture(Texture&& other);
+
+			~Texture();
 
 			inline GpuResource& GetDefaultHeapResource() noexcept
 			{
@@ -42,6 +60,8 @@ namespace sr
 			}
 
 		private:
+			TextureType mType = TextureType::Num;
+
 			GpuResource mDefaultHeap;
 			GpuResource mUploadHeap;
 			uint8_t* mMappedMemoryForUploadHeap = nullptr;

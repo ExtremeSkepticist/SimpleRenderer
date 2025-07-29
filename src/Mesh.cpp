@@ -1,27 +1,22 @@
 #include <assimp/mesh.h>
+#include <assimp/material.h>
 
 #include "GraphicsDevice.h"
-#include "GpuResource.h"
 #include "Mesh.h"
 
 namespace sr
 {
 	namespace rendering
 	{
-		Mesh::Mesh(const aiMesh& assimpMesh, const GraphicsDevice& graphicsDevice) noexcept
+		Mesh::Mesh(const aiMesh& assimpMesh, const aiMaterial& material) noexcept
 			: mName(assimpMesh.mName.C_Str())
 			, mVerticesNum(assimpMesh.mNumVertices)
-			, mIndicesNum(assimpMesh.mNumFaces * indiceNumPerFace)
-			, mVertexBufferResource(nullptr)
-			, mIndexBufferResource(nullptr)
-			, mVertexBufferView()
-			, mIndexBufferView()
-			, mVertexBuffer(nullptr)
-			, mIndexBuffer(nullptr)
+			, mIndicesNum(assimpMesh.mNumFaces* indiceNumPerFace)
+			, mTextureNameMap()
 		{
 			Expects(mVerticesNum > 0);
 			Expects(mIndicesNum > 0);
-			Expects(assimpMesh.GetNumUVChannels() == 1 && assimpMesh.HasTextureCoords(0) == true);
+			Expects(assimpMesh.GetNumUVChannels() == 1 && assimpMesh.HasTextureCoords(0));
 			Expects(assimpMesh.HasNormals());
 			Expects(assimpMesh.HasFaces());
 
@@ -29,65 +24,57 @@ namespace sr
 			mIndices.reserve(mIndicesNum);
 			for (gsl::index i = 0; i < mVerticesNum; ++i)
 			{
-				// TODO: might have to change this to XMFLOAT4
 				const XMFLOAT3 position(reinterpret_cast<float*>(&assimpMesh.mVertices[i]));
 				const XMFLOAT2 texcoords(reinterpret_cast<float*>(&assimpMesh.mTextureCoords[0][i]));
 				const XMFLOAT3 normal(reinterpret_cast<float*>(&assimpMesh.mNormals[i]));
 				const XMFLOAT3 tangent(reinterpret_cast<float*>(&assimpMesh.mTangents[i]));
 				const XMFLOAT3 binormal(reinterpret_cast<float*>(&assimpMesh.mBitangents[i]));
 
-				const Vertex vertex = { position, texcoords, normal, tangent, binormal};
+				const Vertex vertex = { position, texcoords, normal, tangent, binormal };
 				mVertices.emplace_back(vertex);
 			}
 
-			for (size_t i = 0; i < assimpMesh.mNumFaces; ++i)
+			for (gsl::index i = 0; i < assimpMesh.mNumFaces; ++i)
 			{
 				const aiFace& face = assimpMesh.mFaces[i];
-				for (size_t j = 0; j < face.mNumIndices; ++j)
+				for (gsl::index j = 0; j < face.mNumIndices; ++j)
 				{
 					mIndices.emplace_back(face.mIndices[j]);
 				}
 			}
 
-			assert(mVertices.size() == assimpMesh.mNumVertices);
-			assert(mIndices.size() == mIndicesNum);
+			aiShadingMode shadingMode;
+			material.Get(AI_MATKEY_SHADING_MODEL, shadingMode);
+			assert(shadingMode == aiShadingMode_PBR_BRDF);
 
-			// TODO: Create DEFAULT heap and copy thess to it
-			// Initialize vertex buffer
-			const size_t vertexDataSize = sizeof(sr::rendering::Mesh::Vertex) * mVerticesNum;
-			mVertexBufferResource = make_unique<GpuResource>(L"Vertex buffer resource", vertexDataSize, ResourceHeapType::Upload, ResourceState::GenericRead);
-			graphicsDevice.CreateGpuResource(*mVertexBufferResource);
-			{
-				uint8_t* mappedMemoryForVertexBuffer = nullptr;
-				CD3DX12_RANGE readRange(0, 0);
-				ComPtr<ID3D12Resource>& vertexBufferOwner = mVertexBufferResource->GetD3d12ResourceOwner();
+			// Albedo
+			aiString textureName;
+			material.GetTexture(AI_MATKEY_BASE_COLOR_TEXTURE, &textureName);
+			mTextureNameMap.emplace(make_pair(Texture::TextureType::Albedo, textureName.C_Str()));
 
-				vertexBufferOwner->Map(0, &readRange, reinterpret_cast<void**>(&mappedMemoryForVertexBuffer));
-				memcpy(mappedMemoryForVertexBuffer, &mVertices[0], vertexDataSize);
-				vertexBufferOwner->Unmap(0, nullptr);
+			// Metallic-Roughness
+			// Note: Assimp recognizes metallic-roughness texture as metallic texture
+			material.GetTexture(AI_MATKEY_METALLIC_TEXTURE, &textureName);
+			mTextureNameMap.emplace(make_pair(Texture::TextureType::MetalRoughness, textureName.C_Str()));
 
-				mVertexBufferView.BufferLocation = vertexBufferOwner->GetGPUVirtualAddress();
-				mVertexBufferView.StrideInBytes = sizeof(Vertex);
-				mVertexBufferView.SizeInBytes= vertexDataSize;
-			}
+			material.GetTexture(aiTextureType_NORMALS, 0, &textureName);
+			mTextureNameMap.emplace(make_pair(Texture::TextureType::Normal, textureName.C_Str()));
 
-			// Initialize index buffer
-			const size_t indexDataSize = mIndicesNum * indexSize;
-			mIndexBufferResource = make_unique<GpuResource>(L"Index buffer resource", indexDataSize, ResourceHeapType::Upload, ResourceState::GenericRead);
-			graphicsDevice.CreateGpuResource(*mIndexBufferResource);
-			{
-				uint8_t* mappedMemoryForIndexBuffer = nullptr;
-				CD3DX12_RANGE readRange(0, 0);
-				ComPtr<ID3D12Resource>& indexBufferOwner = mIndexBufferResource->GetD3d12ResourceOwner();
+			material.GetTexture(aiTextureType_EMISSIVE, 0, &textureName);
+			mTextureNameMap.emplace(make_pair(Texture::TextureType::Emissive, textureName.C_Str()));
 
-				indexBufferOwner->Map(0, &readRange, reinterpret_cast<void**>(&mappedMemoryForIndexBuffer));
-				memcpy(mappedMemoryForIndexBuffer, &mIndices[0], indexDataSize);
-				indexBufferOwner->Unmap(0, nullptr);
+			// Assimp detects AO map of damaged helmet as light map
+			material.GetTexture(aiTextureType_LIGHTMAP, 0, &textureName);
+			mTextureNameMap.emplace(make_pair(Texture::TextureType::AmbientOcclusion, textureName.C_Str()));
 
-				mIndexBufferView.BufferLocation = indexBufferOwner->GetGPUVirtualAddress();
-				mIndexBufferView.SizeInBytes = indexDataSize;
-				mIndexBufferView.Format = indexFormat;
-			}
+			Ensures(mVertices.size() == assimpMesh.mNumVertices);
+			Ensures(mIndices.size() == mIndicesNum);
+			Ensures(mTextureNameMap.size() == static_cast<size_t>(Texture::TextureType::Num));
+		}
+
+		const std::string& Mesh::GetTextureName(Texture::TextureType type) const
+		{
+			return mTextureNameMap.find(type)->second;
 		}
 	}
 }

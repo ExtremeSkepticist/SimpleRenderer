@@ -128,8 +128,19 @@
     <ClCompile Include="src\main.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\FrameResource.cpp" />
     <ClCompile Include="src\DepthStencilDescriptorHeap.cpp">
+      <Filter>pipeline resources\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Application.cpp">
+      <Filter>pipeline resources\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\FrameBuilder.cpp">
+      <Filter>pipeline resources\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Scene.cpp">
+      <Filter>pipeline resources\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\TextureGroup.cpp">
       <Filter>pipeline resources\src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -206,12 +217,25 @@
     <ClInclude Include="include\CommandList.h">
       <Filter>pipeline\include</Filter>
     </ClInclude>
-    <ClInclude Include="include\DescriptorHandle.h" />
-    <ClInclude Include="include\FrameResource.h" />
     <ClInclude Include="include\DepthStencilDescriptorHeap.h">
       <Filter>pipeline resources\include</Filter>
     </ClInclude>
     <ClInclude Include="include\LightSource.h">
+      <Filter>pipeline resources\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Application.h">
+      <Filter>pipeline resources\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\FrameBuilder.h">
+      <Filter>pipeline resources\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\DescriptorHandle.h">
+      <Filter>pipeline resources\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Scene.h">
+      <Filter>pipeline resources\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\TextureGroup.h">
       <Filter>pipeline resources\include</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,11 +1,11 @@
+#pragma once
+
 #include "DescriptorHeap.h"
 
 namespace sr
 {
 	namespace rendering
 	{
-		class GraphicsDevice;
-		
 		class ShaderResourceDescriptorHeap : public DescriptorHeap
 		{
 		public:
@@ -16,6 +16,7 @@ namespace sr
 
 			void BindResource(GraphicsDevice& graphicsDevice) override final
 			{
+
 			}
 		};
 	}

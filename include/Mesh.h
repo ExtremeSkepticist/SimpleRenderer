@@ -2,11 +2,14 @@
 
 #include <DirectXMath.h>
 #include <d3d12.h>
+#include <map>
 
 #include "Common.h"
 #include "GpuResource.h"
+#include "Texture.h"
 
 struct aiMesh;
+struct aiMaterial;
 
 using namespace DirectX;
 namespace sr
@@ -34,38 +37,17 @@ namespace sr
 				XMFLOAT3 Binormal;
 			} Vertex;
 
-
 			Mesh() = delete;
-			Mesh(const aiMesh& assimpMesh, const GraphicsDevice& graphicsDevice) noexcept;
+			Mesh(const aiMesh& assimpMesh, const aiMaterial& material) noexcept;
 
-			inline vector<Vertex>& GetVerticeDataOwner() noexcept
+			inline const vector<Vertex>& GetVertice() const noexcept
 			{
 				return mVertices;
 			}
 
-			inline vector<IndexType>& GetIndexDataOwner() noexcept
+			inline const vector<IndexType>& GetIndice() const noexcept
 			{
 				return mIndices;
-			}
-
-			inline ID3D12Resource* GetVertexBufferResource() noexcept
-			{
-				return mVertexBufferResource->GetD3d12Resource();
-			}
-
-			inline ID3D12Resource* GetIndexBufferResource() noexcept
-			{
-				return mIndexBufferResource->GetD3d12Resource();
-			}
-
-			inline D3D12_VERTEX_BUFFER_VIEW& GetVertexBufferView() noexcept
-			{
-				return mVertexBufferView;
-			}
-
-			inline D3D12_INDEX_BUFFER_VIEW& GetIndexBufferView() noexcept
-			{
-				return mIndexBufferView;
 			}
 
 			inline const size_t GetVerticeNum() const noexcept
@@ -78,6 +60,13 @@ namespace sr
 				return mIndicesNum;
 			}
 
+			std::string& GetName()
+			{
+				return mName;
+			}
+
+			const std::string& GetTextureName(Texture::TextureType type) const;
+
 		private:
 			std::string mName = "";
 			size_t mVerticesNum = 0;
@@ -85,13 +74,7 @@ namespace sr
 			vector<Vertex> mVertices = {};
 			vector<IndexType> mIndices = {};
 
-			unique_ptr<GpuResource> mVertexBufferResource = nullptr;
-			unique_ptr<GpuResource> mIndexBufferResource = nullptr;
-			D3D12_VERTEX_BUFFER_VIEW mVertexBufferView;
-			D3D12_INDEX_BUFFER_VIEW mIndexBufferView;
-			
-			ComPtr<ID3D12Resource> mVertexBuffer;
-			ComPtr<ID3D12Resource> mIndexBuffer;
+			std::map<Texture::TextureType, std::string> mTextureNameMap = {};
 		};
 	}
 }

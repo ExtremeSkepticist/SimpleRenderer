@@ -16,11 +16,11 @@ namespace sr
 		class Model
 		{
 		public:
-			Model(const aiScene& assimpScene, const XMFLOAT3 worldCoords, const GraphicsDevice& graphicsDevice) noexcept;
+			Model(const aiScene& assimpScene, const XMFLOAT3 worldCoords) noexcept;
 			Model() = delete;
 			~Model() = default;
 
-			inline vector<unique_ptr<Mesh>>& GetMeshes() noexcept
+			inline std::vector<unique_ptr<Mesh>>& GetMeshes() noexcept
 			{
 				return mMeshes;
 			}

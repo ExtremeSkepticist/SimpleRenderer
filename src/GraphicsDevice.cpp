@@ -1,5 +1,7 @@
 #include <dxgi1_6.h>
 
+#include "GraphicsDevice.h"
+
 #include "ConstBuffer.h"
 #include "CommandType.h"
 #include "CommandQueue.h"
@@ -7,11 +9,10 @@
 #include "Fence.h"
 #include "GpuResource.h"
 #include "CommandList.h"
-#include "GraphicsDevice.h"
-#include "GraphicsPipelineState.h"
-#include "RenderTargetDescriptorHeap.h"
 #include "RootSignature.h"
 #include "ShaderResourceDescriptorHeap.h"
+#include "GraphicsPipelineState.h"
+#include "RenderTargetDescriptorHeap.h"
 #include "Texture.h"
 #include "DescriptorHandle.h"
 #include "PlatformWindow.h"
@@ -63,6 +64,8 @@ namespace sr
 
 			Ensures(mD3d12Device != nullptr);
 		}
+
+		GraphicsDevice::~GraphicsDevice() = default;
 
 		void GraphicsDevice::CreateCommandQueue(CommandQueue& commandQueue) const noexcept
 		{
@@ -257,7 +260,7 @@ namespace sr
 				assert(false);
 			}
 
-			// TODO: copy from FrameResource.cpp
+			// TODO: copy from FrameBuilder.cpp
 			if (isDepthBuffer)
 			{
 
