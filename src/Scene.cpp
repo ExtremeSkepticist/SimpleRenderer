@@ -1,6 +1,8 @@
 #include <assimp\scene.h>
 
+#include "AssetLoader.h"
 #include "Camera.h"
+#include "Entity.h"
 #include "Model.h"
 #include "Scene.h"
 #include "TextureGroup.h"
@@ -14,12 +16,16 @@ namespace sr
 		// - assumes there's only one model as the program's currently using assimp
 		// - assumes rendering only one DamagedHelmet, so ignoring recursive node-processing
 		// TODO: Switch to scene graph when needed
-		Scene::Scene(const aiScene& scene) noexcept
+		Scene::Scene(const AssetLoader& assetLoader) noexcept
 			: mModel(nullptr)
+			, mEntities({})
 			, mCamera(nullptr)
 			, mLightPosition({0, 6, 1})
 			, mAngle(0)
 		{
+			mEntities.reserve(16);
+			mEntities.emplace_back();
+
 			constexpr XMFLOAT3 modelWorldPosition(0, 4, 2);
 			mModel = make_unique<Model>(scene, modelWorldPosition);
 

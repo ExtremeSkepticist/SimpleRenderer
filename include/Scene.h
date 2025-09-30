@@ -3,7 +3,6 @@
 #include <DirectXMath.h>
 
 #include "Common.h"
-
 struct aiScene;
 
 namespace sr
@@ -12,13 +11,15 @@ namespace sr
 	{
 		static constexpr DirectX::XMFLOAT3 worldUpDirection(0, 1, 0);
 
-		class Model;
+		class AssetLoader;
 		class Camera;
+		class Entity;
+		class Model;
 
 		class Scene
 		{
 		public:
-			Scene(const aiScene& scene) noexcept;
+			Scene(const AssetLoader& assetLoader) noexcept;
 			~Scene() = default;
 
 			DirectX::XMVECTOR GetLightPos() const noexcept;
@@ -34,7 +35,8 @@ namespace sr
 			}
 			
 		private:
-			unique_ptr<Model> mModel = nullptr;
+			std::vector<Entity> mEntities = {};
+			unique_ptr<Model> mModel = nullptr; // TODO: to be deprecated
 			unique_ptr<Camera> mCamera = nullptr;
 			const DirectX::XMFLOAT3 mLightPosition;
 			float mAngle = 0;

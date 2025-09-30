@@ -1,10 +1,8 @@
 #include <Windows.h>
 
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
-
 #include "Application.h"
+
+#include "AssetLoader.h"
 
 // Definition order
 #include "GraphicsDevice.h"
@@ -62,12 +60,15 @@ namespace sr
 
 	void Application::loadAssets()
 	{
+		// TODO: Move this into AssetLoader class
+		// - contains scene graph hierachy information (mesh, material) using assimp, which is abstracted under the hood
+		// - Depercate model class
+		// - Entity class contains Node. Node contains Transform, ChildNodes, Mesh and Material class
+		// - DataLoader takes a path to the model and initializes assimp scene
+		// - Entity class takes a valid DataLoader object and load assimp info into entity nodes
 		// Import Model & Create Scene
-		Assimp::Importer importer;
-		const std::string modelPath = std::string("resources\\") + mSampleName;
-		constexpr uint32_t importFlag = aiProcess_ConvertToLeftHanded | aiProcess_CalcTangentSpace;
-		const aiScene* scene = importer.ReadFile(modelPath, importFlag);
-		assert(scene != nullptr);
+		const std::string assetPath = std::string("resources\\") + mSampleName;
+		sr::rendering::AssetLoader assetLoader(assetPath.c_str());
 
 		mScene = make_unique<rendering::Scene>(*scene);
 		mFrameBuilder = make_unique<rendering::FrameBuilder>(*mPipeline, *mScene);

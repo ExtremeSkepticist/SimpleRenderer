@@ -18,7 +18,7 @@ namespace sr
 		public:
 			Model(const aiScene& assimpScene, const XMFLOAT3 worldCoords) noexcept;
 			Model() = delete;
-			~Model() = default;
+			virtual ~Model() = default;
 
 			inline std::vector<unique_ptr<Mesh>>& GetMeshes() noexcept
 			{
