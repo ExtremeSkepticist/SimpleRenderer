@@ -23,11 +23,16 @@ namespace sr
 			, mLightPosition({0, 6, 1})
 			, mAngle(0)
 		{
-			mEntities.reserve(16);
-			mEntities.emplace_back();
+			const size_t entityCount = assetLoader.GetAssetCount();
+			mEntities.reserve(entityCount);
+			for (size_t i = 0; i < entityCount; ++i)
+			{
+				Entity& entity = mEntities.emplace_back();
+				assetLoader.LoadEntity(entity, i);
+			}
 
 			constexpr XMFLOAT3 modelWorldPosition(0, 4, 2);
-			mModel = make_unique<Model>(scene, modelWorldPosition);
+			// mModel = make_unique<Model>(scene, modelWorldPosition);
 
 			constexpr XMFLOAT3 cameraWorldPosition(0, 6, 0);
 			constexpr XMFLOAT3 worldUpDirection(0, 1, 0);

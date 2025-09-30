@@ -8,10 +8,28 @@ namespace sr
 {
 	namespace rendering
 	{
-		AssetLoader::AssetLoader(gsl::czstring assetPath) noexcept
+		AssetLoader::AssetLoader() noexcept
 			: mImporter(make_unique<Assimp::Importer>())
-			, mScene(mImporter->ReadFile(assetPath, aiProcess_ConvertToLeftHanded | aiProcess_CalcTangentSpace))
+			, mAssets({})
 		{
 		}
+
+		void AssetLoader::LoadAsset(gsl::czstring assetPath)
+		{
+			const aiScene* scene = mImporter->ReadFile(assetPath, aiProcess_ConvertToLeftHanded | aiProcess_CalcTangentSpace);
+
+			mAssets.emplace_back(*scene);
+		}
+
+		size_t AssetLoader::GetAssetCount() const
+		{
+			return mAssets.size();
+		}
+
+		void AssetLoader::LoadEntity(Entity& entity, const size_t assetIndex) const noexcept
+		{
+			assert(assetIndex < mAssets.size());
+		}
+
 	}
 }

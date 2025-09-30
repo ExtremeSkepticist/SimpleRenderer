@@ -67,10 +67,12 @@ namespace sr
 		// - DataLoader takes a path to the model and initializes assimp scene
 		// - Entity class takes a valid DataLoader object and load assimp info into entity nodes
 		// Import Model & Create Scene
-		const std::string assetPath = std::string("resources\\") + mSampleName;
-		sr::rendering::AssetLoader assetLoader(assetPath.c_str());
 
-		mScene = make_unique<rendering::Scene>(*scene);
+		const std::string assetPath = std::string("resources\\") + mSampleName; // TODO: Make this into .json?
+		sr::rendering::AssetLoader assetLoader;
+		assetLoader.LoadAsset(assetPath.c_str());
+
+		mScene = make_unique<rendering::Scene>(assetLoader);
 		mFrameBuilder = make_unique<rendering::FrameBuilder>(*mPipeline, *mScene);
 
 		// Load all textures from each model mesh
