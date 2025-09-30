@@ -1,4 +1,5 @@
 #include "AssetLoader.h"
+#include "Entity.h"
 
 #include "assimp/Importer.hpp"
 #include "assimp/postprocess.h"
@@ -26,9 +27,15 @@ namespace sr
 			return mAssets.size();
 		}
 
-		void AssetLoader::LoadEntity(Entity& entity, const size_t assetIndex) const noexcept
+		void AssetLoader::LoadEntity(Entity& entity, const size_t assetIndex) noexcept
 		{
 			assert(assetIndex < mAssets.size());
+			loadEntityRescursively(entity.GetRootNode(), mAssets[assetIndex]);
+		}
+
+		void AssetLoader::loadEntityRescursively(EntityNode& entity, const aiScene& scene)
+		{
+
 		}
 
 	}

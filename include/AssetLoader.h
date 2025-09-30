@@ -13,7 +13,7 @@ namespace sr
 	namespace rendering
 	{
 		class Entity;
-
+		class EntityNode;
 		class AssetLoader
 		{
 		public:
@@ -21,13 +21,14 @@ namespace sr
 			AssetLoader() noexcept;
 
 			void LoadAsset(gsl::czstring assetPath) noexcept;
-			void LoadEntity(Entity& entity, const size_t assetIndex) const noexcept;
+			void LoadEntity(Entity& entity, const size_t assetIndex) noexcept;
 
 			size_t GetAssetCount() const;
 
 		private:
 
-			void loadEntityRescursively();
+			void loadEntityRescursively(EntityNode& entity, const aiScene& scene);
+
 			std::unique_ptr<Assimp::Importer> mImporter = nullptr;
 			std::vector<const aiScene> mAssets = {};
 		};

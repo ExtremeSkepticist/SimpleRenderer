@@ -6,24 +6,25 @@ namespace sr
 {
 	namespace rendering
 	{
-		class Transform
+
+
+		EntityNode::EntityNode(const EntityNode& parent) noexcept
+			: mTransform(std::make_unique<Transform>())
+			, mMesh(std::make_unique<Mesh>())
+			, mParent(&parent)
+			, mChildren({})
+			, mIsDirty(true)
 		{
-		public:
-
-		private:
-			DirectX::XMFLOAT3 mPosition = { 0, 0, 0 };
-			// TODO: XMFLOAT3 mRotation = { 0, 0, 0, }; 
-			// TODO: XMFLOAT3 mScale = { 0 ,0 ,0 };
-		};
-
-		Entity::Entity() noexcept
-		{
-
 		}
 
-		void Entity::AddChild()
+		Entity::Entity() noexcept
+			: mRootNode(std::make_unique<EntityNode>())
 		{
+		}
 
+		EntityNode& Entity::GetRootNode()
+		{
+			return *mRootNode;
 		}
 	}
 }
