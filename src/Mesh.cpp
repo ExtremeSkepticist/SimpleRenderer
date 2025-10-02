@@ -8,6 +8,14 @@ namespace sr
 {
 	namespace rendering
 	{
+
+		Mesh::Mesh(std::string_view name, std::vector<Vertex>& vertices, std::vector<IndexType>& indices)
+			: mName(name.data())
+			, mVertices(std::move(vertices))
+			, mIndices(std::move(indices))
+		{
+		}
+
 		Mesh::Mesh(const aiMesh& assimpMesh, const aiMaterial& material) noexcept
 			: mName(assimpMesh.mName.C_Str())
 			, mVerticesNum(assimpMesh.mNumVertices)
@@ -47,6 +55,7 @@ namespace sr
 			material.Get(AI_MATKEY_SHADING_MODEL, shadingMode);
 			assert(shadingMode == aiShadingMode_PBR_BRDF);
 
+			// TODO: Move this into material class
 			// Albedo
 			aiString textureName;
 			material.GetTexture(AI_MATKEY_BASE_COLOR_TEXTURE, &textureName);

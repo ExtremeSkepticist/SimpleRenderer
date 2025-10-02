@@ -3,6 +3,9 @@
 #include "Common.h"
 
 struct aiScene;
+struct aiMesh;
+struct aiNode;
+
 namespace Assimp
 {
 	class Importer;
@@ -14,6 +17,8 @@ namespace sr
 	{
 		class Entity;
 		class EntityNode;
+		class Mesh;
+
 		class AssetLoader
 		{
 		public:
@@ -26,8 +31,8 @@ namespace sr
 			size_t GetAssetCount() const;
 
 		private:
-
-			void loadEntityRescursively(EntityNode& entity, const aiScene& scene);
+			void loadEntityRescursively(EntityNode& entityNode, const aiNode& assimpNode, const aiScene& scene);
+			void loadMesh(EntityNode& entityNode, const aiMesh& mesh, const aiScene& scene) noexcept;
 
 			std::unique_ptr<Assimp::Importer> mImporter = nullptr;
 			std::vector<const aiScene> mAssets = {};

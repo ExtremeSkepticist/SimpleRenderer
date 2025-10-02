@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Common.h"
+#include "Mesh.h"
 
 namespace sr
 {
@@ -25,9 +26,12 @@ namespace sr
 			
 			EntityNode() = delete;
 			~EntityNode() = default;
+
+			EntityNode& AddChild() noexcept;
+			void AddMesh(std::vector<Mesh::Vertex>& vertices, std::vector<IndexType>& indices) noexcept;
 		private:
-			unique_ptr<Transform> mTransform = nullptr;
-			unique_ptr<Mesh> mMesh = nullptr;
+			std::vector<Transform> mTransforms = {};
+			std::vector<Mesh> mMeshes = {};
 			// TODO: unique_ptr<Material> mMaterial = nullptr;
 
 			const EntityNode* mParent = nullptr;

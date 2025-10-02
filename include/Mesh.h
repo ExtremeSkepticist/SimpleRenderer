@@ -38,6 +38,8 @@ namespace sr
 			} Vertex;
 
 			Mesh() = delete;
+			Mesh(std::string_view name, std::vector<Vertex>& vertices, std::vector<IndexType>& indices);
+
 			Mesh(const aiMesh& assimpMesh, const aiMaterial& material) noexcept;
 
 			inline const vector<Vertex>& GetVertice() const noexcept
@@ -71,8 +73,8 @@ namespace sr
 			std::string mName = "";
 			size_t mVerticesNum = 0;
 			size_t mIndicesNum = 0;
-			vector<Vertex> mVertices = {};
-			vector<IndexType> mIndices = {};
+			std::vector<Vertex> mVertices = {};
+			std::vector<IndexType> mIndices = {};
 
 			std::map<Texture::TextureType, std::string> mTextureNameMap = {};
 		};
