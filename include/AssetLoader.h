@@ -5,6 +5,7 @@
 struct aiScene;
 struct aiMesh;
 struct aiNode;
+struct aiMaterial;
 
 namespace Assimp
 {
@@ -18,6 +19,7 @@ namespace sr
 		class Entity;
 		class EntityNode;
 		class Mesh;
+		class Material;
 
 		class AssetLoader
 		{
@@ -33,6 +35,7 @@ namespace sr
 		private:
 			void loadEntityRescursively(EntityNode& entityNode, const aiNode& assimpNode, const aiScene& scene);
 			void loadMesh(EntityNode& entityNode, const aiMesh& mesh, const aiScene& scene) noexcept;
+			std::unique_ptr<Material> getMaterial(const aiMaterial& material) noexcept;
 
 			std::unique_ptr<Assimp::Importer> mImporter = nullptr;
 			std::vector<const aiScene> mAssets = {};

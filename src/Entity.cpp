@@ -23,7 +23,7 @@ namespace sr
 			return mChildren.emplace_back(*this);
 		}
 
-		void EntityNode::AddMesh(std::vector<Mesh::Vertex>& vertices, std::vector<IndexType>& indices) noexcept
+		void EntityNode::AddMesh(std::vector<Mesh::Vertex>& vertices, std::vector<IndexType>& indices, std::unique_ptr<Material>& material) noexcept
 		{
 			mMeshes.emplace_back(vertices, indices);
 		}

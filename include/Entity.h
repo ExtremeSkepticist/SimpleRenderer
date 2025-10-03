@@ -8,7 +8,8 @@ namespace sr
 	namespace rendering
 	{
 		class Mesh;
-		
+		class Material;
+
 		class Transform
 		{
 		public:
@@ -28,11 +29,10 @@ namespace sr
 			~EntityNode() = default;
 
 			EntityNode& AddChild() noexcept;
-			void AddMesh(std::vector<Mesh::Vertex>& vertices, std::vector<IndexType>& indices) noexcept;
+			void AddMesh(std::vector<Mesh::Vertex>& vertices, std::vector<IndexType>& indices, std::unique_ptr<Material>& material) noexcept;
 		private:
 			std::vector<Transform> mTransforms = {};
 			std::vector<Mesh> mMeshes = {};
-			// TODO: unique_ptr<Material> mMaterial = nullptr;
 
 			const EntityNode* mParent = nullptr;
 			std::vector<EntityNode> mChildren = {};

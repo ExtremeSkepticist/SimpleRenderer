@@ -9,10 +9,11 @@ namespace sr
 	namespace rendering
 	{
 
-		Mesh::Mesh(std::string_view name, std::vector<Vertex>& vertices, std::vector<IndexType>& indices)
+		Mesh::Mesh(std::string_view name, std::vector<Vertex>& vertices, std::vector<IndexType>& indices, std::unique_ptr<Material>& material)
 			: mName(name.data())
 			, mVertices(std::move(vertices))
 			, mIndices(std::move(indices))
+			, mMaterial(std::move(material))
 		{
 		}
 

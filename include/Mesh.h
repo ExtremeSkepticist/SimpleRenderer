@@ -25,6 +25,8 @@ namespace sr
 		static constexpr size_t indexSize = sizeof(IndexType);
 		static constexpr DXGI_FORMAT indexFormat = DXGI_FORMAT_R32_UINT;
 
+		class Material;
+
 		class Mesh
 		{
 		public:
@@ -38,8 +40,10 @@ namespace sr
 			} Vertex;
 
 			Mesh() = delete;
-			Mesh(std::string_view name, std::vector<Vertex>& vertices, std::vector<IndexType>& indices);
+			Mesh(std::string_view name, std::vector<Vertex>& vertices, std::vector<IndexType>& indices, std::unique_ptr<Material>& material);
 
+
+			// TO BE DEPRECATED
 			Mesh(const aiMesh& assimpMesh, const aiMaterial& material) noexcept;
 
 			inline const vector<Vertex>& GetVertice() const noexcept
@@ -76,6 +80,7 @@ namespace sr
 			std::vector<Vertex> mVertices = {};
 			std::vector<IndexType> mIndices = {};
 
+			std::unique_ptr<Material> mMaterial = nullptr;
 			std::map<Texture::TextureType, std::string> mTextureNameMap = {};
 		};
 	}
