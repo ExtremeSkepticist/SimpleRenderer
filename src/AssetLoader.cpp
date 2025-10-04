@@ -39,15 +39,13 @@ namespace sr
 
 		void AssetLoader::loadEntityRescursively(EntityNode& entityNode, const aiNode& assimpNode, const aiScene& scene)
 		{
-			const size_t childrenNum = assimpNode.mNumChildren;
-			for (size_t i = 0; i < childrenNum; ++i)
+			for (size_t i = 0; i < assimpNode.mNumChildren; ++i)
 			{
 				EntityNode& newChildNode = entityNode.AddChild();
 				loadEntityRescursively(newChildNode, *assimpNode.mChildren[i], scene);
 			}
 
-			const size_t meshNum = assimpNode.mNumMeshes;
-			for (size_t i = 0; i < meshNum; ++i)
+			for (size_t i = 0; i < assimpNode.mNumMeshes; ++i)
 			{
 				// How do I load assets into mesh?
 				// Want to keep assimp only used in AssetLoader

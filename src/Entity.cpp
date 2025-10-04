@@ -5,10 +5,10 @@ namespace sr
 {
 	namespace rendering
 	{
-		EntityNode::EntityNode(const EntityNode& parent) noexcept
+		EntityNode::EntityNode(const EntityNode* parent) noexcept
 			: mTransforms({})
 			, mMeshes({})
-			, mParent(&parent)
+			, mParent(parent)
 			, mChildren({})
 			, mIsDirty(true)
 		{
@@ -20,7 +20,7 @@ namespace sr
 
 		EntityNode& EntityNode::AddChild() noexcept
 		{
-			return mChildren.emplace_back(*this);
+			return mChildren.emplace_back(this);
 		}
 
 		void EntityNode::AddMesh(std::vector<Mesh::Vertex>& vertices, std::vector<IndexType>& indices, std::unique_ptr<Material>& material) noexcept
@@ -29,7 +29,7 @@ namespace sr
 		}
 
 		Entity::Entity() noexcept
-			: mRootNode(std::make_unique<EntityNode>())
+			: mRootNode(std::make_unique<EntityNode>(nullptr))
 		{
 		}
 

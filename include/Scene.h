@@ -19,7 +19,7 @@ namespace sr
 		class Scene
 		{
 		public:
-			Scene(const AssetLoader& assetLoader) noexcept;
+			Scene(AssetLoader& assetLoader) noexcept;
 			~Scene() = default;
 
 			DirectX::XMVECTOR GetLightPos() const noexcept;

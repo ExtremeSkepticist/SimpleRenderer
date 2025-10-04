@@ -23,13 +23,15 @@ namespace sr
 		class EntityNode
 		{
 		public:
-			EntityNode(const EntityNode& node) noexcept;
+			EntityNode(const EntityNode* node) noexcept;
 			
 			EntityNode() = delete;
 			~EntityNode() = default;
 
 			EntityNode& AddChild() noexcept;
 			void AddMesh(std::vector<Mesh::Vertex>& vertices, std::vector<IndexType>& indices, std::unique_ptr<Material>& material) noexcept;
+		
+			// TODO: Add Update() when mIsDirty == true
 		private:
 			std::vector<Transform> mTransforms = {};
 			std::vector<Mesh> mMeshes = {};

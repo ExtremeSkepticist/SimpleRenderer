@@ -12,11 +12,7 @@ namespace sr
 {
 	namespace rendering
 	{
-		// Precondition
-		// - assumes there's only one model as the program's currently using assimp
-		// - assumes rendering only one DamagedHelmet, so ignoring recursive node-processing
-		// TODO: Switch to scene graph when needed
-		Scene::Scene(const AssetLoader& assetLoader) noexcept
+		Scene::Scene(AssetLoader& assetLoader) noexcept
 			: mModel(nullptr)
 			, mEntities({})
 			, mCamera(nullptr)
@@ -31,6 +27,11 @@ namespace sr
 				assetLoader.LoadEntity(entity, i);
 			}
 
+			// TODO: move worldPosition into entity
+			// TODO: Should camera belong to entity? 
+			//	- Base class (has transform, parent, children, isDirty)
+			//		-> inherited by EntityNode (has meshes)
+			//		-> inherited by Camera class (has camera functions)
 			constexpr XMFLOAT3 modelWorldPosition(0, 4, 2);
 			// mModel = make_unique<Model>(scene, modelWorldPosition);
 

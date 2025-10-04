@@ -20,35 +20,20 @@
 
 namespace sr
 {
-	Application::Application(uint16_t width, uint16_t height, gsl::not_null<gsl::cwzstring> name, gsl::czstring sampleName, int nCmdShow)
-		: mWidth(width)
-		, mHeight(height)
-		, mName(name)
+	Application::Application(gsl::not_null<gsl::czstring> sampleName, int nCmdShow) noexcept
+		: mWidth(800)
+		, mHeight(600)
+		, mName(L"SimpleRenderer")
 		, mCmdShow(nCmdShow)
 		, mSampleName(sampleName)
-		, mIsInit(false)
+		, mPlatformWindow(make_unique<platform::PlatformWindow>(mWidth, mHeight, mName, mCmdShow))
+		, mPipeline(make_unique<rendering::RenderingPipeline>(*mPlatformWindow, 2))
+		, mTextureGroup(make_unique<rendering::TextureGroup>())
 	{
-	}
-	Application::~Application() = default;
-
-	void Application::Init()
-	{
-		Expects(!mIsInit);
-		Expects(!mPlatformWindow && !mPipeline && !mTextureGroup);
-
-		mPlatformWindow = make_unique<platform::PlatformWindow>(mWidth, mHeight, mName, mCmdShow);
-		mPipeline = make_unique<rendering::RenderingPipeline>(*mPlatformWindow, 2);
-		mTextureGroup = make_unique<rendering::TextureGroup>();
-
-		mIsInit = true;
-
-		Ensures(mPlatformWindow && mPipeline && mTextureGroup);
 	}
 
 	void Application::Run()
 	{
-		Expects(mIsInit);
-
 		loadAssets();
 
 		while (true)
@@ -60,12 +45,6 @@ namespace sr
 
 	void Application::loadAssets()
 	{
-		// TODO: Move this into AssetLoader class
-		// - contains scene graph hierachy information (mesh, material) using assimp, which is abstracted under the hood
-		// - Depercate model class
-		// - Entity class contains Node. Node contains Transform, ChildNodes, Mesh and Material class
-		// - DataLoader takes a path to the model and initializes assimp scene
-		// - Entity class takes a valid DataLoader object and load assimp info into entity nodes
 		// Import Model & Create Scene
 
 		const std::string assetPath = std::string("resources\\") + mSampleName; // TODO: Make this into .json?
@@ -75,13 +54,15 @@ namespace sr
 		mScene = make_unique<rendering::Scene>(assetLoader);
 		mFrameBuilder = make_unique<rendering::FrameBuilder>(*mPipeline, *mScene);
 
+		// Priority: render Sponza with a solid color, worry about textures later
+
 		// Load all textures from each model mesh
-		auto& meshes = mScene->GetModel().GetMeshes();
-		for (const auto& mesh : meshes)
-		{
-			mTextureGroup->AddMesh(*mesh);
-		}
-		mTextureGroup->LoadAllTexturesFromMesh(*mPipeline);
+		//auto& meshes = mScene->GetModel().GetMeshes();
+		//for (const auto& mesh : meshes)
+		//{
+		//	mTextureGroup->AddMesh(*mesh);
+		//}
+		//mTextureGroup->LoadAllTexturesFromMesh(*mPipeline);
 	}
 
 	void Application::update()
