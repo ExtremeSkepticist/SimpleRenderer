@@ -23,40 +23,58 @@ namespace sr
 		class EntityNode
 		{
 		public:
-			EntityNode(const EntityNode* node) noexcept;
-			
+			EntityNode() noexcept;
 			EntityNode() = delete;
-			~EntityNode() = default;
+			virtual ~EntityNode() = default;
 
-			EntityNode& AddChild() noexcept;
-			void AddMesh(std::vector<Mesh::Vertex>& vertices, std::vector<IndexType>& indices, std::unique_ptr<Material>& material) noexcept;
-		
-			// TODO: Add Update() when mIsDirty == true
+			virtual void Update();
+
+		protected:
+			static constexpr uint32_t mReserveSize = 128;
+
 		private:
 			std::vector<Transform> mTransforms = {};
-			std::vector<Mesh> mMeshes = {};
-
-			const EntityNode* mParent = nullptr;
-			std::vector<EntityNode> mChildren = {};
-
-			bool mIsDirty = true;
 		};
 
-		// TODO: Putting worldCoordinate in Entity, not in Model..And I want to do it via Transform class. How?
+		class RenderableNode final: public EntityNode
+		{
+		public:
+			RenderableNode(const RenderableNode* parent) noexcept;
+			RenderableNode() = delete;
+			~RenderableNode() override = default;
+
+			RenderableNode& AddChild() noexcept;
+			void AddMesh(std::vector<Mesh::Vertex>& vertices, std::vector<IndexType>& indices, std::unique_ptr<Material>& material) noexcept;
+			void Update() noexcept override;
+
+		private:
+			// TODO
+			void updateRecursively() noexcept;
+
+			const RenderableNode* mParent = nullptr;
+			std::vector<RenderableNode> mChildren = {};
+			std::vector<Mesh> mMeshes = {};
+		};
+
+		// Entity = renderable
+		// Camera = Entity with Camera functions, non-renderable
 		class Entity
 		{
 		public:
-			Entity() noexcept;
-
+			Entity(const bool isRenderable) noexcept;
 			Entity() = delete;
 			~Entity() = default;
 
 			EntityNode& GetRootNode();
-			void Update();
-		private:
-			unique_ptr<EntityNode> mRootNode = nullptr;
+			bool IsRenderable() const noexcept;
 
-			void updateRecursively();
+			// TODO: Check keyboard/mouse input and do update
+			virtual void Update() noexcept;
+
+		private:
+			std::unique_ptr<EntityNode> mRootNode = nullptr;
+			const bool mIsRenderable = false;
+			bool mIsDirty = true;
 		};
 	}
 }

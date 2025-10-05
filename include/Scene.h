@@ -12,7 +12,6 @@ namespace sr
 		static constexpr DirectX::XMFLOAT3 worldUpDirection(0, 1, 0);
 
 		class AssetLoader;
-		class Camera;
 		class Entity;
 		class Model;
 
@@ -29,15 +28,11 @@ namespace sr
 			{
 				return *mModel;
 			}
-			inline Camera& GetCamera()
-			{
-				return *mCamera;
-			}
+
 			
 		private:
-			std::vector<Entity> mEntities = {};
+			std::vector<std::unique_ptr<Entity>> mEntities = {};
 			unique_ptr<Model> mModel = nullptr; // TODO: to be deprecated
-			unique_ptr<Camera> mCamera = nullptr;
 			const DirectX::XMFLOAT3 mLightPosition;
 			float mAngle = 0;
 		};

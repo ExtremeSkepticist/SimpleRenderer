@@ -2,19 +2,23 @@
 
 #include <DirectXMath.h>
 
+#include "Entity.h"
+
 namespace sr
 {
 	namespace rendering
 	{
 		using namespace DirectX;
 
-		class Camera
+		class Camera : public Entity
 		{
 		public:
 			Camera(const float fovAngle, const float aspectRatio, const float nearZCoords, const float farZCoords, const XMFLOAT3& worldCoords) noexcept;
 
 			XMMATRIX GetViewLookAtMatrixLh(const XMFLOAT3& eyeCoords, const XMFLOAT3& targetCoords, const XMFLOAT3& upDireciton) const noexcept;
 			XMMATRIX GetProjectionMatrixLh() const noexcept;
+
+			void Update() noexcept override;
 
 			inline DirectX::XMFLOAT3 GetWorldCoords() const noexcept
 			{

@@ -33,6 +33,7 @@ namespace sr
 		void AssetLoader::LoadEntity(Entity& entity, const size_t assetIndex) noexcept
 		{
 			Expects(assetIndex < mAssets.size());
+			Expects(entity.IsRenderable());
 
 			loadEntityRescursively(entity.GetRootNode(), *mAssets[assetIndex].mRootNode, mAssets[assetIndex]);
 		}

@@ -5,7 +5,8 @@ namespace sr
 	namespace rendering
 	{
 		Camera::Camera(float fovAngle, float aspectRatio, float nearZCoords, float farZCoords, const XMFLOAT3& worldCoords) noexcept
-			: mFovAngle(fovAngle)
+			: Entity(false)
+			, mFovAngle(fovAngle)
 			, mAspectRatio(aspectRatio)
 			, mNearZCoords(nearZCoords)
 			, mFarZCoords(farZCoords)
@@ -22,5 +23,11 @@ namespace sr
 		{
 			return XMMatrixPerspectiveFovLH(mFovAngle, mAspectRatio, mNearZCoords, mFarZCoords);
 		}
+
+		void Camera::Update() noexcept
+		{
+			//TODO: add update code by entity update request
+		}
+
 	}
 }

@@ -54,7 +54,13 @@ namespace sr
 		mScene = make_unique<rendering::Scene>(assetLoader);
 		mFrameBuilder = make_unique<rendering::FrameBuilder>(*mPipeline, *mScene);
 
-		// Priority: render Sponza with a solid color, worry about textures later
+		// Priority: 
+		// TODO: complete implementing scene graph
+		// - make camera belong to scene
+		// - move worldPosition into EntityNode or its base class
+		// TODO: render Sponza with a solid color, worry about textures later
+		// TODO: implement camera movement
+		// - chapter 1 ~ 2 study
 
 		// Load all textures from each model mesh
 		//auto& meshes = mScene->GetModel().GetMeshes();

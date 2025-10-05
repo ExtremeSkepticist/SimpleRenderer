@@ -15,7 +15,6 @@ namespace sr
 		Scene::Scene(AssetLoader& assetLoader) noexcept
 			: mModel(nullptr)
 			, mEntities({})
-			, mCamera(nullptr)
 			, mLightPosition({0, 6, 1})
 			, mAngle(0)
 		{
@@ -23,8 +22,8 @@ namespace sr
 			mEntities.reserve(entityCount);
 			for (size_t i = 0; i < entityCount; ++i)
 			{
-				Entity& entity = mEntities.emplace_back();
-				assetLoader.LoadEntity(entity, i);
+				auto& entity = mEntities.emplace_back(std::make_unique<Entity>(true));
+				assetLoader.LoadEntity(*entity.get(), i);
 			}
 
 			// TODO: move worldPosition into entity
@@ -40,7 +39,7 @@ namespace sr
 			constexpr float fovAngle = 45.0f;
 			constexpr float nearZcoordinate = 0.01f;
 			constexpr float farZcoordinate = 100.0f;
-			mCamera = make_unique<Camera>(fovAngle, platform::aspectRatio, nearZcoordinate, farZcoordinate, cameraWorldPosition);
+			mEntities.emplace_back(make_unique<Camera>(fovAngle, platform::aspectRatio, nearZcoordinate, farZcoordinate, cameraWorldPosition));
 		}
 
 		DirectX::XMVECTOR Scene::GetLightPos() const noexcept
