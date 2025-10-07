@@ -26,20 +26,18 @@ namespace sr
 				assetLoader.LoadEntity(*entity.get(), i);
 			}
 
-			// TODO: move worldPosition into entity
-			// TODO: Should camera belong to entity? 
-			//	- Base class (has transform, parent, children, isDirty)
-			//		-> inherited by EntityNode (has meshes)
-			//		-> inherited by Camera class (has camera functions)
+			// TODO: support multiple entities in the scene
 			constexpr XMFLOAT3 modelWorldPosition(0, 4, 2);
-			// mModel = make_unique<Model>(scene, modelWorldPosition);
+			mEntities[0]->SetPosition(modelWorldPosition);
 
 			constexpr XMFLOAT3 cameraWorldPosition(0, 6, 0);
 			constexpr XMFLOAT3 worldUpDirection(0, 1, 0);
 			constexpr float fovAngle = 45.0f;
 			constexpr float nearZcoordinate = 0.01f;
 			constexpr float farZcoordinate = 100.0f;
-			mEntities.emplace_back(make_unique<Camera>(fovAngle, platform::aspectRatio, nearZcoordinate, farZcoordinate, cameraWorldPosition));
+			std::unique_ptr<Camera> camera = make_unique<Camera>(fovAngle, platform::aspectRatio, nearZcoordinate, farZcoordinate, cameraWorldPosition);
+			camera->SetPosition(cameraWorldPosition);
+			mEntities.emplace_back(std::move(camera));
 		}
 
 		DirectX::XMVECTOR Scene::GetLightPos() const noexcept
@@ -52,6 +50,11 @@ namespace sr
 			// TODO: Add camera movement and update camera position
 			// TODO: Add proper LightSource class
 			//		- mLightPosition is XMMATRIX just to follow const buffer size constraints
+			for (auto& entity : mEntities)
+			{
+				entity->Update();
+			}
+
 			if (mAngle >= 360) {
 				mAngle = 0;
 				return;

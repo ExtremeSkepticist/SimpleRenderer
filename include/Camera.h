@@ -13,25 +13,18 @@ namespace sr
 		class Camera : public Entity
 		{
 		public:
-			Camera(const float fovAngle, const float aspectRatio, const float nearZCoords, const float farZCoords, const XMFLOAT3& worldCoords) noexcept;
+			Camera(const float fovAngle, const float aspectRatio, const float nearZCoords, const float farZCoords) noexcept;
 
 			XMMATRIX GetViewLookAtMatrixLh(const XMFLOAT3& eyeCoords, const XMFLOAT3& targetCoords, const XMFLOAT3& upDireciton) const noexcept;
 			XMMATRIX GetProjectionMatrixLh() const noexcept;
 
 			void Update() noexcept override;
 
-			inline DirectX::XMFLOAT3 GetWorldCoords() const noexcept
-			{
-				return mWorldCoords;
-			}
-
 		private:
 			float mFovAngle = 0.0f;
 			float mAspectRatio = 0.0f;
 			float mNearZCoords = 0.0f;
 			float mFarZCoords = 0.0f;
-
-			XMFLOAT3 mWorldCoords = {};
 		};
 	}
 }

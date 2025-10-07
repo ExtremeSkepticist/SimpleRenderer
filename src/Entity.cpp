@@ -5,12 +5,23 @@ namespace sr
 {
 	namespace rendering
 	{
+		Transform::Transform() noexcept
+			: mPosition({0, 0, 0})
+		{
+		}
+
+		void Transform::SetPosition(const XMFLOAT3& position) noexcept
+		{
+			mPosition = position;
+		}
+
+		// Precondition: every transform, mesh, material uses the first element in general, unless there's a special reason
 		EntityNode::EntityNode() noexcept
 			: mTransforms({})
-			, mIsDirty(true)
 
 		{
 			mTransforms.reserve(mReserveSize);
+			mTransforms.emplace_back(); // Precondition: every node has at least one transform in the vector
 		}
 
 		void EntityNode::Update() noexcept
@@ -18,8 +29,15 @@ namespace sr
 			// TODO: Update transforms for non-renderable entity
 		}
 
+		void EntityNode::SetPosition(const XMFLOAT3& position) noexcept
+		{
+			mTransforms[0].SetPosition(position);
+		}
+
+
 		RenderableNode::RenderableNode(const RenderableNode* parent)
-			: mParent(parent)
+			: EntityNode()
+			, mParent(parent)
 			, mChildren({})
 			, mMeshes({})
 		{
@@ -50,19 +68,25 @@ namespace sr
 		{
 		}
 
-		EntityNode& Entity::GetRootNode()
-		{
-			return *mRootNode;
-		}
-
 		bool Entity::IsRenderable() const noexcept
 		{
 			return mIsRenderable;
 		}
 
+		void Entity::SetPosition(const XMFLOAT3& position) noexcept
+		{
+			mRootNode->SetPosition(position);
+		}
+
 		void Entity::Update() noexcept
 		{
-			// TODO: Check keyboard/mouse input and do update
+			// TODO: Remove manual update
+			// TODO: check keyboard/mouse input and do update
+			if (mIsDirty)
+			{
+				mRootNode->Update();
+				mIsDirty = false;
+			}
 		}
 	}
 }

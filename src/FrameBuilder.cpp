@@ -38,6 +38,7 @@ namespace sr
 			, mIsDirty(false)
 			, mIndexNum(0)
 		{
+			// TODO: disable some stuff that's not required for solid color rendering?
 			const GraphicsDevice& device = pipeline.GetGraphicsDevice();
 			device.CreateDescriptorHeap(*mRenderTargetDescriptorHeap);
 			device.CreateDescriptorHeap(*mShaderResourceDescriptorHeap);

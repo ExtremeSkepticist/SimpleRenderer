@@ -4,13 +4,12 @@ namespace sr
 {
 	namespace rendering
 	{
-		Camera::Camera(float fovAngle, float aspectRatio, float nearZCoords, float farZCoords, const XMFLOAT3& worldCoords) noexcept
+		Camera::Camera(float fovAngle, float aspectRatio, float nearZCoords, float farZCoords) noexcept
 			: Entity(false)
 			, mFovAngle(fovAngle)
 			, mAspectRatio(aspectRatio)
 			, mNearZCoords(nearZCoords)
 			, mFarZCoords(farZCoords)
-			, mWorldCoords(worldCoords)
 		{
 		}
 

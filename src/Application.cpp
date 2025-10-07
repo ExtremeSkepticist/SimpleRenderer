@@ -73,12 +73,14 @@ namespace sr
 
 	void Application::update()
 	{
+		// TODO: Check for keyboard/mouse input
 		mScene->Update();
 		mFrameBuilder->Update(mScene.get());
 	}
 
 	void Application::render()
 	{
+		// TODO: render Sponza with solid color first
 		auto& meshes = mScene->GetModel().GetMeshes();
 		for (auto& mesh : meshes)
 		{

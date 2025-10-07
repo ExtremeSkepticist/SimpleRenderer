@@ -13,9 +13,11 @@ namespace sr
 		class Transform
 		{
 		public:
+			Transform() noexcept;
+			void SetPosition(const XMFLOAT3& position) noexcept;
 
 		private:
-			DirectX::XMFLOAT3 mPosition = { 0, 0, 0 };
+			XMFLOAT3 mPosition = { 0, 0, 0 };
 			// TODO: XMFLOAT3 mRotation = { 0, 0, 0, }; 
 			// TODO: XMFLOAT3 mScale = { 0 ,0 ,0 };
 		};
@@ -28,6 +30,7 @@ namespace sr
 			virtual ~EntityNode() = default;
 
 			virtual void Update();
+			void SetPosition(const XMFLOAT3& position) noexcept;
 
 		protected:
 			static constexpr uint32_t mReserveSize = 128;
@@ -65,8 +68,8 @@ namespace sr
 			Entity() = delete;
 			~Entity() = default;
 
-			EntityNode& GetRootNode();
 			bool IsRenderable() const noexcept;
+			void SetPosition(const XMFLOAT3& position) noexcept;
 
 			// TODO: Check keyboard/mouse input and do update
 			virtual void Update() noexcept;
