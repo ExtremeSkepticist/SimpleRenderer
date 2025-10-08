@@ -29,7 +29,6 @@ namespace sr
 			, mShaderResourceDescriptorHeap(make_unique<ShaderResourceDescriptorHeap>())
 			, mDsvHeap(nullptr)
 			, mConstBuffer(nullptr)
-			, mCpuConstBufferData(nullptr)
 			, mMesh(nullptr)
 			, mVertexBufferResource(nullptr)
 			, mIndexBufferResource(nullptr)
@@ -41,8 +40,8 @@ namespace sr
 			// TODO: disable some stuff that's not required for solid color rendering?
 			const GraphicsDevice& device = pipeline.GetGraphicsDevice();
 			device.CreateDescriptorHeap(*mRenderTargetDescriptorHeap);
-			device.CreateDescriptorHeap(*mShaderResourceDescriptorHeap);
-			createDefaultResources(pipeline, scene);
+			// device.CreateDescriptorHeap(*mShaderResourceDescriptorHeap);
+			createDefaultResources(pipeline);
 			createDefaultRootSignature(device);
 			createDefaultPipelineState(device);
 
@@ -100,14 +99,14 @@ namespace sr
 			return *mRootSignature;
 		}
 
-		void FrameBuilder::Update(gsl::not_null<Scene*> scene)
+		void FrameBuilder::Update(Scene& scene) noexcept
 		{
 			// TODO: how to automatically set w-component to 1?
-			mCpuConstBufferData->mLightPosition.r[0] = scene->GetLightPos();
-			mConstBuffer->Update(*mCpuConstBufferData);
+			// mCpuConstBufferData->mLightPosition.r[0] = scene->GetLightPos();
+			mConstBuffer->Update();
 		}
 
-		void FrameBuilder::createDefaultResources(RenderingPipeline& pipeline, Scene& scene)
+		void FrameBuilder::createDefaultResources(RenderingPipeline& pipeline) noexcept
 		{
 			// Create render target view
 			sr::rendering::GraphicsDevice& device = pipeline.GetGraphicsDevice();
@@ -128,9 +127,12 @@ namespace sr
 				device.CreateRenderTargetView(resource, handle);
 			}
 
-			// TODO: set the following values with the .gltf provided values
 			// Create const buffer
-			const DirectX::XMFLOAT3 modelWorldPosition = scene.GetModel().GetWorldCoords();
+			mConstBuffer = make_unique<sr::rendering::ConstBuffer>(L"Coord Transform Const buffer", pipeline.GetGraphicsDevice());
+			
+			
+			// TODO: set the following values with the .gltf provided values
+			/*const DirectX::XMFLOAT3 modelWorldPosition = scene.GetModel().GetWorldCoords();
 			XMMATRIX worldMatrix = XMMatrixMultiply(XMMatrixScaling(0.8f, 0.8f, 0.8f), XMMatrixRotationX(-0.8));
 			worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixRotationY(1));
 
@@ -144,26 +146,23 @@ namespace sr
 			{
 				const XMFLOAT3 lightDir = { 0, 6 ,2 };
 				lightDirections.r[0] = XMLoadFloat3(&lightDir);
-			}
+			}*/
 
 			//constexpr XMFLOAT3 pointLightSourceWorldPosition(modelWorldPosition.x, modelWorldPosition.y + 3, modelWorldPosition.z);
 			// TODO: Store the max light intensity somewhere
 			// const sr::rendering::PointLight lightSource = { XMFLOAT3(1, 1, 1), 100, pointLightSourceWorldPosition };
 
-			CpuConstBufferData data = { worldMatrix, viewMatrix, projectionMatrix, lightDirections };
-			mCpuConstBufferData = make_unique<CpuConstBufferData>(data);
-			mConstBuffer = make_unique<sr::rendering::ConstBuffer>(L"Coord Transform Const buffer", *mCpuConstBufferData, pipeline.GetGraphicsDevice());
 		}
 
 		void FrameBuilder::createDefaultRootSignature(const GraphicsDevice& device)
 		{
 			// Initialize RootSignature
-			constexpr size_t numDescriptorRanges = 2;
+			constexpr size_t numDescriptorRanges = 1;
 			constexpr size_t numConstBufferDescriptors = 1;
-			constexpr size_t numShaderResourceDescriptors = 3; // albedo + normal + metallicRoughness
+			// constexpr size_t numShaderResourceDescriptors = 3; // albedo + normal + metallicRoughness
 			sr::rendering::DescriptorRange descriptorRanges[numDescriptorRanges] = {
 				{ sr::rendering::DescriptorRange::RangeType::ConstBuffer, numConstBufferDescriptors }
-				, { sr::rendering::DescriptorRange::RangeType::ShaderResourceBuffer, numShaderResourceDescriptors }
+				// , { sr::rendering::DescriptorRange::RangeType::ShaderResourceBuffer, numShaderResourceDescriptors }
 			};
 
 			constexpr size_t numRootParameters = 1;

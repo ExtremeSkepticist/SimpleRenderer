@@ -35,25 +35,11 @@ namespace sr
 			RootSignature& GetRootSignature();
 			~FrameBuilder();
 
-			void Update(gsl::not_null<Scene*> scene);
+			void Update(Scene& scene) noexcept;
 
 			// TODO: abstract this
 			ComPtr<ID3D12DescriptorHeap> mDsvHeap = nullptr;
 			ComPtr<ID3D12Resource> mDsvBuffer = nullptr;
-			
-
-			inline void SetMesh(gsl::not_null<Mesh*> mesh, gsl::not_null<TextureGroup*> textureGroup, const GraphicsDevice& device)
-			{
-				if (!mIsDirty)
-				{
-					mMesh = mesh.get();
-					mIsDirty = true;
-					mIndexNum = mMesh->GetIndicesNum();
-					
-					createMeshResources(device);
-					bindSrvResources(textureGroup, device);
-				}
-			}
 
 			inline D3D12_VERTEX_BUFFER_VIEW& GetVertexView() noexcept
 			{
@@ -69,7 +55,7 @@ namespace sr
 			}
 
 		private:
-			void createDefaultResources(RenderingPipeline& pipeline, Scene& scene);
+			void createDefaultResources(RenderingPipeline& pipeline) noexcept;
 			void createDefaultRootSignature(const GraphicsDevice& device);
 			void createDefaultPipelineState(const GraphicsDevice& device);
 			void createMeshResources(const GraphicsDevice& device) noexcept;
@@ -82,7 +68,6 @@ namespace sr
 			unique_ptr<RenderTargetDescriptorHeap> mRenderTargetDescriptorHeap = nullptr;
 			unique_ptr<ShaderResourceDescriptorHeap> mShaderResourceDescriptorHeap = nullptr;
 			unique_ptr<ConstBuffer> mConstBuffer = nullptr;
-			unique_ptr<CpuConstBufferData> mCpuConstBufferData = nullptr;
 			
 			const Mesh* mMesh = nullptr;
 			unique_ptr<GpuResource> mVertexBufferResource = nullptr;

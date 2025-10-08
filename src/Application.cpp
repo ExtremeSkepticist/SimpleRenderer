@@ -75,17 +75,13 @@ namespace sr
 	{
 		// TODO: Check for keyboard/mouse input
 		mScene->Update();
-		mFrameBuilder->Update(mScene.get());
+		mFrameBuilder->Update(*mScene);
 	}
 
 	void Application::render()
 	{
 		// TODO: render Sponza with solid color first
-		auto& meshes = mScene->GetModel().GetMeshes();
-		for (auto& mesh : meshes)
-		{
-			mFrameBuilder->SetMesh(mesh.get(), mTextureGroup.get(), mPipeline->GetGraphicsDevice());
-			mPipeline->Render(*mFrameBuilder);
-		}
+		// TODO: Make FrameBuilder take scene and render entities
+		mPipeline->Render(*mFrameBuilder);
 	}
 }
