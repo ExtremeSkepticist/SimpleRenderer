@@ -68,11 +68,16 @@ namespace sr
 					continue;
 				}
 				
-				// TODO: How do I traverse each RenderableNode and pass its mesh into frame builder?
-				// TODO: Let entity return the next renderable mesh
-				// TODO: Pass the mesh into frameBuilder.Build()
-				frameBuilder.Build(*entity);
-				pipeline.Render(frameBuilder);
+				// TODO: Is there a way to separate rendering logic from Scene?
+				std::vector<RenderableNode*> nodes;
+				nodes.reserve(128); // TODO: replace the magic number
+				entity->GetRenderableNodes(nodes);
+
+				for (auto& node: nodes)
+				{
+					frameBuilder.Build(*node, *mCamera, pipeline.GetGraphicsDevice());
+					pipeline.Render(frameBuilder);
+				}
 			}
 		}
 	}

@@ -97,13 +97,70 @@ namespace sr
 			return *mRootSignature;
 		}
 
-		void FrameBuilder::Build(Mesh& mesh) noexcept
+		void FrameBuilder::Build(RenderableNode& node, Camera& camera, GraphicsDevice& device) noexcept
 		{
-			// TODO: move createMeshResource() code into here
-			// - build vertex buffer
-			// - build index buffer
-			// - build const buffer
-			// - ignore srv resources for now
+			// TODO: Create DEFAULT heap and copy these to it
+			// Initialize vertex buffer
+			const auto& mesh = node.GetMesh();
+			const size_t vertexDataSize = sizeof(Mesh::Vertex) * mesh.GetVerticeCount();
+			mVertexBufferResource = make_unique<GpuResource>(L"Vertex buffer resource", vertexDataSize, ResourceHeapType::Upload, ResourceState::GenericRead);
+			device.CreateGpuResource(*mVertexBufferResource);
+			{
+				// TODO: abstract the mapping process if possible
+				const auto& vertices = mesh.GetVertice();
+				{
+					uint8_t* mappedMemoryForVertexBuffer = nullptr;
+					CD3DX12_RANGE readRange(0, 0);
+					ComPtr<ID3D12Resource>& vertexBufferOwner = mVertexBufferResource->GetD3d12ResourceOwner();
+
+					vertexBufferOwner->Map(0, &readRange, reinterpret_cast<void**>(&mappedMemoryForVertexBuffer));
+					memcpy(mappedMemoryForVertexBuffer, &vertices[0], vertexDataSize);
+					vertexBufferOwner->Unmap(0, nullptr);
+					
+					mVertexBufferView.BufferLocation = vertexBufferOwner->GetGPUVirtualAddress();
+					mVertexBufferView.StrideInBytes = sizeof(Mesh::Vertex);
+					mVertexBufferView.SizeInBytes = vertexDataSize;
+				}
+
+			}
+
+			// Initialize index buffer
+			const size_t indexDataSize = mesh.GetIndicesCount() * indexSize;
+			mIndexBufferResource = make_unique<GpuResource>(L"Index buffer resource", indexDataSize, ResourceHeapType::Upload, ResourceState::GenericRead);
+			device.CreateGpuResource(*mIndexBufferResource);
+			{
+				const auto& indices = mesh.GetIndice();
+				{
+					uint8_t* mappedMemoryForIndexBuffer = nullptr;
+					CD3DX12_RANGE readRange(0, 0);
+					ComPtr<ID3D12Resource>& indexBufferOwner = mIndexBufferResource->GetD3d12ResourceOwner();
+
+					indexBufferOwner->Map(0, &readRange, reinterpret_cast<void**>(&mappedMemoryForIndexBuffer));
+					memcpy(mappedMemoryForIndexBuffer, &indices[0], indexDataSize);
+					indexBufferOwner->Unmap(0, nullptr);
+
+					mIndexBufferView.BufferLocation = indexBufferOwner->GetGPUVirtualAddress();
+					mIndexBufferView.SizeInBytes = indexDataSize;
+					mIndexBufferView.Format = indexFormat;
+				}
+			}
+
+			// TODO: build const buffer
+			// TODO: set the following values with the .gltf provided values
+			const XMMATRIX worldMatrix = XMMatrixTranspose(node.GetWorldMatrix());
+
+			// TODO: build view matrix
+			const XMMATRIX viewMatrix = XMMatrixTranspose(camera.GetViewLookAtMatrixLh(camera.GetWorldCoords(), modelWorldPosition, sr::rendering::worldUpDirection));
+			const XMMATRIX projectionMatrix = XMMatrixTranspose(camera.GetProjectionMatrixLh());
+			XMMATRIX lightDirections = {};
+			{
+				const XMFLOAT3 lightDir = { 0, 6 ,2 };
+				lightDirections.r[0] = XMLoadFloat3(&lightDir);
+			}
+
+			//constexpr XMFLOAT3 pointLightSourceWorldPosition(modelWorldPosition.x, modelWorldPosition.y + 3, modelWorldPosition.z);
+			// TODO: Store the max light intensity somewhere
+			// const sr::rendering::PointLight lightSource = { XMFLOAT3(1, 1, 1), 100, pointLightSourceWorldPosition };
 		}
 
 		void FrameBuilder::createDefaultResources(RenderingPipeline& pipeline) noexcept
@@ -129,29 +186,6 @@ namespace sr
 
 			// Create const buffer
 			mConstBuffer = make_unique<sr::rendering::ConstBuffer>(L"Coord Transform Const buffer", pipeline.GetGraphicsDevice());
-			
-			
-			// TODO: set the following values with the .gltf provided values
-			/*const DirectX::XMFLOAT3 modelWorldPosition = scene.GetModel().GetWorldCoords();
-			XMMATRIX worldMatrix = XMMatrixMultiply(XMMatrixScaling(0.8f, 0.8f, 0.8f), XMMatrixRotationX(-0.8));
-			worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixRotationY(1));
-
-			worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(modelWorldPosition.x, modelWorldPosition.y, modelWorldPosition.z));
-			worldMatrix = XMMatrixTranspose(worldMatrix);
-
-			sr::rendering::Camera& camera = scene.GetCamera();
-			const XMMATRIX viewMatrix = XMMatrixTranspose(camera.GetViewLookAtMatrixLh(camera.GetWorldCoords(), modelWorldPosition, sr::rendering::worldUpDirection));
-			const XMMATRIX projectionMatrix = XMMatrixTranspose(camera.GetProjectionMatrixLh());
-			XMMATRIX lightDirections = {};
-			{
-				const XMFLOAT3 lightDir = { 0, 6 ,2 };
-				lightDirections.r[0] = XMLoadFloat3(&lightDir);
-			}*/
-
-			//constexpr XMFLOAT3 pointLightSourceWorldPosition(modelWorldPosition.x, modelWorldPosition.y + 3, modelWorldPosition.z);
-			// TODO: Store the max light intensity somewhere
-			// const sr::rendering::PointLight lightSource = { XMFLOAT3(1, 1, 1), 100, pointLightSourceWorldPosition };
-
 		}
 
 		void FrameBuilder::createDefaultRootSignature(const GraphicsDevice& device)
@@ -197,68 +231,24 @@ namespace sr
 			device.CreateGraphicsPipelineState(*mPipelineState);
 		}
 
-		void FrameBuilder::createMeshResources(const GraphicsDevice& device) noexcept
-		{
-			// TODO: Create DEFAULT heap and copy these to it
-			// Initialize vertex buffer
-			const size_t vertexDataSize = sizeof(Mesh::Vertex) * mMesh->GetVerticeNum();
-			mVertexBufferResource = make_unique<GpuResource>(L"Vertex buffer resource", vertexDataSize, ResourceHeapType::Upload, ResourceState::GenericRead);
-			device.CreateGpuResource(*mVertexBufferResource);
-			{
-				const auto& vertices = mMesh->GetVertice();
-
-				uint8_t* mappedMemoryForVertexBuffer = nullptr;
-				CD3DX12_RANGE readRange(0, 0);
-				ComPtr<ID3D12Resource>& vertexBufferOwner = mVertexBufferResource->GetD3d12ResourceOwner();
-
-				vertexBufferOwner->Map(0, &readRange, reinterpret_cast<void**>(&mappedMemoryForVertexBuffer));
-				memcpy(mappedMemoryForVertexBuffer, &vertices[0], vertexDataSize);
-				vertexBufferOwner->Unmap(0, nullptr);
-
-				mVertexBufferView.BufferLocation = vertexBufferOwner->GetGPUVirtualAddress();
-				mVertexBufferView.StrideInBytes = sizeof(Mesh::Vertex);
-				mVertexBufferView.SizeInBytes = vertexDataSize;
-			}
-
-			// Initialize index buffer
-			const size_t indexDataSize = mMesh->GetIndicesNum() * indexSize;
-			mIndexBufferResource = make_unique<GpuResource>(L"Index buffer resource", indexDataSize, ResourceHeapType::Upload, ResourceState::GenericRead);
-			device.CreateGpuResource(*mIndexBufferResource);
-			{
-				const auto& indices = mMesh->GetIndice();
-
-				uint8_t* mappedMemoryForIndexBuffer = nullptr;
-				CD3DX12_RANGE readRange(0, 0);
-				ComPtr<ID3D12Resource>& indexBufferOwner = mIndexBufferResource->GetD3d12ResourceOwner();
-
-				indexBufferOwner->Map(0, &readRange, reinterpret_cast<void**>(&mappedMemoryForIndexBuffer));
-				memcpy(mappedMemoryForIndexBuffer, &indices[0], indexDataSize);
-				indexBufferOwner->Unmap(0, nullptr);
-
-				mIndexBufferView.BufferLocation = indexBufferOwner->GetGPUVirtualAddress();
-				mIndexBufferView.SizeInBytes = indexDataSize;
-				mIndexBufferView.Format = indexFormat;
-			}
-		}
-
 		void FrameBuilder::bindSrvResources(gsl::not_null<TextureGroup*> textureGroup, const GraphicsDevice& device) noexcept
 		{
-			Expects(mConstBuffer != nullptr);
+			//Expects(mConstBuffer != nullptr);
 
-			sr::rendering::DescriptorHandle descriptorHandle = mShaderResourceDescriptorHeap->GetHeapStartHandle();
-			device.CreateConstBufferView(*mConstBuffer, descriptorHandle);
-			descriptorHandle.cpuHandle.ptr += device.GetShaderResourceDescriptorHeapHandleIncrementSize();
+			//sr::rendering::DescriptorHandle descriptorHandle = mShaderResourceDescriptorHeap->GetHeapStartHandle();
+			//device.CreateConstBufferView(*mConstBuffer, descriptorHandle);
+			//descriptorHandle.cpuHandle.ptr += device.GetShaderResourceDescriptorHeapHandleIncrementSize();
 
-			// TODO: add emissive & AO map
-			constexpr size_t textureNum = static_cast<size_t>(Texture::TextureType::Num) - 2;
-			for (gsl::index i = 0; i < textureNum; ++i)
-			{
-				Texture& texture = textureGroup->GetTexture(mMesh, static_cast<Texture::TextureType>(i));
-				
-				device.CreateShaderResourceView(texture, descriptorHandle);
+			//// TODO: add emissive & AO map
+			//constexpr size_t textureNum = static_cast<size_t>(Texture::TextureType::Num) - 2;
+			//for (gsl::index i = 0; i < textureNum; ++i)
+			//{
+			//	Texture& texture = textureGroup->GetTexture(mMesh, static_cast<Texture::TextureType>(i));
+			//	
+			//	device.CreateShaderResourceView(texture, descriptorHandle);
 
-				descriptorHandle.cpuHandle.ptr += device.GetShaderResourceDescriptorHeapHandleIncrementSize();
-			}
+			//	descriptorHandle.cpuHandle.ptr += device.GetShaderResourceDescriptorHeapHandleIncrementSize();
+			//}
 		}
 
 	}

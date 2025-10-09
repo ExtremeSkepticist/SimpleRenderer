@@ -82,6 +82,26 @@ namespace sr
 			Ensures(mTextureNameMap.size() == static_cast<size_t>(Texture::TextureType::Num));
 		}
 
+		const size_t Mesh::GetVerticeCount() const noexcept
+		{
+			return mVertices.size();
+		}
+
+		const vector<Mesh::Vertex>& Mesh::GetVertice() const noexcept
+		{
+			return mVertices;
+		}
+
+		const size_t Mesh::GetIndicesCount() const noexcept
+		{
+			return mIndices.size();
+		}
+
+		const vector<IndexType>& Mesh::GetIndice() const noexcept
+		{
+			return mIndices;
+		}
+
 		const std::string& Mesh::GetTextureName(Texture::TextureType type) const
 		{
 			return mTextureNameMap.find(type)->second;

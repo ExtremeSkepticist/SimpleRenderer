@@ -7,7 +7,7 @@ namespace sr
 	namespace rendering
 	{
 		Transform::Transform() noexcept
-			: mPosition({0, 0, 0})
+			: mPosition({ 0, 0, 0 })
 			, mWorldMatrix(XMMatrixIdentity())
 		{
 		}
@@ -46,10 +46,16 @@ namespace sr
 
 		{
 			mTransforms.reserve(mReserveSize);
-			
+
 			// Precondition: every node has at least one transform in the vector by default
-			mTransforms.emplace_back(); 
+			mTransforms.emplace_back();
 		}
+
+		XMMATRIX EntityNode::GetWorldMatrix() const noexcept
+		{
+			return mTransforms[0].GetWorldMatrix();
+		}
+
 
 		void EntityNode::Update() noexcept
 		{
@@ -87,6 +93,31 @@ namespace sr
 			mMeshes.emplace_back(vertices, indices, material);
 		}
 
+
+		bool RenderableNode::HasChildren() const noexcept
+		{
+			return !mChildren.empty();
+		}
+
+		std::vector<RenderableNode>& RenderableNode::GetChildren() noexcept
+		{
+			return mChildren;
+		}
+
+		Mesh& RenderableNode::GetMesh() noexcept
+		{
+			return mMeshes[0];
+		}
+
+		void RenderableNode::GetNodes(std::vector<RenderableNode*>& nodes) noexcept
+		{
+			nodes.emplace_back(this);
+			for (auto& child : mChildren)
+			{
+				child.GetNodes(nodes);
+			}
+		}
+
 		void RenderableNode::Update() noexcept
 		{
 			// TODO: Update child node if Entity needs an update
@@ -121,6 +152,15 @@ namespace sr
 		void Entity::SetPosition(const XMFLOAT3& position) noexcept
 		{
 			mRootNode->SetPosition(position);
+		}
+
+
+		void Entity::GetRenderableNodes(std::vector<RenderableNode*>& nodes) noexcept
+		{
+			if (mIsRenderable)
+			{
+				reinterpret_cast<RenderableNode*>(mRootNode.get())->GetNodes(nodes);
+			}
 		}
 
 		void Entity::Update() noexcept

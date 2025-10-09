@@ -18,6 +18,8 @@ namespace sr
 	{
 		class GraphicsDevice;
 
+		// TODO: Should think about how to deal with these. It's fine now since the codebase is small, but wonder if
+		// the scope here is ok
 		static constexpr size_t indiceNumPerFace = 3;
 		static_assert(indiceNumPerFace == 3, "The number of indice per face should remain 3 (Triangle)");
 
@@ -46,25 +48,11 @@ namespace sr
 			// TO BE DEPRECATED
 			Mesh(const aiMesh& assimpMesh, const aiMaterial& material) noexcept;
 
-			inline const vector<Vertex>& GetVertice() const noexcept
-			{
-				return mVertices;
-			}
+			const size_t GetVerticeCount() const noexcept;
+			const vector<Vertex>& GetVertice() const noexcept;
+			const size_t GetIndicesCount() const noexcept;
+			const vector<IndexType>& GetIndice() const noexcept;
 
-			inline const vector<IndexType>& GetIndice() const noexcept
-			{
-				return mIndices;
-			}
-
-			inline const size_t GetVerticeNum() const noexcept
-			{
-				return mVerticesNum;
-			}
-
-			inline const size_t GetIndicesNum() const noexcept
-			{
-				return mIndicesNum;
-			}
 
 			std::string& GetName()
 			{

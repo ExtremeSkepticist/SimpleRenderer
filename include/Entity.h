@@ -36,8 +36,11 @@ namespace sr
 			EntityNode() = delete;
 			virtual ~EntityNode() = default;
 
-			virtual void Update();
+			XMMATRIX GetWorldMatrix() const noexcept;
+			
 			void SetPosition(const XMFLOAT3& position) noexcept;
+
+			virtual void Update();
 
 		protected:
 			static constexpr uint32_t mReserveSize = 128;
@@ -56,6 +59,12 @@ namespace sr
 
 			RenderableNode& AddChild() noexcept;
 			void AddMesh(std::vector<Mesh::Vertex>& vertices, std::vector<IndexType>& indices, std::unique_ptr<Material>& material) noexcept;
+			
+			bool HasChildren() const noexcept;
+			Mesh& GetMesh() noexcept;
+			std::vector<RenderableNode>& GetChildren() noexcept;
+			void GetNodes(std::vector<RenderableNode*>& nodes) noexcept;
+
 			void Update() noexcept override;
 
 		private:
@@ -74,6 +83,8 @@ namespace sr
 			~Entity() = default;
 
 			bool IsRenderable() const noexcept;
+			void GetRenderableNodes(std::vector<RenderableNode*>& nodes) noexcept;
+
 			void SetPosition(const XMFLOAT3& position) noexcept;
 
 			// TODO: Check keyboard/mouse input and do update
