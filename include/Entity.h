@@ -15,9 +15,16 @@ namespace sr
 		public:
 			Transform() noexcept;
 			void SetPosition(const XMFLOAT3& position) noexcept;
+			XMMATRIX GetWorldMatrix() const noexcept;
+
+			void Update(const Transform* parent) noexcept;
 
 		private:
+			void computeWorldMatrix() noexcept;
+
 			XMFLOAT3 mPosition = { 0, 0, 0 };
+			XMMATRIX mWorldMatrix = XMMatrixIdentity();
+
 			// TODO: XMFLOAT3 mRotation = { 0, 0, 0, }; 
 			// TODO: XMFLOAT3 mScale = { 0 ,0 ,0 };
 		};
@@ -34,6 +41,7 @@ namespace sr
 
 		protected:
 			static constexpr uint32_t mReserveSize = 128;
+			Transform& GetTransform() noexcept;
 
 		private:
 			std::vector<Transform> mTransforms = {};
@@ -42,7 +50,7 @@ namespace sr
 		class RenderableNode final: public EntityNode
 		{
 		public:
-			RenderableNode(const RenderableNode* parent) noexcept;
+			RenderableNode(RenderableNode* parent) noexcept;
 			RenderableNode() = delete;
 			~RenderableNode() override = default;
 
@@ -51,10 +59,7 @@ namespace sr
 			void Update() noexcept override;
 
 		private:
-			// TODO
-			void updateRecursively() noexcept;
-
-			const RenderableNode* mParent = nullptr;
+			RenderableNode* mParent = nullptr;
 			std::vector<RenderableNode> mChildren = {};
 			std::vector<Mesh> mMeshes = {};
 		};

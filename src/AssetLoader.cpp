@@ -38,11 +38,11 @@ namespace sr
 			loadEntityRescursively(entity.GetRootNode(), *mAssets[assetIndex].mRootNode, mAssets[assetIndex]);
 		}
 
-		void AssetLoader::loadEntityRescursively(EntityNode& entityNode, const aiNode& assimpNode, const aiScene& scene)
+		void AssetLoader::loadEntityRescursively(RenderableNode& renderableNode, const aiNode& assimpNode, const aiScene& scene)
 		{
 			for (size_t i = 0; i < assimpNode.mNumChildren; ++i)
 			{
-				EntityNode& newChildNode = entityNode.AddChild();
+				RenderableNode& newChildNode = renderableNode.AddChild();
 				loadEntityRescursively(newChildNode, *assimpNode.mChildren[i], scene);
 			}
 
@@ -51,11 +51,11 @@ namespace sr
 				// How do I load assets into mesh?
 				// Want to keep assimp only used in AssetLoader
 				const size_t meshIndex = assimpNode.mMeshes[i];
-				loadMesh(entityNode, *scene.mMeshes[meshIndex], scene);
+				loadMesh(renderableNode, *scene.mMeshes[meshIndex], scene);
 			}
 		}
 
-		void AssetLoader::loadMesh(EntityNode& entityNode, const aiMesh& mesh, const aiScene& scene)
+		void AssetLoader::loadMesh(RenderableNode& renderableNode, const aiMesh& mesh, const aiScene& scene)
 		{
 			std::vector<Mesh::Vertex> vertices = {};
 			std::vector<IndexType> indices = {};

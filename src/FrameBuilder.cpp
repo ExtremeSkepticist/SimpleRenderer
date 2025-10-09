@@ -29,12 +29,10 @@ namespace sr
 			, mShaderResourceDescriptorHeap(make_unique<ShaderResourceDescriptorHeap>())
 			, mDsvHeap(nullptr)
 			, mConstBuffer(nullptr)
-			, mMesh(nullptr)
 			, mVertexBufferResource(nullptr)
 			, mIndexBufferResource(nullptr)
 			, mVertexBufferView()
 			, mIndexBufferView()
-			, mIsDirty(false)
 			, mIndexNum(0)
 		{
 			// TODO: disable some stuff that's not required for solid color rendering?
@@ -99,11 +97,13 @@ namespace sr
 			return *mRootSignature;
 		}
 
-		void FrameBuilder::Update(Scene& scene) noexcept
+		void FrameBuilder::Build(Mesh& mesh) noexcept
 		{
-			// TODO: how to automatically set w-component to 1?
-			// mCpuConstBufferData->mLightPosition.r[0] = scene->GetLightPos();
-			mConstBuffer->Update();
+			// TODO: move createMeshResource() code into here
+			// - build vertex buffer
+			// - build index buffer
+			// - build const buffer
+			// - ignore srv resources for now
 		}
 
 		void FrameBuilder::createDefaultResources(RenderingPipeline& pipeline) noexcept
@@ -199,11 +199,6 @@ namespace sr
 
 		void FrameBuilder::createMeshResources(const GraphicsDevice& device) noexcept
 		{
-			if (!mIsDirty)
-			{
-				return;
-			}
-
 			// TODO: Create DEFAULT heap and copy these to it
 			// Initialize vertex buffer
 			const size_t vertexDataSize = sizeof(Mesh::Vertex) * mMesh->GetVerticeNum();
@@ -249,7 +244,6 @@ namespace sr
 		void FrameBuilder::bindSrvResources(gsl::not_null<TextureGroup*> textureGroup, const GraphicsDevice& device) noexcept
 		{
 			Expects(mConstBuffer != nullptr);
-			Expects(mMesh != nullptr);
 
 			sr::rendering::DescriptorHandle descriptorHandle = mShaderResourceDescriptorHeap->GetHeapStartHandle();
 			device.CreateConstBufferView(*mConstBuffer, descriptorHandle);

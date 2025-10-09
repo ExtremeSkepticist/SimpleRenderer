@@ -3,7 +3,8 @@
 #include "AssetLoader.h"
 #include "Camera.h"
 #include "Entity.h"
-#include "Model.h"
+#include "FrameBuilder.h"
+#include "RenderingPipeline.h"
 #include "Scene.h"
 #include "TextureGroup.h"
 #include "PlatformWindow.h"
@@ -13,10 +14,10 @@ namespace sr
 	namespace rendering
 	{
 		Scene::Scene(AssetLoader& assetLoader) noexcept
-			: mModel(nullptr)
-			, mEntities({})
+			: mEntities({})
 			, mLightPosition({0, 6, 1})
 			, mAngle(0)
+			, mCamera(nullptr)
 		{
 			const size_t entityCount = assetLoader.GetAssetCount();
 			mEntities.reserve(entityCount);
@@ -38,6 +39,8 @@ namespace sr
 			std::unique_ptr<Camera> camera = make_unique<Camera>(fovAngle, platform::aspectRatio, nearZcoordinate, farZcoordinate, cameraWorldPosition);
 			camera->SetPosition(cameraWorldPosition);
 			mEntities.emplace_back(std::move(camera));
+
+			mCamera = reinterpret_cast<Camera*>(mEntities[1].get());
 		}
 
 		DirectX::XMVECTOR Scene::GetLightPos() const noexcept
@@ -54,12 +57,23 @@ namespace sr
 			{
 				entity->Update();
 			}
+		}
 
-			if (mAngle >= 360) {
-				mAngle = 0;
-				return;
+		void Scene::Render(FrameBuilder& frameBuilder, RenderingPipeline& pipeline) noexcept
+		{
+			for (auto& entity : mEntities)
+			{
+				if (!entity->IsRenderable())
+				{
+					continue;
+				}
+				
+				// TODO: How do I traverse each RenderableNode and pass its mesh into frame builder?
+				// TODO: Let entity return the next renderable mesh
+				// TODO: Pass the mesh into frameBuilder.Build()
+				frameBuilder.Build(*entity);
+				pipeline.Render(frameBuilder);
 			}
-			mAngle += 0.01;
 		}
 	}
 }

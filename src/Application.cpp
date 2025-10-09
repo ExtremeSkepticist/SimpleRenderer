@@ -75,13 +75,12 @@ namespace sr
 	{
 		// TODO: Check for keyboard/mouse input
 		mScene->Update();
-		mFrameBuilder->Update(*mScene);
 	}
 
 	void Application::render()
 	{
 		// TODO: render Sponza with solid color first
 		// TODO: Make FrameBuilder take scene and render entities
-		mPipeline->Render(*mFrameBuilder);
+		mScene->Render(*mFrameBuilder, *mPipeline);
 	}
 }

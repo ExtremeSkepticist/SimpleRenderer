@@ -12,6 +12,9 @@ namespace sr
 		static constexpr DirectX::XMFLOAT3 worldUpDirection(0, 1, 0);
 
 		class AssetLoader;
+		class Camera;
+		class FrameBuilder;
+		class RenderingPipeline;
 		class Entity;
 		class Model;
 
@@ -23,18 +26,13 @@ namespace sr
 
 			DirectX::XMVECTOR GetLightPos() const noexcept;
 			void Update() noexcept;
-
-			inline Model& GetModel()
-			{
-				return *mModel;
-			}
-
+			void Render(FrameBuilder& frameBuilder, RenderingPipeline& pipeline) noexcept;
 			
 		private:
 			std::vector<std::unique_ptr<Entity>> mEntities = {};
-			unique_ptr<Model> mModel = nullptr; // TODO: to be deprecated
 			const DirectX::XMFLOAT3 mLightPosition;
 			float mAngle = 0;
+			Camera* mCamera = nullptr;
 		};
 	}
 }

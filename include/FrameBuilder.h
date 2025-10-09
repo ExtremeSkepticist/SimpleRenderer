@@ -35,7 +35,7 @@ namespace sr
 			RootSignature& GetRootSignature();
 			~FrameBuilder();
 
-			void Update(Scene& scene) noexcept;
+			void Build(Mesh& mesh) noexcept;
 
 			// TODO: abstract this
 			ComPtr<ID3D12DescriptorHeap> mDsvHeap = nullptr;
@@ -61,22 +61,17 @@ namespace sr
 			void createMeshResources(const GraphicsDevice& device) noexcept;
 			void bindSrvResources(gsl::not_null<TextureGroup*> textureGroup, const GraphicsDevice& device) noexcept;
 
-			void recordCommands();
-
 			unique_ptr<RootSignature> mRootSignature = nullptr;
 			unique_ptr<GraphicsPipelineState> mPipelineState = nullptr;
 			unique_ptr<RenderTargetDescriptorHeap> mRenderTargetDescriptorHeap = nullptr;
 			unique_ptr<ShaderResourceDescriptorHeap> mShaderResourceDescriptorHeap = nullptr;
 			unique_ptr<ConstBuffer> mConstBuffer = nullptr;
 			
-			const Mesh* mMesh = nullptr;
 			unique_ptr<GpuResource> mVertexBufferResource = nullptr;
 			unique_ptr<GpuResource> mIndexBufferResource = nullptr;
 			D3D12_VERTEX_BUFFER_VIEW mVertexBufferView;
 			D3D12_INDEX_BUFFER_VIEW mIndexBufferView;
 			size_t mIndexNum = 0;
-
-			bool mIsDirty = false;
 		};
 	}
 }

@@ -17,7 +17,7 @@ namespace sr
 	namespace rendering
 	{
 		class Entity;
-		class EntityNode;
+		class RenderableNode;
 		class Mesh;
 		class Material;
 
@@ -33,8 +33,8 @@ namespace sr
 			size_t GetAssetCount() const;
 
 		private:
-			void loadEntityRescursively(EntityNode& entityNode, const aiNode& assimpNode, const aiScene& scene);
-			void loadMesh(EntityNode& entityNode, const aiMesh& mesh, const aiScene& scene) noexcept;
+			void loadEntityRescursively(RenderableNode& renderableNode, const aiNode& assimpNode, const aiScene& scene);
+			void loadMesh(RenderableNode& renderableNode, const aiMesh& mesh, const aiScene& scene) noexcept;
 			std::unique_ptr<Material> getMaterial(const aiMaterial& material) noexcept;
 
 			std::unique_ptr<Assimp::Importer> mImporter = nullptr;
