@@ -35,7 +35,7 @@ namespace sr
 			RootSignature& GetRootSignature();
 			~FrameBuilder();
 
-			void Build(RenderableNode& node, Camera& camera, GraphicsDevice& device) noexcept;
+			void Build(RenderableNode& node, Camera& camera, XMFLOAT3 targetPosition, GraphicsDevice& device) noexcept;
 
 			// TODO: abstract this
 			ComPtr<ID3D12DescriptorHeap> mDsvHeap = nullptr;

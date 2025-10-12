@@ -14,9 +14,12 @@ namespace sr
 		{
 		public:
 			Transform() noexcept;
-			void SetPosition(const XMFLOAT3& position) noexcept;
+			
+			XMFLOAT3 GetPosition() const noexcept;
 			XMMATRIX GetWorldMatrix() const noexcept;
 
+			void SetPosition(const XMFLOAT3& position) noexcept;
+			
 			void Update(const Transform* parent) noexcept;
 
 		private:
@@ -36,6 +39,7 @@ namespace sr
 			EntityNode() = delete;
 			virtual ~EntityNode() = default;
 
+			XMFLOAT3 GetPosition() const noexcept;
 			XMMATRIX GetWorldMatrix() const noexcept;
 			
 			void SetPosition(const XMFLOAT3& position) noexcept;
@@ -84,6 +88,7 @@ namespace sr
 
 			bool IsRenderable() const noexcept;
 			void GetRenderableNodes(std::vector<RenderableNode*>& nodes) noexcept;
+			XMFLOAT3 GetPosition() const noexcept;
 
 			void SetPosition(const XMFLOAT3& position) noexcept;
 

@@ -12,14 +12,19 @@ namespace sr
 		{
 		}
 
-		void Transform::SetPosition(const XMFLOAT3& position) noexcept
+		XMFLOAT3 Transform::GetPosition() const noexcept
 		{
-			mPosition = position;
+			return mPosition;
 		}
 
 		XMMATRIX Transform::GetWorldMatrix() const noexcept
 		{
 			return mWorldMatrix;
+		}
+
+		void Transform::SetPosition(const XMFLOAT3& position) noexcept
+		{
+			mPosition = position;
 		}
 
 		void Transform::Update(const Transform* parent) noexcept
@@ -51,11 +56,15 @@ namespace sr
 			mTransforms.emplace_back();
 		}
 
+		XMFLOAT3 Entity::GetPosition() const noexcept
+		{
+			return mRootNode->GetPosition();
+		}
+
 		XMMATRIX EntityNode::GetWorldMatrix() const noexcept
 		{
 			return mTransforms[0].GetWorldMatrix();
 		}
-
 
 		void EntityNode::Update() noexcept
 		{

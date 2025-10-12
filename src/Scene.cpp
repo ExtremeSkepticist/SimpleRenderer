@@ -69,13 +69,14 @@ namespace sr
 				}
 				
 				// TODO: Is there a way to separate rendering logic from Scene?
+				const XMFLOAT3 position = entity->GetPosition();
 				std::vector<RenderableNode*> nodes;
 				nodes.reserve(128); // TODO: replace the magic number
 				entity->GetRenderableNodes(nodes);
 
 				for (auto& node: nodes)
 				{
-					frameBuilder.Build(*node, *mCamera, pipeline.GetGraphicsDevice());
+					frameBuilder.Build(*node, *mCamera, position, pipeline.GetGraphicsDevice());
 					pipeline.Render(frameBuilder);
 				}
 			}

@@ -1,6 +1,7 @@
 #include "FrameBuilder.h"
 
 #include "Camera.h"
+#include "Entity.h"
 #include "ConstBuffer.h"
 #include "DescriptorRange.h"
 #include "GraphicsDevice.h"
@@ -97,7 +98,7 @@ namespace sr
 			return *mRootSignature;
 		}
 
-		void FrameBuilder::Build(RenderableNode& node, Camera& camera, GraphicsDevice& device) noexcept
+		void FrameBuilder::Build(RenderableNode& node, Camera& camera, XMFLOAT3 targetPosition, GraphicsDevice& device) noexcept
 		{
 			// TODO: Create DEFAULT heap and copy these to it
 			// Initialize vertex buffer
@@ -148,15 +149,18 @@ namespace sr
 			// TODO: build const buffer
 			// TODO: set the following values with the .gltf provided values
 			const XMMATRIX worldMatrix = XMMatrixTranspose(node.GetWorldMatrix());
-
-			// TODO: build view matrix
-			const XMMATRIX viewMatrix = XMMatrixTranspose(camera.GetViewLookAtMatrixLh(camera.GetWorldCoords(), modelWorldPosition, sr::rendering::worldUpDirection));
+			const XMMATRIX viewMatrix = XMMatrixTranspose(camera.GetViewLookAtMatrixLh(camera.GetPosition(), targetPosition, sr::rendering::worldUpDirection));
 			const XMMATRIX projectionMatrix = XMMatrixTranspose(camera.GetProjectionMatrixLh());
-			XMMATRIX lightDirections = {};
-			{
-				const XMFLOAT3 lightDir = { 0, 6 ,2 };
-				lightDirections.r[0] = XMLoadFloat3(&lightDir);
-			}
+
+			const CpuConstBufferData data = { worldMatrix, viewMatrix, projectionMatrix };
+			mConstBuffer->Update(data);
+
+			//
+			//XMMATRIX lightDirections = {};
+			//{
+			//	const XMFLOAT3 lightDir = { 0, 6 ,2 };
+			//	lightDirections.r[0] = XMLoadFloat3(&lightDir);
+			//}
 
 			//constexpr XMFLOAT3 pointLightSourceWorldPosition(modelWorldPosition.x, modelWorldPosition.y + 3, modelWorldPosition.z);
 			// TODO: Store the max light intensity somewhere

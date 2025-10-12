@@ -23,8 +23,6 @@ namespace sr
 			d3d12ConstBufferResourceOwner->Map(0, &constBufferReadRange, mappedAddressForConstBufferData);
 			memcpy(mMappedMemoryForCpuConstBufferData, &mCpuConstBufferData, GetCpuConstBufferDataSize());
 			d3d12ConstBufferResourceOwner->Unmap(0, nullptr);
-
-			Ensures(mMappedMemoryForCpuConstBufferData != nullptr);
 		}
 	}
 }

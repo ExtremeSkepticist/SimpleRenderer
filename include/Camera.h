@@ -15,12 +15,13 @@ namespace sr
 		public:
 			Camera(const float fovAngle, const float aspectRatio, const float nearZCoords, const float farZCoords) noexcept;
 
+
 			XMMATRIX GetViewLookAtMatrixLh(const XMFLOAT3& eyeCoords, const XMFLOAT3& targetCoords, const XMFLOAT3& upDireciton) const noexcept;
 			XMMATRIX GetProjectionMatrixLh() const noexcept;
 
 			void Update() noexcept override;
-
 		private:
+			
 			float mFovAngle = 0.0f;
 			float mAspectRatio = 0.0f;
 			float mNearZCoords = 0.0f;
