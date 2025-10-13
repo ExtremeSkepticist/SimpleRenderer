@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Windows.h>
 #include <DirectXMath.h>
 
 #include "Entity.h"
@@ -14,7 +15,7 @@ namespace sr
 		{
 		public:
 			Camera(const float fovAngle, const float aspectRatio, const float nearZCoords, const float farZCoords) noexcept;
-
+			~Camera();
 
 			XMMATRIX GetViewLookAtMatrixLh(const XMFLOAT3& eyeCoords, const XMFLOAT3& targetCoords, const XMFLOAT3& upDireciton) const noexcept;
 			XMMATRIX GetProjectionMatrixLh() const noexcept;

@@ -1,4 +1,5 @@
 #pragma once
+#include <Windows.h>
 
 #include "Common.h"
 #include "Mesh.h"
@@ -7,7 +8,6 @@ namespace sr
 {
 	namespace rendering
 	{
-		class Mesh;
 		class Material;
 
 		class Transform
@@ -36,7 +36,6 @@ namespace sr
 		{
 		public:
 			EntityNode() noexcept;
-			EntityNode() = delete;
 			virtual ~EntityNode() = default;
 
 			XMFLOAT3 GetPosition() const noexcept;
@@ -44,7 +43,7 @@ namespace sr
 			
 			void SetPosition(const XMFLOAT3& position) noexcept;
 
-			virtual void Update();
+			virtual void Update() noexcept;
 
 		protected:
 			static constexpr uint32_t mReserveSize = 128;
@@ -62,7 +61,7 @@ namespace sr
 			~RenderableNode() override = default;
 
 			RenderableNode& AddChild() noexcept;
-			void AddMesh(std::vector<Mesh::Vertex>& vertices, std::vector<IndexType>& indices, std::unique_ptr<Material>& material) noexcept;
+			void AddMesh(std::string_view name, std::vector<Mesh::Vertex>& vertices, std::vector<IndexType>& indices, std::unique_ptr<Material> material) noexcept;
 			
 			bool HasChildren() const noexcept;
 			Mesh& GetMesh() noexcept;
@@ -89,6 +88,7 @@ namespace sr
 			bool IsRenderable() const noexcept;
 			void GetRenderableNodes(std::vector<RenderableNode*>& nodes) noexcept;
 			XMFLOAT3 GetPosition() const noexcept;
+			EntityNode& GetRootNode() noexcept;
 
 			void SetPosition(const XMFLOAT3& position) noexcept;
 

@@ -36,7 +36,7 @@ namespace sr
 			constexpr float fovAngle = 45.0f;
 			constexpr float nearZcoordinate = 0.01f;
 			constexpr float farZcoordinate = 100.0f;
-			std::unique_ptr<Camera> camera = make_unique<Camera>(fovAngle, platform::aspectRatio, nearZcoordinate, farZcoordinate, cameraWorldPosition);
+			std::unique_ptr<Camera> camera = make_unique<Camera>(fovAngle, platform::aspectRatio, nearZcoordinate, farZcoordinate);
 			camera->SetPosition(cameraWorldPosition);
 			mEntities.emplace_back(std::move(camera));
 

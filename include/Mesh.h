@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Windows.h>
 #include <DirectXMath.h>
 #include <d3d12.h>
 #include <map>
@@ -17,6 +18,7 @@ namespace sr
 	namespace rendering
 	{
 		class GraphicsDevice;
+		class Material;
 
 		// TODO: Should think about how to deal with these. It's fine now since the codebase is small, but wonder if
 		// the scope here is ok
@@ -27,7 +29,6 @@ namespace sr
 		static constexpr size_t indexSize = sizeof(IndexType);
 		static constexpr DXGI_FORMAT indexFormat = DXGI_FORMAT_R32_UINT;
 
-		class Material;
 
 		class Mesh
 		{
@@ -41,10 +42,10 @@ namespace sr
 				XMFLOAT3 Binormal;
 			} Vertex;
 
+			Mesh(std::string_view name, std::vector<Vertex>& vertices, std::vector<IndexType>& indices, std::unique_ptr<Material> material);
+			~Mesh();
+
 			Mesh() = delete;
-			Mesh(std::string_view name, std::vector<Vertex>& vertices, std::vector<IndexType>& indices, std::unique_ptr<Material>& material);
-
-
 			// TO BE DEPRECATED
 			Mesh(const aiMesh& assimpMesh, const aiMaterial& material) noexcept;
 

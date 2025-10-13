@@ -16,7 +16,10 @@ struct PS_OUTPUT
 
 PS_OUTPUT main(PS_INPUT input)
 {
-    return float4(1, 0, 0, 1);
+    PS_OUTPUT output;
+    output.mColor = float4(1, 0, 0, 1);
+    
+    return output;
 }
 
 //struct LightSource

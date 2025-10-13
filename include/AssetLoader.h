@@ -1,16 +1,14 @@
 #pragma once
 
+#include <Windows.h>
+#include <assimp/Importer.hpp>
+
 #include "Common.h"
 
 struct aiScene;
 struct aiMesh;
 struct aiNode;
 struct aiMaterial;
-
-namespace Assimp
-{
-	class Importer;
-}
 
 namespace sr
 {
@@ -24,7 +22,6 @@ namespace sr
 		class AssetLoader
 		{
 		public:
-			AssetLoader() = delete;
 			AssetLoader() noexcept;
 
 			void LoadAsset(gsl::czstring assetPath) noexcept;
@@ -38,7 +35,7 @@ namespace sr
 			std::unique_ptr<Material> getMaterial(const aiMaterial& material) noexcept;
 
 			std::unique_ptr<Assimp::Importer> mImporter = nullptr;
-			std::vector<const aiScene> mAssets = {};
+			std::vector<const aiScene*> mAssets = {};
 		};
 	}
 }

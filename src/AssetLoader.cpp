@@ -17,12 +17,12 @@ namespace sr
 		{
 		}
 
-		void AssetLoader::LoadAsset(gsl::czstring assetPath)
+		void AssetLoader::LoadAsset(gsl::czstring assetPath) noexcept
 		{
 			const aiScene* scene = mImporter->ReadFile(assetPath, aiProcess_ConvertToLeftHanded | aiProcess_CalcTangentSpace);
 			assert(scene->HasMeshes() && scene->HasMaterials() && scene->HasTextures());
 
-			mAssets.emplace_back(*scene);
+			mAssets.emplace_back(scene);
 		}
 
 		size_t AssetLoader::GetAssetCount() const
@@ -35,7 +35,7 @@ namespace sr
 			Expects(assetIndex < mAssets.size());
 			Expects(entity.IsRenderable());
 
-			loadEntityRescursively(entity.GetRootNode(), *mAssets[assetIndex].mRootNode, mAssets[assetIndex]);
+			loadEntityRescursively(reinterpret_cast<RenderableNode&>(entity.GetRootNode()), *mAssets[assetIndex]->mRootNode, *mAssets[assetIndex]);
 		}
 
 		void AssetLoader::loadEntityRescursively(RenderableNode& renderableNode, const aiNode& assimpNode, const aiScene& scene)
@@ -55,7 +55,7 @@ namespace sr
 			}
 		}
 
-		void AssetLoader::loadMesh(RenderableNode& renderableNode, const aiMesh& mesh, const aiScene& scene)
+		void AssetLoader::loadMesh(RenderableNode& renderableNode, const aiMesh& mesh, const aiScene& scene) noexcept
 		{
 			std::vector<Mesh::Vertex> vertices = {};
 			std::vector<IndexType> indices = {};
@@ -91,7 +91,7 @@ namespace sr
 			// While keeping assimp in asset loader, the number of parameters should be reduced
 			// Maybe have createMesh() and pass the return value into AddMesh() or use std::move
 			auto material = getMaterial(*scene.mMaterials[mesh.mMaterialIndex]);
-			entityNode.AddMesh(vertices, indices, material);
+			renderableNode.AddMesh(mesh.mName.C_Str(), vertices, indices, std::move(material));
 		}
 
 		// TODO: Load more materials than albedo

@@ -32,6 +32,8 @@ namespace sr
 	{
 	}
 
+	Application::~Application() = default;
+
 	void Application::Run()
 	{
 		loadAssets();

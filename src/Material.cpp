@@ -10,5 +10,7 @@ namespace sr
 			: mAlbedoTexture(albedoTextureName.data())
 		{
 		}
+
+		Material::~Material() = default;
 	}
 }

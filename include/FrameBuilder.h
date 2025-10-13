@@ -11,16 +11,18 @@ namespace sr
 	{
 		struct CpuConstBufferData;
 		
+		class Camera;
 		class ConstBuffer;
 		class GraphicsDevice;
 		class GraphicsPipelineState;
+		class GpuResource;
+		class RenderableNode;
 		class RenderTargetDescriptorHeap;
 		class RenderingPipeline;
 		class RootSignature;
 		class Scene;
 		class ShaderResourceDescriptorHeap;
 		class Mesh;
-		class GpuResource;
 		class TextureGroup;
 
 		struct DescriptorHandle;

@@ -7,7 +7,6 @@
 #include "GraphicsDevice.h"
 #include "GraphicsPipelineState.h"
 #include "Mesh.h"
-#include "Model.h"
 #include "RenderTargetDescriptorHeap.h"
 #include "ShaderResourceDescriptorHeap.h" // Definition order for unique_ptr
 #include "RenderingPipeline.h"

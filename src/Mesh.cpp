@@ -2,6 +2,7 @@
 #include <assimp/material.h>
 
 #include "GraphicsDevice.h"
+#include "Material.h"
 #include "Mesh.h"
 
 namespace sr
@@ -9,14 +10,16 @@ namespace sr
 	namespace rendering
 	{
 
-		Mesh::Mesh(std::string_view name, std::vector<Vertex>& vertices, std::vector<IndexType>& indices, std::unique_ptr<Material>& material)
+		Mesh::Mesh(std::string_view name, std::vector<Vertex>& vertices, std::vector<IndexType>& indices, std::unique_ptr<Material> material)
 			: mName(name.data())
 			, mVertices(std::move(vertices))
 			, mIndices(std::move(indices))
 			, mMaterial(std::move(material))
 		{
 		}
-
+		
+		Mesh::~Mesh() = default;
+		
 		Mesh::Mesh(const aiMesh& assimpMesh, const aiMaterial& material) noexcept
 			: mName(assimpMesh.mName.C_Str())
 			, mVerticesNum(assimpMesh.mNumVertices)

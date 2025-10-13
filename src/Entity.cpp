@@ -82,7 +82,7 @@ namespace sr
 			return mTransforms[0];
 		}
 
-		RenderableNode::RenderableNode(RenderableNode* parent)
+		RenderableNode::RenderableNode(RenderableNode* parent) noexcept
 			: EntityNode()
 			, mParent(parent)
 			, mChildren({})
@@ -97,9 +97,9 @@ namespace sr
 			return mChildren.emplace_back(this);
 		}
 
-		void RenderableNode::AddMesh(std::vector<Mesh::Vertex>& vertices, std::vector<IndexType>& indices, std::unique_ptr<Material>& material) noexcept
+		void RenderableNode::AddMesh(std::string_view name, std::vector<Mesh::Vertex>& vertices, std::vector<IndexType>& indices, std::unique_ptr<Material> material) noexcept
 		{
-			mMeshes.emplace_back(vertices, indices, material);
+			mMeshes.emplace_back(name, vertices, indices, std::move(material));
 		}
 
 
@@ -148,7 +148,7 @@ namespace sr
 		Entity::Entity(const bool isRenderable) noexcept
 			: mIsRenderable(isRenderable)
 			, mRootNode(mIsRenderable
-				? std::make_unique<RenderableNode>(nullptr) : std::make_unique<EntityNode>(nullptr))
+				? std::make_unique<RenderableNode>(nullptr) : std::make_unique<EntityNode>())
 			, mIsDirty(true)
 		{
 		}
@@ -170,6 +170,11 @@ namespace sr
 			{
 				reinterpret_cast<RenderableNode*>(mRootNode.get())->GetNodes(nodes);
 			}
+		}
+
+		EntityNode& Entity::GetRootNode() noexcept
+		{
+			return *mRootNode;
 		}
 
 		void Entity::Update() noexcept

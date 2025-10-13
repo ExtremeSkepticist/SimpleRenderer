@@ -20,7 +20,7 @@ namespace sr
 	{
 	public:
 		Application(gsl::not_null<gsl::czstring> sampleName, int nCmdShow) noexcept;
-		~Application() = default;
+		~Application();
 
 		void Init();
 		void Run();

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Windows.h>
+
 #include "Common.h"
 
 namespace sr
@@ -11,9 +13,9 @@ namespace sr
 		{
 		public:
 			Material(const string_view albedoTextureName) noexcept;
+			~Material();
 
 			Material() = delete;
-			~Material() = default;
 		private:
 			std::string mAlbedoTexture = "";
 		};
