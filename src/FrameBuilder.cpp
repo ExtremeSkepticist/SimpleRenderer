@@ -29,16 +29,13 @@ namespace sr
 			, mShaderResourceDescriptorHeap(make_unique<ShaderResourceDescriptorHeap>())
 			, mDsvHeap(nullptr)
 			, mConstBuffer(nullptr)
-			, mVertexBufferResource(nullptr)
-			, mIndexBufferResource(nullptr)
-			, mVertexBufferView()
-			, mIndexBufferView()
-			, mIndexNum(0)
+			, mVertexResourceMap()
+			, mIndexResourceMap()
 		{
 			// TODO: disable some stuff that's not required for solid color rendering?
 			const GraphicsDevice& device = pipeline.GetGraphicsDevice();
 			device.CreateDescriptorHeap(*mRenderTargetDescriptorHeap);
-			// device.CreateDescriptorHeap(*mShaderResourceDescriptorHeap);
+			device.CreateDescriptorHeap(*mShaderResourceDescriptorHeap);
 			createDefaultResources(pipeline);
 			createDefaultRootSignature(device);
 			createDefaultPipelineState(device);
@@ -97,51 +94,95 @@ namespace sr
 			return *mRootSignature;
 		}
 
+		D3D12_VERTEX_BUFFER_VIEW& FrameBuilder::GetVertexBufferView(Mesh& mesh)
+		{
+			return mVertexResourceMap[&mesh].second;
+
+		}
+		
+		D3D12_INDEX_BUFFER_VIEW& FrameBuilder::GetIndexBufferView(Mesh& mesh)
+		{
+			return mIndexResourceMap[&mesh].second;
+		}
+
 		void FrameBuilder::Build(RenderableNode& node, Camera& camera, XMFLOAT3 targetPosition, GraphicsDevice& device) noexcept
 		{
-			// TODO: Create DEFAULT heap and copy these to it
-			// Initialize vertex buffer
-			const auto& mesh = node.GetMesh();
-			const size_t vertexDataSize = sizeof(Mesh::Vertex) * mesh.GetVerticeCount();
-			mVertexBufferResource = make_unique<GpuResource>(L"Vertex buffer resource", vertexDataSize, ResourceHeapType::Upload, ResourceState::GenericRead);
-			device.CreateGpuResource(*mVertexBufferResource);
+			if (!node.HasMesh())
 			{
-				// TODO: abstract the mapping process if possible
-				const auto& vertices = mesh.GetVertice();
-				{
-					uint8_t* mappedMemoryForVertexBuffer = nullptr;
-					CD3DX12_RANGE readRange(0, 0);
-					ComPtr<ID3D12Resource>& vertexBufferOwner = mVertexBufferResource->GetD3d12ResourceOwner();
-
-					vertexBufferOwner->Map(0, &readRange, reinterpret_cast<void**>(&mappedMemoryForVertexBuffer));
-					memcpy(mappedMemoryForVertexBuffer, &vertices[0], vertexDataSize);
-					vertexBufferOwner->Unmap(0, nullptr);
-					
-					mVertexBufferView.BufferLocation = vertexBufferOwner->GetGPUVirtualAddress();
-					mVertexBufferView.StrideInBytes = sizeof(Mesh::Vertex);
-					mVertexBufferView.SizeInBytes = vertexDataSize;
-				}
-
+				return;
 			}
 
-			// Initialize index buffer
-			const size_t indexDataSize = mesh.GetIndicesCount() * indexSize;
-			mIndexBufferResource = make_unique<GpuResource>(L"Index buffer resource", indexDataSize, ResourceHeapType::Upload, ResourceState::GenericRead);
-			device.CreateGpuResource(*mIndexBufferResource);
+			// TODO: Remove this
+			static bool constBufferViewCreated = false;
+			if (!constBufferViewCreated)
 			{
-				const auto& indices = mesh.GetIndice();
+				sr::rendering::DescriptorHandle descriptorHandle = mShaderResourceDescriptorHeap->GetHeapStartHandle();
+				device.CreateConstBufferView(*mConstBuffer, descriptorHandle);
+				constBufferViewCreated = true;
+			}
+
+			// TODO: Create DEFAULT heap and copy these to it
+			// Initialize vertex buffer
+
+			const auto& mesh = node.GetMesh();
+			const size_t vertexDataSize = sizeof(Mesh::Vertex) * mesh.GetVerticeCount();
+			if (mVertexResourceMap.find(&mesh) == mVertexResourceMap.end())
+			{
+				mVertexResourceMap[&mesh] = std::make_pair<GpuResource, D3D12_VERTEX_BUFFER_VIEW>(
+					GpuResource(L"Vertex buffer resource", vertexDataSize, ResourceHeapType::Upload, ResourceState::GenericRead)
+					, D3D12_VERTEX_BUFFER_VIEW()
+				);
+
+				GpuResource& resource = mVertexResourceMap[&mesh].first;
+				D3D12_VERTEX_BUFFER_VIEW& view = mVertexResourceMap[&mesh].second;
+				device.CreateGpuResource(resource);
 				{
-					uint8_t* mappedMemoryForIndexBuffer = nullptr;
-					CD3DX12_RANGE readRange(0, 0);
-					ComPtr<ID3D12Resource>& indexBufferOwner = mIndexBufferResource->GetD3d12ResourceOwner();
+					// TODO: abstract the mapping process if possible
+					const auto& vertices = mesh.GetVertice();
+					{
+						uint8_t* mappedMemoryForVertexBuffer = nullptr;
+						CD3DX12_RANGE readRange(0, 0);
+						ComPtr<ID3D12Resource>& vertexBufferOwner = resource.GetD3d12ResourceOwner();
 
-					indexBufferOwner->Map(0, &readRange, reinterpret_cast<void**>(&mappedMemoryForIndexBuffer));
-					memcpy(mappedMemoryForIndexBuffer, &indices[0], indexDataSize);
-					indexBufferOwner->Unmap(0, nullptr);
+						vertexBufferOwner->Map(0, &readRange, reinterpret_cast<void**>(&mappedMemoryForVertexBuffer));
+						memcpy(mappedMemoryForVertexBuffer, &vertices[0], vertexDataSize);
+						vertexBufferOwner->Unmap(0, nullptr);
 
-					mIndexBufferView.BufferLocation = indexBufferOwner->GetGPUVirtualAddress();
-					mIndexBufferView.SizeInBytes = indexDataSize;
-					mIndexBufferView.Format = indexFormat;
+						view.BufferLocation = vertexBufferOwner->GetGPUVirtualAddress();
+						view.StrideInBytes = sizeof(Mesh::Vertex);
+						view.SizeInBytes = vertexDataSize;
+					}
+
+				}
+			}
+			if (mIndexResourceMap.find(&mesh) == mIndexResourceMap.end())
+			{
+				mIndexResourceMap[&mesh] = std::make_pair<GpuResource, D3D12_INDEX_BUFFER_VIEW>(
+					GpuResource(L"Index buffer resource", vertexDataSize, ResourceHeapType::Upload, ResourceState::GenericRead)
+					, D3D12_INDEX_BUFFER_VIEW()
+				);
+
+				GpuResource& resource = mIndexResourceMap[&mesh].first;
+				D3D12_INDEX_BUFFER_VIEW& view = mIndexResourceMap[&mesh].second;
+
+				// Initialize index buffer
+				const size_t indexDataSize = mesh.GetIndicesCount() * indexSize;
+				device.CreateGpuResource(resource);
+				{
+					const auto& indices = mesh.GetIndice();
+					{
+						uint8_t* mappedMemoryForIndexBuffer = nullptr;
+						CD3DX12_RANGE readRange(0, 0);
+						ComPtr<ID3D12Resource>& indexBufferOwner = resource.GetD3d12ResourceOwner();
+
+						indexBufferOwner->Map(0, &readRange, reinterpret_cast<void**>(&mappedMemoryForIndexBuffer));
+						memcpy(mappedMemoryForIndexBuffer, &indices[0], indexDataSize);
+						indexBufferOwner->Unmap(0, nullptr);
+
+						view.BufferLocation = indexBufferOwner->GetGPUVirtualAddress();
+						view.SizeInBytes = indexDataSize;
+						view.Format = indexFormat;
+					}
 				}
 			}
 
@@ -151,7 +192,7 @@ namespace sr
 			const XMMATRIX viewMatrix = XMMatrixTranspose(camera.GetViewLookAtMatrixLh(camera.GetPosition(), targetPosition, sr::rendering::worldUpDirection));
 			const XMMATRIX projectionMatrix = XMMatrixTranspose(camera.GetProjectionMatrixLh());
 
-			const CpuConstBufferData data = { worldMatrix, viewMatrix, projectionMatrix };
+			const CpuConstBufferData data = { worldMatrix, viewMatrix, projectionMatrix, XMMatrixIdentity()};
 			mConstBuffer->Update(data);
 
 			//

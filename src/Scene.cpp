@@ -23,7 +23,7 @@ namespace sr
 			mEntities.reserve(entityCount);
 			for (size_t i = 0; i < entityCount; ++i)
 			{
-				auto& entity = mEntities.emplace_back(std::make_unique<Entity>(true));
+				auto& entity = mEntities.emplace_back(std::make_shared<Entity>(true));
 				assetLoader.LoadEntity(*entity.get(), i);
 			}
 
@@ -36,7 +36,7 @@ namespace sr
 			constexpr float fovAngle = 45.0f;
 			constexpr float nearZcoordinate = 0.01f;
 			constexpr float farZcoordinate = 100.0f;
-			std::unique_ptr<Camera> camera = make_unique<Camera>(fovAngle, platform::aspectRatio, nearZcoordinate, farZcoordinate);
+			std::shared_ptr<Camera> camera = make_shared<Camera>(fovAngle, platform::aspectRatio, nearZcoordinate, farZcoordinate);
 			camera->SetPosition(cameraWorldPosition);
 			mEntities.emplace_back(std::move(camera));
 
@@ -61,6 +61,8 @@ namespace sr
 
 		void Scene::Render(FrameBuilder& frameBuilder, RenderingPipeline& pipeline) noexcept
 		{
+			pipeline.RenderStart(frameBuilder);
+
 			for (auto& entity : mEntities)
 			{
 				if (!entity->IsRenderable())
@@ -76,10 +78,15 @@ namespace sr
 
 				for (auto& node: nodes)
 				{
-					frameBuilder.Build(*node, *mCamera, position, pipeline.GetGraphicsDevice());
-					pipeline.Render(frameBuilder);
+					if (node->HasMesh())
+					{
+						frameBuilder.Build(*node, *mCamera, position, pipeline.GetGraphicsDevice());
+						pipeline.Render(frameBuilder, *node);
+					}
 				}
 			}
+
+			pipeline.RenderEnd();
 		}
 	}
 }

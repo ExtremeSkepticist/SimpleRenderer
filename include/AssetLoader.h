@@ -32,7 +32,7 @@ namespace sr
 		private:
 			void loadEntityRescursively(RenderableNode& renderableNode, const aiNode& assimpNode, const aiScene& scene);
 			void loadMesh(RenderableNode& renderableNode, const aiMesh& mesh, const aiScene& scene) noexcept;
-			std::unique_ptr<Material> getMaterial(const aiMaterial& material) noexcept;
+			std::shared_ptr<Material> getMaterial(const aiMaterial& material) noexcept;
 
 			std::unique_ptr<Assimp::Importer> mImporter = nullptr;
 			std::vector<const aiScene*> mAssets = {};

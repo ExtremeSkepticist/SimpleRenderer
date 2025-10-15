@@ -20,7 +20,7 @@ namespace sr
 		void AssetLoader::LoadAsset(gsl::czstring assetPath) noexcept
 		{
 			const aiScene* scene = mImporter->ReadFile(assetPath, aiProcess_ConvertToLeftHanded | aiProcess_CalcTangentSpace);
-			assert(scene->HasMeshes() && scene->HasMaterials() && scene->HasTextures());
+			assert(scene->HasMeshes() && scene->HasMaterials());
 
 			mAssets.emplace_back(scene);
 		}
@@ -91,11 +91,11 @@ namespace sr
 			// While keeping assimp in asset loader, the number of parameters should be reduced
 			// Maybe have createMesh() and pass the return value into AddMesh() or use std::move
 			auto material = getMaterial(*scene.mMaterials[mesh.mMaterialIndex]);
-			renderableNode.AddMesh(mesh.mName.C_Str(), vertices, indices, std::move(material));
+			renderableNode.AddMesh(mesh.mName.C_Str(), vertices, indices, material);
 		}
 
 		// TODO: Load more materials than albedo
-		std::unique_ptr<Material> AssetLoader::getMaterial(const aiMaterial& material) noexcept
+		std::shared_ptr<Material> AssetLoader::getMaterial(const aiMaterial& material) noexcept
 		{
 			// TODO: Add shading mode check
 			// aiShadingMode shadingMode;
@@ -105,7 +105,7 @@ namespace sr
 			aiString textureName;
 			material.GetTexture(AI_MATKEY_BASE_COLOR_TEXTURE, &textureName);
 
-			return std::make_unique<Material>(textureName.C_Str());
+			return std::make_shared<Material>(textureName.C_Str());
 		}
 	}
 }

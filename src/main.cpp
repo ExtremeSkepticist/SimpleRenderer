@@ -6,9 +6,8 @@
 // TODO: deprecate d3dx12 and implement its own initialization
 int CALLBACK wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int nCmdShow)
 {
-	std::unique_ptr<sr::Application> app(make_unique<sr::Application>("Sponza", nCmdShow));
+	std::unique_ptr<sr::Application> app(make_unique<sr::Application>("Sponza\\sponza.obj", nCmdShow));
 
-	app->Init();
 	app->Run();
 
 	return 0;

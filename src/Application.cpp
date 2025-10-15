@@ -49,6 +49,7 @@ namespace sr
 	{
 		// Import Model & Create Scene
 
+		// TODO: Do I have to import .mtl file as well?
 		const std::string assetPath = std::string("resources\\") + mSampleName; // TODO: Make this into .json?
 		sr::rendering::AssetLoader assetLoader;
 		assetLoader.LoadAsset(assetPath.c_str());

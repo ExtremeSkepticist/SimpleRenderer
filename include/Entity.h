@@ -61,9 +61,10 @@ namespace sr
 			~RenderableNode() override = default;
 
 			RenderableNode& AddChild() noexcept;
-			void AddMesh(std::string_view name, std::vector<Mesh::Vertex>& vertices, std::vector<IndexType>& indices, std::unique_ptr<Material> material) noexcept;
+			void AddMesh(std::string_view name, std::vector<Mesh::Vertex>& vertices, std::vector<IndexType>& indices, std::shared_ptr<Material> material) noexcept;
 			
 			bool HasChildren() const noexcept;
+			bool HasMesh() const noexcept;
 			Mesh& GetMesh() noexcept;
 			std::vector<RenderableNode>& GetChildren() noexcept;
 			void GetNodes(std::vector<RenderableNode*>& nodes) noexcept;

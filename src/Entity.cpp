@@ -61,6 +61,11 @@ namespace sr
 			return mRootNode->GetPosition();
 		}
 
+		XMFLOAT3 EntityNode::GetPosition() const noexcept
+		{
+			return mTransforms[0].GetPosition();
+		}
+
 		XMMATRIX EntityNode::GetWorldMatrix() const noexcept
 		{
 			return mTransforms[0].GetWorldMatrix();
@@ -97,15 +102,20 @@ namespace sr
 			return mChildren.emplace_back(this);
 		}
 
-		void RenderableNode::AddMesh(std::string_view name, std::vector<Mesh::Vertex>& vertices, std::vector<IndexType>& indices, std::unique_ptr<Material> material) noexcept
+		void RenderableNode::AddMesh(std::string_view name, std::vector<Mesh::Vertex>& vertices, std::vector<IndexType>& indices, std::shared_ptr<Material> material) noexcept
 		{
-			mMeshes.emplace_back(name, vertices, indices, std::move(material));
+			mMeshes.emplace_back(name, vertices, indices, material);
 		}
 
 
 		bool RenderableNode::HasChildren() const noexcept
 		{
 			return !mChildren.empty();
+		}
+
+		bool RenderableNode::HasMesh() const noexcept
+		{
+			return !mMeshes.empty();
 		}
 
 		std::vector<RenderableNode>& RenderableNode::GetChildren() noexcept

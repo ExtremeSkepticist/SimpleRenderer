@@ -13,15 +13,16 @@ namespace sr
 	{
 		class GraphicsDevice;
 
-#pragma pack(push, 256)
+//#pragma pack(push, 256)
 		// Aligning with 256 bytes
 		typedef struct CpuConstBufferData
 		{
 			DirectX::XMMATRIX mWorldMatrix;
 			DirectX::XMMATRIX mViewMatrix;
 			DirectX::XMMATRIX mProjectionMatrix;
+			DirectX::XMMATRIX mUnused;
 		} CpuConstBufferData;
-#pragma pack(pop)
+//#pragma pack(pop)
 
 		class ConstBuffer
 		{	

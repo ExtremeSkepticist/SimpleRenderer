@@ -1,5 +1,6 @@
 #include "Fence.h"
 #include "FrameBuilder.h"
+#include "Entity.h"
 #include "CommandList.h"
 #include "CommandType.h"
 #include "CommandQueue.h"
@@ -38,20 +39,15 @@ namespace sr
 		}
 
 		RenderingPipeline::~RenderingPipeline() = default;
-
-		void RenderingPipeline::Render(FrameBuilder& frameBuilder)
-		{
-			setupDefaultCommands(frameBuilder);
-		}
-
-		void RenderingPipeline::setupDefaultCommands(FrameBuilder& frameBuilder)
+		
+		void RenderingPipeline::RenderStart(FrameBuilder& frameBuilder)
 		{
 			sr::rendering::CommandList& graphicsCommandList = GetGraphicsCommandList();
 
 			graphicsCommandList.ResetCommandList();
 			graphicsCommandList.SetPipelineState(frameBuilder.GetPipelineState());
 			graphicsCommandList.SetGraphicsRootSignature(frameBuilder.GetRootSignature());
-			
+
 			// TODO: Encapsulate all d3d12 functions into CommandList class
 
 			// Bind SRV heap
@@ -83,7 +79,7 @@ namespace sr
 			{
 				ID3D12DescriptorHeap* rtvHeap = frameBuilder.GetRenderTargetDescriptorHeap().GetDescriptorHeap();
 				CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(rtvHeap->GetCPUDescriptorHandleForHeapStart(), currentBackBufferIndex, mGraphicsDevice->GetRenderTargetHeapHandleIncrementSize());
-				
+
 				DescriptorHandle dsvHandle = { frameBuilder.mDsvHeap->GetCPUDescriptorHandleForHeapStart(), 0 };
 				d3d12CommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle.cpuHandle);
 
@@ -92,11 +88,23 @@ namespace sr
 				d3d12CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 				d3d12CommandList->ClearDepthStencilView(dsvHandle.cpuHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
-				d3d12CommandList->IASetVertexBuffers(0, 1, &frameBuilder.GetVertexView());
-				d3d12CommandList->IASetIndexBuffer(&frameBuilder.GetIndexView());
-				d3d12CommandList->DrawIndexedInstanced(frameBuilder.GetIndexNum(), 1, 0, 0, 0);
 			}
-			resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(backBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+		}
+
+		void RenderingPipeline::RenderEnd()
+		{
+			ID3D12Resource* backBuffer = nullptr;
+			const uint32_t currentBackBufferIndex = mSwapChain->GetBackBufferIndex();
+			mSwapChain->GetDxgiSwapChain()->GetBuffer(currentBackBufferIndex, IID_PPV_ARGS(&backBuffer));
+			CD3DX12_RESOURCE_BARRIER resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
+				backBuffer
+				, D3D12_RESOURCE_STATE_RENDER_TARGET
+				, D3D12_RESOURCE_STATE_PRESENT
+			);
+
+			sr::rendering::CommandList& graphicsCommandList = GetGraphicsCommandList();
+			gsl::not_null<ID3D12GraphicsCommandList*> d3d12CommandList = graphicsCommandList.GetCommandList();
+
 			d3d12CommandList->ResourceBarrier(1, &resourceBarrier);
 
 			d3d12CommandList->Close();
@@ -107,6 +115,29 @@ namespace sr
 			mSwapChain->GetDxgiSwapChain()->Present(1, 0);
 
 			WaitForPreviousFrame();
+		}
+		
+		void RenderingPipeline::Render(FrameBuilder& frameBuilder, RenderableNode& node)
+		{
+			// TODO: Set up drawcall again
+			// - Might have to do initial setup like RTV state, draw, and then present?
+			// - How is multi-mesh rendering/drawing suppoesd to work?
+			if (node.HasMesh())
+			{
+				setupDefaultCommands(frameBuilder, node.GetMesh());
+			}
+		}
+
+		void RenderingPipeline::setupDefaultCommands(FrameBuilder& frameBuilder, Mesh& mesh)
+		{
+			sr::rendering::CommandList& graphicsCommandList = GetGraphicsCommandList();
+			gsl::not_null<ID3D12GraphicsCommandList*> d3d12CommandList = graphicsCommandList.GetCommandList();
+
+			d3d12CommandList->IASetVertexBuffers(0, 1, &frameBuilder.GetVertexBufferView(mesh));
+
+			const auto& indexBufferView = frameBuilder.GetIndexBufferView(mesh);
+			d3d12CommandList->IASetIndexBuffer(&indexBufferView);
+			d3d12CommandList->DrawIndexedInstanced(indexBufferView.SizeInBytes / indexSize, 1, 0, 0, 0);
 		}
 
 		//TODO: lOOK AT D3D12HellOFrameBuffering

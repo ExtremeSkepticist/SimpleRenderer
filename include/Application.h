@@ -22,7 +22,6 @@ namespace sr
 		Application(gsl::not_null<gsl::czstring> sampleName, int nCmdShow) noexcept;
 		~Application();
 
-		void Init();
 		void Run();
 
 	private:

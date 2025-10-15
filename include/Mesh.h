@@ -42,7 +42,7 @@ namespace sr
 				XMFLOAT3 Binormal;
 			} Vertex;
 
-			Mesh(std::string_view name, std::vector<Vertex>& vertices, std::vector<IndexType>& indices, std::unique_ptr<Material> material);
+			Mesh(std::string_view name, std::vector<Vertex>& vertices, std::vector<IndexType>& indices, std::shared_ptr<Material> material);
 			~Mesh();
 
 			Mesh() = delete;
@@ -69,7 +69,7 @@ namespace sr
 			std::vector<Vertex> mVertices = {};
 			std::vector<IndexType> mIndices = {};
 
-			std::unique_ptr<Material> mMaterial = nullptr;
+			std::shared_ptr<Material> mMaterial = nullptr;
 			std::map<Texture::TextureType, std::string> mTextureNameMap = {};
 		};
 	}

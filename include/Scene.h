@@ -29,7 +29,7 @@ namespace sr
 			void Render(FrameBuilder& frameBuilder, RenderingPipeline& pipeline) noexcept;
 			
 		private:
-			std::vector<std::unique_ptr<Entity>> mEntities = {};
+			std::vector<std::shared_ptr<Entity>> mEntities = {};
 			const DirectX::XMFLOAT3 mLightPosition;
 			float mAngle = 0;
 			Camera* mCamera = nullptr;

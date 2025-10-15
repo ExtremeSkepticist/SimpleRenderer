@@ -1,6 +1,7 @@
 #pragma once
 
 #include <d3d12.h>
+#include <unordered_map>
 
 #include "Common.h"
 #include "Mesh.h"
@@ -39,18 +40,14 @@ namespace sr
 
 			void Build(RenderableNode& node, Camera& camera, XMFLOAT3 targetPosition, GraphicsDevice& device) noexcept;
 
+			D3D12_VERTEX_BUFFER_VIEW& GetVertexBufferView(Mesh& mesh);
+			D3D12_INDEX_BUFFER_VIEW& GetIndexBufferView(Mesh& mesh);
+
 			// TODO: abstract this
 			ComPtr<ID3D12DescriptorHeap> mDsvHeap = nullptr;
 			ComPtr<ID3D12Resource> mDsvBuffer = nullptr;
 
-			inline D3D12_VERTEX_BUFFER_VIEW& GetVertexView() noexcept
-			{
-				return mVertexBufferView;
-			}
-			inline D3D12_INDEX_BUFFER_VIEW& GetIndexView() noexcept
-			{
-				return mIndexBufferView;
-			}
+
 			inline size_t GetIndexNum() const noexcept
 			{
 				return mIndexNum;
@@ -69,10 +66,9 @@ namespace sr
 			unique_ptr<ShaderResourceDescriptorHeap> mShaderResourceDescriptorHeap = nullptr;
 			unique_ptr<ConstBuffer> mConstBuffer = nullptr;
 			
-			unique_ptr<GpuResource> mVertexBufferResource = nullptr;
-			unique_ptr<GpuResource> mIndexBufferResource = nullptr;
-			D3D12_VERTEX_BUFFER_VIEW mVertexBufferView;
-			D3D12_INDEX_BUFFER_VIEW mIndexBufferView;
+			std::unordered_map<const Mesh*, std::pair<GpuResource, D3D12_VERTEX_BUFFER_VIEW>> mVertexResourceMap = {};
+			std::unordered_map<const Mesh*, std::pair<GpuResource, D3D12_INDEX_BUFFER_VIEW>> mIndexResourceMap = {};
+
 			size_t mIndexNum = 0;
 		};
 	}
