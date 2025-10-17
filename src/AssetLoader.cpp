@@ -19,7 +19,8 @@ namespace sr
 
 		void AssetLoader::LoadAsset(gsl::czstring assetPath) noexcept
 		{
-			const aiScene* scene = mImporter->ReadFile(assetPath, aiProcess_ConvertToLeftHanded | aiProcess_CalcTangentSpace);
+			const aiScene* scene = mImporter->ReadFile(assetPath, aiProcess_CalcTangentSpace 
+				| aiProcess_Triangulate);
 			assert(scene->HasMeshes() && scene->HasMaterials());
 
 			mAssets.emplace_back(scene);
