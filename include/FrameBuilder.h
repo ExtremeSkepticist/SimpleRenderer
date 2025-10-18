@@ -38,7 +38,7 @@ namespace sr
 			RootSignature& GetRootSignature();
 			~FrameBuilder();
 
-			void Build(RenderableNode& node, Camera& camera, XMFLOAT3 targetPosition, GraphicsDevice& device) noexcept;
+			void Build(Mesh& mesh, RenderableNode& node, Camera& camera, XMFLOAT3 targetPosition, GraphicsDevice& device) noexcept;
 
 			D3D12_VERTEX_BUFFER_VIEW& GetVertexBufferView(Mesh& mesh);
 			D3D12_INDEX_BUFFER_VIEW& GetIndexBufferView(Mesh& mesh);

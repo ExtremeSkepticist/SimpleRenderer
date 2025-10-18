@@ -19,17 +19,18 @@ namespace sr
 			XMMATRIX GetWorldMatrix() const noexcept;
 
 			void SetPosition(const XMFLOAT3& position) noexcept;
-			
+			void SetScale(const XMFLOAT3& scale) noexcept;
+
 			void Update(const Transform* parent) noexcept;
 
 		private:
 			void computeWorldMatrix() noexcept;
 
 			XMFLOAT3 mPosition = { 0, 0, 0 };
+			XMFLOAT3 mScale = { 0, 0 ,0 };
 			XMMATRIX mWorldMatrix = XMMatrixIdentity();
 
 			// TODO: XMFLOAT3 mRotation = { 0, 0, 0, }; 
-			// TODO: XMFLOAT3 mScale = { 0 ,0 ,0 };
 		};
 
 		class EntityNode
@@ -42,6 +43,7 @@ namespace sr
 			XMMATRIX GetWorldMatrix() const noexcept;
 			
 			void SetPosition(const XMFLOAT3& position) noexcept;
+			void SetScale(const XMFLOAT3& scale) noexcept;
 
 			virtual void Update() noexcept;
 
@@ -65,7 +67,7 @@ namespace sr
 			
 			bool HasChildren() const noexcept;
 			bool HasMesh() const noexcept;
-			Mesh& GetMesh() noexcept;
+			std::vector<Mesh>& GetMesh() noexcept;
 			std::vector<RenderableNode>& GetChildren() noexcept;
 			void GetNodes(std::vector<RenderableNode*>& nodes) noexcept;
 
@@ -92,6 +94,7 @@ namespace sr
 			EntityNode& GetRootNode() noexcept;
 
 			void SetPosition(const XMFLOAT3& position) noexcept;
+			void SetScale(const XMFLOAT3& scale) noexcept;
 
 			// TODO: Check keyboard/mouse input and do update
 			virtual void Update() noexcept;

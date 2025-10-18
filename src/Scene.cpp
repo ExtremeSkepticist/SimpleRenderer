@@ -28,8 +28,11 @@ namespace sr
 			}
 
 			// TODO: support multiple entities in the scene
-			constexpr XMFLOAT3 modelWorldPosition(0, 4, 2);
+			constexpr XMFLOAT3 modelWorldPosition(0, 4, 50);
+			constexpr XMFLOAT3 modelScale(0.1, 0.1, 1);
+
 			mEntities[0]->SetPosition(modelWorldPosition);
+			mEntities[0]->SetScale(modelScale);
 
 			constexpr XMFLOAT3 cameraWorldPosition(0, 6, 0);
 			constexpr XMFLOAT3 worldUpDirection(0, 1, 0);
@@ -77,11 +80,11 @@ namespace sr
 				entity->GetRenderableNodes(nodes);
 
 				for (auto& node: nodes)
-				{
-					if (node->HasMesh())
+				{					
+					for (auto& mesh : node->GetMesh())
 					{
-						frameBuilder.Build(*node, *mCamera, position, pipeline.GetGraphicsDevice());
-						pipeline.Render(frameBuilder, *node);
+						frameBuilder.Build(mesh, *node, *mCamera, position, pipeline.GetGraphicsDevice());
+						pipeline.Render(frameBuilder, mesh);
 					}
 				}
 			}

@@ -117,15 +117,12 @@ namespace sr
 			WaitForPreviousFrame();
 		}
 		
-		void RenderingPipeline::Render(FrameBuilder& frameBuilder, RenderableNode& node)
+		void RenderingPipeline::Render(FrameBuilder& frameBuilder, Mesh& mesh)
 		{
 			// TODO: Set up drawcall again
 			// - Might have to do initial setup like RTV state, draw, and then present?
 			// - How is multi-mesh rendering/drawing suppoesd to work?
-			if (node.HasMesh())
-			{
-				setupDefaultCommands(frameBuilder, node.GetMesh());
-			}
+			setupDefaultCommands(frameBuilder, mesh);
 		}
 
 		void RenderingPipeline::setupDefaultCommands(FrameBuilder& frameBuilder, Mesh& mesh)

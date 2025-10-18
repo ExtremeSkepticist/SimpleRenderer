@@ -19,6 +19,7 @@ namespace sr
 		class SwapChain;
 		class RenderableNode;
 		class RenderTargetDescriptorHeap;
+		class Mesh;
 
 		class RenderingPipeline final
 		{
@@ -34,7 +35,7 @@ namespace sr
 
 			void RenderStart(FrameBuilder& frameBuilder);
 			void RenderEnd();
-			void Render(FrameBuilder& frameBuilder, RenderableNode& node);
+			void Render(FrameBuilder& frameBuilder, Mesh& node);
 
 			inline GraphicsDevice& GetGraphicsDevice() noexcept
 			{

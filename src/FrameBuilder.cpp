@@ -105,26 +105,11 @@ namespace sr
 			return mIndexResourceMap[&mesh].second;
 		}
 
-		void FrameBuilder::Build(RenderableNode& node, Camera& camera, XMFLOAT3 targetPosition, GraphicsDevice& device) noexcept
+		void FrameBuilder::Build(Mesh& mesh, RenderableNode& node, Camera& camera, XMFLOAT3 targetPosition, GraphicsDevice& device) noexcept
 		{
-			if (!node.HasMesh())
-			{
-				return;
-			}
-
-			// TODO: Remove this
-			static bool constBufferViewCreated = false;
-			if (!constBufferViewCreated)
-			{
-				sr::rendering::DescriptorHandle descriptorHandle = mShaderResourceDescriptorHeap->GetHeapStartHandle();
-				device.CreateConstBufferView(*mConstBuffer, descriptorHandle);
-				constBufferViewCreated = true;
-			}
-
 			// TODO: Create DEFAULT heap and copy these to it
 			// Initialize vertex buffer
 
-			const auto& mesh = node.GetMesh();
 			const size_t vertexDataSize = sizeof(Mesh::Vertex) * mesh.GetVerticeCount();
 			if (mVertexResourceMap.find(&mesh) == mVertexResourceMap.end())
 			{
@@ -133,8 +118,9 @@ namespace sr
 					, D3D12_VERTEX_BUFFER_VIEW()
 				);
 
-				GpuResource& resource = mVertexResourceMap[&mesh].first;
-				D3D12_VERTEX_BUFFER_VIEW& view = mVertexResourceMap[&mesh].second;
+				auto& vertexPair = mVertexResourceMap[&mesh];
+				GpuResource& resource = vertexPair.first;
+				D3D12_VERTEX_BUFFER_VIEW& view = vertexPair.second;
 				device.CreateGpuResource(resource);
 				{
 					// TODO: abstract the mapping process if possible
@@ -162,8 +148,9 @@ namespace sr
 					, D3D12_INDEX_BUFFER_VIEW()
 				);
 
-				GpuResource& resource = mIndexResourceMap[&mesh].first;
-				D3D12_INDEX_BUFFER_VIEW& view = mIndexResourceMap[&mesh].second;
+				auto& indexPair = mIndexResourceMap[&mesh];
+				GpuResource& resource = indexPair.first;
+				D3D12_INDEX_BUFFER_VIEW& view = indexPair.second;
 
 				// Initialize index buffer
 				const size_t indexDataSize = mesh.GetIndicesCount() * indexSize;
@@ -230,6 +217,8 @@ namespace sr
 
 			// Create const buffer
 			mConstBuffer = make_unique<sr::rendering::ConstBuffer>(L"Coord Transform Const buffer", pipeline.GetGraphicsDevice());
+			sr::rendering::DescriptorHandle descriptorHandle = mShaderResourceDescriptorHeap->GetHeapStartHandle();
+			device.CreateConstBufferView(*mConstBuffer, descriptorHandle);
 		}
 
 		void FrameBuilder::createDefaultRootSignature(const GraphicsDevice& device)

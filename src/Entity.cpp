@@ -27,20 +27,29 @@ namespace sr
 			mPosition = position;
 		}
 
+		void Transform::SetScale(const XMFLOAT3& scale) noexcept
+		{
+			mScale = scale;
+		}
+
 		void Transform::Update(const Transform* parent) noexcept
 		{
 			computeWorldMatrix();
 
 			if (parent)
 			{
-				XMMatrixMultiply(mWorldMatrix, parent->mWorldMatrix);
+				mWorldMatrix = XMMatrixMultiply(mWorldMatrix, parent->mWorldMatrix);
 			}
 		}
 
 		void Transform::computeWorldMatrix() noexcept
 		{
 			// TODO: Add Rotation and Scale
+			
 			mWorldMatrix = XMMatrixTranslation(mPosition.x, mPosition.y, mPosition.z);
+
+			/*mWorldMatrix = XMMatrixMultiply(XMMatrixTranslation(mPosition.x, mPosition.y, mPosition.z)
+				, XMMatrixScaling(mScale.x, mScale.y, mScale.z));*/
 		}
 
 
@@ -80,6 +89,11 @@ namespace sr
 		void EntityNode::SetPosition(const XMFLOAT3& position) noexcept
 		{
 			mTransforms[0].SetPosition(position);
+		}
+
+		void EntityNode::SetScale(const XMFLOAT3& scale) noexcept
+		{
+			mTransforms[0].SetScale(scale);
 		}
 
 		Transform& EntityNode::GetTransform() noexcept
@@ -123,9 +137,9 @@ namespace sr
 			return mChildren;
 		}
 
-		Mesh& RenderableNode::GetMesh() noexcept
+		std::vector<Mesh>& RenderableNode::GetMesh() noexcept
 		{
-			return mMeshes[0];
+			return mMeshes;
 		}
 
 		void RenderableNode::GetNodes(std::vector<RenderableNode*>& nodes) noexcept
@@ -173,6 +187,10 @@ namespace sr
 			mRootNode->SetPosition(position);
 		}
 
+		void Entity::SetScale(const XMFLOAT3& scale) noexcept
+		{
+			mRootNode->SetScale(scale);
+		}
 
 		void Entity::GetRenderableNodes(std::vector<RenderableNode*>& nodes) noexcept
 		{
