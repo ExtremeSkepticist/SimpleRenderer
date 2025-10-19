@@ -1,6 +1,7 @@
 #pragma once
 
 #include <d3d12.h>
+#include <unordered_map>
 
 #include "Common.h"
 #include "Mesh.h"
@@ -11,16 +12,18 @@ namespace sr
 	{
 		struct CpuConstBufferData;
 		
+		class Camera;
 		class ConstBuffer;
 		class GraphicsDevice;
 		class GraphicsPipelineState;
+		class GpuResource;
+		class RenderableNode;
 		class RenderTargetDescriptorHeap;
 		class RenderingPipeline;
 		class RootSignature;
 		class Scene;
 		class ShaderResourceDescriptorHeap;
 		class Mesh;
-		class GpuResource;
 		class TextureGroup;
 
 		struct DescriptorHandle;
@@ -35,63 +38,38 @@ namespace sr
 			RootSignature& GetRootSignature();
 			~FrameBuilder();
 
-			void Update(gsl::not_null<Scene*> scene);
+			void Build(Mesh& mesh, RenderableNode& node, Camera& camera, XMFLOAT3 targetPosition, GraphicsDevice& device) noexcept;
+
+			D3D12_VERTEX_BUFFER_VIEW& GetVertexBufferView(Mesh& mesh);
+			D3D12_INDEX_BUFFER_VIEW& GetIndexBufferView(Mesh& mesh);
 
 			// TODO: abstract this
 			ComPtr<ID3D12DescriptorHeap> mDsvHeap = nullptr;
 			ComPtr<ID3D12Resource> mDsvBuffer = nullptr;
-			
 
-			inline void SetMesh(gsl::not_null<Mesh*> mesh, gsl::not_null<TextureGroup*> textureGroup, const GraphicsDevice& device)
-			{
-				if (!mIsDirty)
-				{
-					mMesh = mesh.get();
-					mIsDirty = true;
-					mIndexNum = mMesh->GetIndicesNum();
-					
-					createMeshResources(device);
-					bindSrvResources(textureGroup, device);
-				}
-			}
 
-			inline D3D12_VERTEX_BUFFER_VIEW& GetVertexView() noexcept
-			{
-				return mVertexBufferView;
-			}
-			inline D3D12_INDEX_BUFFER_VIEW& GetIndexView() noexcept
-			{
-				return mIndexBufferView;
-			}
 			inline size_t GetIndexNum() const noexcept
 			{
 				return mIndexNum;
 			}
 
 		private:
-			void createDefaultResources(RenderingPipeline& pipeline, Scene& scene);
+			void createDefaultResources(RenderingPipeline& pipeline) noexcept;
 			void createDefaultRootSignature(const GraphicsDevice& device);
 			void createDefaultPipelineState(const GraphicsDevice& device);
 			void createMeshResources(const GraphicsDevice& device) noexcept;
 			void bindSrvResources(gsl::not_null<TextureGroup*> textureGroup, const GraphicsDevice& device) noexcept;
-
-			void recordCommands();
 
 			unique_ptr<RootSignature> mRootSignature = nullptr;
 			unique_ptr<GraphicsPipelineState> mPipelineState = nullptr;
 			unique_ptr<RenderTargetDescriptorHeap> mRenderTargetDescriptorHeap = nullptr;
 			unique_ptr<ShaderResourceDescriptorHeap> mShaderResourceDescriptorHeap = nullptr;
 			unique_ptr<ConstBuffer> mConstBuffer = nullptr;
-			unique_ptr<CpuConstBufferData> mCpuConstBufferData = nullptr;
 			
-			const Mesh* mMesh = nullptr;
-			unique_ptr<GpuResource> mVertexBufferResource = nullptr;
-			unique_ptr<GpuResource> mIndexBufferResource = nullptr;
-			D3D12_VERTEX_BUFFER_VIEW mVertexBufferView;
-			D3D12_INDEX_BUFFER_VIEW mIndexBufferView;
-			size_t mIndexNum = 0;
+			std::unordered_map<const Mesh*, std::pair<GpuResource, D3D12_VERTEX_BUFFER_VIEW>> mVertexResourceMap = {};
+			std::unordered_map<const Mesh*, std::pair<GpuResource, D3D12_INDEX_BUFFER_VIEW>> mIndexResourceMap = {};
 
-			bool mIsDirty = false;
+			size_t mIndexNum = 0;
 		};
 	}
 }

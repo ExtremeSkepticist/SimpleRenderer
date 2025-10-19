@@ -3,7 +3,6 @@
 #include <DirectXMath.h>
 
 #include "Common.h"
-
 struct aiScene;
 
 namespace sr
@@ -12,32 +11,28 @@ namespace sr
 	{
 		static constexpr DirectX::XMFLOAT3 worldUpDirection(0, 1, 0);
 
-		class Model;
+		class AssetLoader;
 		class Camera;
+		class FrameBuilder;
+		class RenderingPipeline;
+		class Entity;
+		class Model;
 
 		class Scene
 		{
 		public:
-			Scene(const aiScene& scene) noexcept;
+			Scene(AssetLoader& assetLoader) noexcept;
 			~Scene() = default;
 
 			DirectX::XMVECTOR GetLightPos() const noexcept;
 			void Update() noexcept;
-
-			inline Model& GetModel()
-			{
-				return *mModel;
-			}
-			inline Camera& GetCamera()
-			{
-				return *mCamera;
-			}
+			void Render(FrameBuilder& frameBuilder, RenderingPipeline& pipeline) noexcept;
 			
 		private:
-			unique_ptr<Model> mModel = nullptr;
-			unique_ptr<Camera> mCamera = nullptr;
+			std::vector<std::shared_ptr<Entity>> mEntities = {};
 			const DirectX::XMFLOAT3 mLightPosition;
 			float mAngle = 0;
+			Camera* mCamera = nullptr;
 		};
 	}
 }

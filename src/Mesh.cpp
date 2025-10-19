@@ -2,12 +2,24 @@
 #include <assimp/material.h>
 
 #include "GraphicsDevice.h"
+#include "Material.h"
 #include "Mesh.h"
 
 namespace sr
 {
 	namespace rendering
 	{
+
+		Mesh::Mesh(std::string_view name, std::vector<Vertex>& vertices, std::vector<IndexType>& indices, std::shared_ptr<Material> material)
+			: mName(name.data())
+			, mVertices(std::move(vertices))
+			, mIndices(std::move(indices))
+			, mMaterial(material)
+		{
+		}
+		
+		Mesh::~Mesh() = default;
+		
 		Mesh::Mesh(const aiMesh& assimpMesh, const aiMaterial& material) noexcept
 			: mName(assimpMesh.mName.C_Str())
 			, mVerticesNum(assimpMesh.mNumVertices)
@@ -47,6 +59,7 @@ namespace sr
 			material.Get(AI_MATKEY_SHADING_MODEL, shadingMode);
 			assert(shadingMode == aiShadingMode_PBR_BRDF);
 
+			// TODO: Move this into material class
 			// Albedo
 			aiString textureName;
 			material.GetTexture(AI_MATKEY_BASE_COLOR_TEXTURE, &textureName);
@@ -70,6 +83,26 @@ namespace sr
 			Ensures(mVertices.size() == assimpMesh.mNumVertices);
 			Ensures(mIndices.size() == mIndicesNum);
 			Ensures(mTextureNameMap.size() == static_cast<size_t>(Texture::TextureType::Num));
+		}
+
+		const size_t Mesh::GetVerticeCount() const noexcept
+		{
+			return mVertices.size();
+		}
+
+		const vector<Mesh::Vertex>& Mesh::GetVertice() const noexcept
+		{
+			return mVertices;
+		}
+
+		const size_t Mesh::GetIndicesCount() const noexcept
+		{
+			return mIndices.size();
+		}
+
+		const vector<IndexType>& Mesh::GetIndice() const noexcept
+		{
+			return mIndices;
 		}
 
 		const std::string& Mesh::GetTextureName(Texture::TextureType type) const

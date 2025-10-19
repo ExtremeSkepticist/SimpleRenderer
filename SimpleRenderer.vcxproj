@@ -158,13 +158,16 @@ msbuild DirectXTex_Desktop_2022.sln -property:Configuration=$(Configuration)</Co
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Application.cpp" />
+    <ClCompile Include="src\AssetLoader.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\CommandList.cpp" />
     <ClCompile Include="src\CommandQueue.cpp" />
     <ClCompile Include="src\ConstBuffer.cpp" />
     <ClCompile Include="src\DepthStencilDescriptorHeap.cpp" />
+    <ClCompile Include="src\Entity.cpp" />
     <ClCompile Include="src\Fence.cpp" />
     <ClCompile Include="src\FrameBuilder.cpp" />
+    <ClCompile Include="src\Material.cpp" />
     <ClCompile Include="src\RenderingPipeline.cpp" />
     <ClCompile Include="src\Scene.cpp" />
     <ClCompile Include="src\Texture.cpp" />
@@ -190,6 +193,7 @@ msbuild DirectXTex_Desktop_2022.sln -property:Configuration=$(Configuration)</Co
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Application.h" />
+    <ClInclude Include="include\AssetLoader.h" />
     <ClInclude Include="include\Camera.h" />
     <ClInclude Include="include\CommandList.h" />
     <ClInclude Include="include\CommandQueue.h" />
@@ -197,9 +201,11 @@ msbuild DirectXTex_Desktop_2022.sln -property:Configuration=$(Configuration)</Co
     <ClInclude Include="include\ConstBuffer.h" />
     <ClInclude Include="include\DepthStencilDescriptorHeap.h" />
     <ClInclude Include="include\DescriptorHandle.h" />
+    <ClInclude Include="include\Entity.h" />
     <ClInclude Include="include\Fence.h" />
     <ClInclude Include="include\FrameBuilder.h" />
     <ClInclude Include="include\LightSource.h" />
+    <ClInclude Include="include\Material.h" />
     <ClInclude Include="include\RenderingPipeline.h" />
     <ClInclude Include="include\Scene.h" />
     <ClInclude Include="include\Texture.h" />

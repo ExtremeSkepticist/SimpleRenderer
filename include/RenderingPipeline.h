@@ -17,7 +17,9 @@ namespace sr
 		class FrameBuilder;
 		class GraphicsDevice;
 		class SwapChain;
+		class RenderableNode;
 		class RenderTargetDescriptorHeap;
+		class Mesh;
 
 		class RenderingPipeline final
 		{
@@ -31,7 +33,9 @@ namespace sr
 			RenderingPipeline& operator=(const RenderingPipeline&) = delete;
 			RenderingPipeline& operator=(RenderingPipeline&&) = delete;
 
-			void Render(FrameBuilder& frameBuilder);
+			void RenderStart(FrameBuilder& frameBuilder);
+			void RenderEnd();
+			void Render(FrameBuilder& frameBuilder, Mesh& node);
 
 			inline GraphicsDevice& GetGraphicsDevice() noexcept
 			{
@@ -56,7 +60,7 @@ namespace sr
 			void WaitForPreviousFrame() noexcept;
 
 		private:
-			void setupDefaultCommands(FrameBuilder& frameBuilder);
+			void setupDefaultCommands(FrameBuilder& frameBuilder, Mesh& mesh);
 
 			unique_ptr<GraphicsDevice> mGraphicsDevice = nullptr;
 			unique_ptr<CommandQueue> mGraphicsCommandQueue = nullptr;

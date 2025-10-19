@@ -13,19 +13,21 @@ namespace sr
 	{
 		class GraphicsDevice;
 
+//#pragma pack(push, 256)
 		// Aligning with 256 bytes
 		typedef struct CpuConstBufferData
 		{
 			DirectX::XMMATRIX mWorldMatrix;
 			DirectX::XMMATRIX mViewMatrix;
 			DirectX::XMMATRIX mProjectionMatrix;
-			DirectX::XMMATRIX mLightPosition;
+			DirectX::XMMATRIX mUnused;
 		} CpuConstBufferData;
+//#pragma pack(pop)
 
 		class ConstBuffer
 		{	
 		public:
-			ConstBuffer(gsl::not_null<gsl::cwzstring> name, const CpuConstBufferData& cpuConstBufferData, const GraphicsDevice& graphicsDevice) noexcept;
+			ConstBuffer(gsl::not_null<gsl::cwzstring> name, const GraphicsDevice& graphicsDevice) noexcept;
 
 			inline GpuResource& GetGpuResource() noexcept
 			{
@@ -37,7 +39,7 @@ namespace sr
 				return sizeof(CpuConstBufferData);
 			}
 
-			void Update(const CpuConstBufferData& cpuConstBufferData);
+			void Update(const CpuConstBufferData& cpuConstBufferData) noexcept;
 
 		private:
 			uint8_t* mMappedMemoryForCpuConstBufferData = nullptr;

@@ -143,6 +143,15 @@
     <ClCompile Include="src\TextureGroup.cpp">
       <Filter>pipeline resources\src</Filter>
     </ClCompile>
+    <ClCompile Include="src\Entity.cpp">
+      <Filter>pipeline resources\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\AssetLoader.cpp">
+      <Filter>pipeline resources\src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Material.cpp">
+      <Filter>pipeline resources\src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Fence.h">
@@ -236,6 +245,15 @@
       <Filter>pipeline resources\include</Filter>
     </ClInclude>
     <ClInclude Include="include\TextureGroup.h">
+      <Filter>pipeline resources\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Entity.h">
+      <Filter>pipeline resources\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\AssetLoader.h">
+      <Filter>pipeline resources\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Material.h">
       <Filter>pipeline resources\include</Filter>
     </ClInclude>
   </ItemGroup>

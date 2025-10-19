@@ -1,7 +1,10 @@
 #include <assimp\scene.h>
 
+#include "AssetLoader.h"
 #include "Camera.h"
-#include "Model.h"
+#include "Entity.h"
+#include "FrameBuilder.h"
+#include "RenderingPipeline.h"
 #include "Scene.h"
 #include "TextureGroup.h"
 #include "PlatformWindow.h"
@@ -10,25 +13,37 @@ namespace sr
 {
 	namespace rendering
 	{
-		// Precondition
-		// - assumes there's only one model as the program's currently using assimp
-		// - assumes rendering only one DamagedHelmet, so ignoring recursive node-processing
-		// TODO: Switch to scene graph when needed
-		Scene::Scene(const aiScene& scene) noexcept
-			: mModel(nullptr)
-			, mCamera(nullptr)
+		Scene::Scene(AssetLoader& assetLoader) noexcept
+			: mEntities({})
 			, mLightPosition({0, 6, 1})
 			, mAngle(0)
+			, mCamera(nullptr)
 		{
-			constexpr XMFLOAT3 modelWorldPosition(0, 4, 2);
-			mModel = make_unique<Model>(scene, modelWorldPosition);
+			const size_t entityCount = assetLoader.GetAssetCount();
+			mEntities.reserve(entityCount);
+			for (size_t i = 0; i < entityCount; ++i)
+			{
+				auto& entity = mEntities.emplace_back(std::make_shared<Entity>(true));
+				assetLoader.LoadEntity(*entity.get(), i);
+			}
 
-			constexpr XMFLOAT3 cameraWorldPosition(0, 6, 0);
+			// TODO: support multiple entities in the scene
+			constexpr XMFLOAT3 modelWorldPosition(0, 4, 2);
+			constexpr XMFLOAT3 modelScale(1, 1, 1);
+
+			mEntities[0]->SetPosition(modelWorldPosition);
+			mEntities[0]->SetScale(modelScale);
+
+			constexpr XMFLOAT3 cameraWorldPosition(-3, 8, 0);
 			constexpr XMFLOAT3 worldUpDirection(0, 1, 0);
 			constexpr float fovAngle = 45.0f;
 			constexpr float nearZcoordinate = 0.01f;
 			constexpr float farZcoordinate = 100.0f;
-			mCamera = make_unique<Camera>(fovAngle, platform::aspectRatio, nearZcoordinate, farZcoordinate, cameraWorldPosition);
+			std::shared_ptr<Camera> camera = make_shared<Camera>(fovAngle, platform::aspectRatio, nearZcoordinate, farZcoordinate);
+			camera->SetPosition(cameraWorldPosition);
+			mEntities.emplace_back(std::move(camera));
+
+			mCamera = reinterpret_cast<Camera*>(mEntities[1].get());
 		}
 
 		DirectX::XMVECTOR Scene::GetLightPos() const noexcept
@@ -41,11 +56,40 @@ namespace sr
 			// TODO: Add camera movement and update camera position
 			// TODO: Add proper LightSource class
 			//		- mLightPosition is XMMATRIX just to follow const buffer size constraints
-			if (mAngle >= 360) {
-				mAngle = 0;
-				return;
+			for (auto& entity : mEntities)
+			{
+				entity->Update();
 			}
-			mAngle += 0.01;
+		}
+
+		void Scene::Render(FrameBuilder& frameBuilder, RenderingPipeline& pipeline) noexcept
+		{
+			pipeline.RenderStart(frameBuilder);
+
+			for (auto& entity : mEntities)
+			{
+				if (!entity->IsRenderable())
+				{
+					continue;
+				}
+				
+				// TODO: Is there a way to separate rendering logic from Scene?
+				const XMFLOAT3 position = entity->GetPosition();
+				std::vector<RenderableNode*> nodes;
+				nodes.reserve(128); // TODO: replace the magic number
+				entity->GetRenderableNodes(nodes);
+
+				for (auto& node: nodes)
+				{					
+					for (auto& mesh : node->GetMesh())
+					{
+						frameBuilder.Build(mesh, *node, *mCamera, position, pipeline.GetGraphicsDevice());
+						pipeline.Render(frameBuilder, mesh);
+					}
+				}
+			}
+
+			pipeline.RenderEnd();
 		}
 	}
 }

@@ -19,10 +19,9 @@ namespace sr
 	class Application
 	{
 	public:
-		Application(uint16_t width, uint16_t height, gsl::not_null<gsl::cwzstring> name, gsl::czstring sampleName, int nCmdShow);
+		Application(gsl::not_null<gsl::czstring> sampleName, int nCmdShow) noexcept;
 		~Application();
 
-		void Init();
 		void Run();
 
 	private:
@@ -30,12 +29,11 @@ namespace sr
 		void update();
 		void render();
 
-		gsl::czstring mSampleName;
-		gsl::cwzstring mName;
 		uint16_t mWidth = 0;
 		uint16_t mHeight = 0;
+		gsl::cwzstring mName = L"SimpleRenderer";
+		gsl::czstring mSampleName;
 		int mCmdShow = 0;
-		bool mIsInit = false;
 
 		unique_ptr<rendering::Scene> mScene = nullptr;
 		unique_ptr<rendering::TextureGroup> mTextureGroup = nullptr;
