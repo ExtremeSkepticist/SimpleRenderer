@@ -28,13 +28,13 @@ namespace sr
 			}
 
 			// TODO: support multiple entities in the scene
-			constexpr XMFLOAT3 modelWorldPosition(0, 4, 50);
-			constexpr XMFLOAT3 modelScale(0.1, 0.1, 1);
+			constexpr XMFLOAT3 modelWorldPosition(0, 4, 2);
+			constexpr XMFLOAT3 modelScale(1, 1, 1);
 
 			mEntities[0]->SetPosition(modelWorldPosition);
 			mEntities[0]->SetScale(modelScale);
 
-			constexpr XMFLOAT3 cameraWorldPosition(0, 6, 0);
+			constexpr XMFLOAT3 cameraWorldPosition(-3, 8, 0);
 			constexpr XMFLOAT3 worldUpDirection(0, 1, 0);
 			constexpr float fovAngle = 45.0f;
 			constexpr float nearZcoordinate = 0.01f;

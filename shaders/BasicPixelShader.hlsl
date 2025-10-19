@@ -17,7 +17,11 @@ struct PS_OUTPUT
 PS_OUTPUT main(PS_INPUT input)
 {
     PS_OUTPUT output;
-    output.mColor = float4(1, 0, 0, 1);
+    float3 lightPosition = normalize(float3(0, 10, 2));
+    
+    float lambert = dot(input.mNormal, lightPosition);
+    lambert = ceil(lambert * 5) / 5;  // toon shading
+    output.mColor = float4(1 * lambert, 0, 0, 1);
     
     return output;
 }
