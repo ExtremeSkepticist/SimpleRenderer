@@ -76,7 +76,18 @@ namespace sr
 
 	void Application::update()
 	{
-		// TODO: Check for keyboard/mouse input
+		// Flow: 
+		//	1.1 Check for keyboard/mouse input
+		//	1.2 If true, set a camera-updating flag
+		// Control:
+		//	Q/E: Ascend & descend
+		//	W/A/S/D: Move forward/backward/left/right
+		//	Mouse: change orientation
+		// TODO:
+		// 1. Add the keys in the loop of PlatformWindow::WndProc()
+		//	1.1 Implement Ascend & descend
+		//	1.2 Implement Move
+		//	1.3 Implement Mouse orientation
 		mScene->Update();
 	}
 
