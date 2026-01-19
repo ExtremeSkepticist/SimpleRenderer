@@ -21,7 +21,7 @@ PS_OUTPUT main(PS_INPUT input)
     
     float lambert = dot(input.mNormal, lightPosition);
     lambert = ceil(lambert * 5) / 5;  // toon shading
-    output.mColor = float4(1 * lambert, 0, 0, 1);
+    output.mColor = float4(1 * lambert, 1 * lambert, 1 * lambert, 1);
     
     return output;
 }

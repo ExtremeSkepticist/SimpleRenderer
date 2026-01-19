@@ -26,6 +26,10 @@ namespace sr
 			PlatformWindow& operator=(PlatformWindow&&) = delete;
 			~PlatformWindow() noexcept;
 
+
+			void Update() noexcept;
+
+			static void OnPressedKey(WPARAM key) noexcept;
 			static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) noexcept;
 
 			inline uint16_t GetFrameWidth() const noexcept

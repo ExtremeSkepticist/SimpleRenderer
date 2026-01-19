@@ -21,8 +21,8 @@
 namespace sr
 {
 	Application::Application(gsl::not_null<gsl::czstring> sampleName, int nCmdShow) noexcept
-		: mWidth(800)
-		, mHeight(600)
+		: mWidth(1080)
+		, mHeight(1080)
 		, mName(L"SimpleRenderer")
 		, mCmdShow(nCmdShow)
 		, mSampleName(sampleName)
@@ -88,6 +88,14 @@ namespace sr
 		//	1.1 Implement Ascend & descend
 		//	1.2 Implement Move
 		//	1.3 Implement Mouse orientation
+		MSG message = {};
+		const BOOL hasSucceededGetMessage = GetMessage(&message, NULL, 0, 0);
+		if (hasSucceededGetMessage > 0)
+		{
+			TranslateMessage(&message);
+			DispatchMessage(&message);
+		}
+
 		mScene->Update();
 	}
 

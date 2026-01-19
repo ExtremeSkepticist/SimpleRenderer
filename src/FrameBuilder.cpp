@@ -58,8 +58,8 @@ namespace sr
 			depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
 			depthOptimizedClearValue.DepthStencil.Stencil = 0;
 			
-			constexpr uint16_t frameWidth = 800;
-			constexpr uint16_t frameHeight = 600;
+			const uint16_t frameWidth = pipeline.GetSwapChain().GetBufferWidth();
+			const uint16_t frameHeight = pipeline.GetSwapChain().GetBufferHeight();
 			auto props = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 			auto desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, frameWidth, frameHeight, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
 			device.GetD3d12Device()->CreateCommittedResource(

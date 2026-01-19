@@ -15,6 +15,7 @@ namespace sr
 			, mFrameHeight(frameHeight)
 			, mClassName(className)
 			, mHwnd(nullptr)
+			, mShouldUpdateCamera(false)
 		{
 			Expects(mHwnd == nullptr);
 			Expects(mFrameWidth >= minFrameWidth && mFrameHeight >= minFrameHeight);
@@ -60,6 +61,26 @@ namespace sr
 
 		PlatformWindow::~PlatformWindow() noexcept = default;
 
+		void PlatformWindow::Update() noexcept
+		{
+
+		}
+
+		void PlatformWindow::OnPressedKey(WPARAM key) noexcept
+		{
+			switch (key)
+			{
+			case 'Q':
+				// TODO: add +1 to z-value for the camera
+				// 1. Create a struct with bit fields that store updates from window
+				// 2. Pass the struct into platform window
+				// 3. Let the window update it
+				// 4. Pass the struct into Scene::Update()
+				break;
+			}
+		}
+
+
 		LRESULT CALLBACK PlatformWindow::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) noexcept
 		{
 			// TODO: process user input with PlatformWindow
@@ -77,6 +98,9 @@ namespace sr
 				break;
 			case WM_DESTROY:
 				PostQuitMessage(0);
+				break;
+			case WM_CHAR:
+				OnPressedKey(wParam);
 				break;
 			default:
 				return DefWindowProc(hWnd, message, wParam, lParam);
