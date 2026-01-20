@@ -226,6 +226,7 @@ msbuild DirectXTex_Desktop_2022.sln -property:Configuration=$(Configuration)</Co
     <ClInclude Include="include\ShaderResourceDescriptorHeap.h" />
     <ClInclude Include="include\SwapChain.h" />
     <ClInclude Include="include\TextureGroup.h" />
+    <ClInclude Include="include\UserInput.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\BasicPixelShader.hlsl">

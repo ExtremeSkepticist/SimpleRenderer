@@ -4,6 +4,8 @@
 
 namespace sr
 {
+	struct UserInput;
+
 	namespace platform
 	{
 		static constexpr uint16_t minFrameWidth = 800;
@@ -31,6 +33,7 @@ namespace sr
 
 			static void OnPressedKey(WPARAM key) noexcept;
 			static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) noexcept;
+			static UserInput& GetUserInput();
 
 			inline uint16_t GetFrameWidth() const noexcept
 			{

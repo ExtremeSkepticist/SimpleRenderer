@@ -1,6 +1,7 @@
 #include <limits>
 #include <Windows.h>
 
+#include "UserInput.h"
 #include "PlatformWindow.h"
 
 //LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) noexcept;
@@ -15,7 +16,6 @@ namespace sr
 			, mFrameHeight(frameHeight)
 			, mClassName(className)
 			, mHwnd(nullptr)
-			, mShouldUpdateCamera(false)
 		{
 			Expects(mHwnd == nullptr);
 			Expects(mFrameWidth >= minFrameWidth && mFrameHeight >= minFrameHeight);
@@ -66,6 +66,13 @@ namespace sr
 
 		}
 
+		UserInput& PlatformWindow::GetUserInput()
+		{
+			static UserInput userInput = {};
+
+			return userInput;
+		}
+
 		void PlatformWindow::OnPressedKey(WPARAM key) noexcept
 		{
 			switch (key)
@@ -76,6 +83,7 @@ namespace sr
 				// 2. Pass the struct into platform window
 				// 3. Let the window update it
 				// 4. Pass the struct into Scene::Update()
+				GetUserInput().mPressedAscend = true;
 				break;
 			}
 		}

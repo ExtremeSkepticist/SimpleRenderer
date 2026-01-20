@@ -256,6 +256,9 @@
     <ClInclude Include="include\Material.h">
       <Filter>pipeline resources\include</Filter>
     </ClInclude>
+    <ClInclude Include="include\UserInput.h">
+      <Filter>pipeline resources\include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="shaders\BasicVertexShader.hlsl">

@@ -8,6 +8,7 @@
 #include "Scene.h"
 #include "TextureGroup.h"
 #include "PlatformWindow.h"
+#include "UserInput.h"
 
 namespace sr
 {
@@ -34,7 +35,7 @@ namespace sr
 			mEntities[0]->SetPosition(modelWorldPosition);
 			mEntities[0]->SetScale(modelScale);
 
-			constexpr XMFLOAT3 cameraWorldPosition(-3, 8, 0);
+			constexpr XMFLOAT3 cameraWorldPosition(-3.5, 5, 0);
 			constexpr XMFLOAT3 worldUpDirection(0, 1, 0);
 			constexpr float fovAngle = 45.0f;
 			constexpr float nearZcoordinate = 0.01f;
@@ -51,11 +52,18 @@ namespace sr
 			return XMVector4Transform(XMLoadFloat3(&mLightPosition), XMMatrixRotationZ(mAngle));
 		}
 
-		void Scene::Update() noexcept
+		void Scene::Update(UserInput& userInput) noexcept
 		{
 			// TODO: Add camera movement and update camera position
 			// TODO: Add proper LightSource class
 			//		- mLightPosition is XMMATRIX just to follow const buffer size constraints
+			auto cameraPosition = mCamera->GetPosition();
+			if (userInput.mPressedAscend)
+			{
+				cameraPosition.z += 1;
+			}
+			mCamera->SetPosition(cameraPosition);
+
 			for (auto& entity : mEntities)
 			{
 				entity->Update();

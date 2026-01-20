@@ -17,6 +17,7 @@
 #include "SwapChain.h"
 #include "TextureGroup.h"
 #include "ConstBuffer.h"
+#include "UserInput.h"
 
 namespace sr
 {
@@ -88,6 +89,9 @@ namespace sr
 		//	1.1 Implement Ascend & descend
 		//	1.2 Implement Move
 		//	1.3 Implement Mouse orientation
+		
+		platform::PlatformWindow::GetUserInput() = {};
+
 		MSG message = {};
 		const BOOL hasSucceededGetMessage = GetMessage(&message, NULL, 0, 0);
 		if (hasSucceededGetMessage > 0)
@@ -96,7 +100,7 @@ namespace sr
 			DispatchMessage(&message);
 		}
 
-		mScene->Update();
+		mScene->Update(platform::PlatformWindow::GetUserInput());
 	}
 
 	void Application::render()

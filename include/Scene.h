@@ -7,6 +7,8 @@ struct aiScene;
 
 namespace sr
 {
+	struct UserInput;
+
 	namespace rendering
 	{
 		static constexpr DirectX::XMFLOAT3 worldUpDirection(0, 1, 0);
@@ -25,7 +27,7 @@ namespace sr
 			~Scene() = default;
 
 			DirectX::XMVECTOR GetLightPos() const noexcept;
-			void Update() noexcept;
+			void Update(UserInput& userInput) noexcept;
 			void Render(FrameBuilder& frameBuilder, RenderingPipeline& pipeline) noexcept;
 			
 		private:
