@@ -75,26 +75,34 @@ namespace sr
 
 		void PlatformWindow::OnPressedKey(WPARAM key) noexcept
 		{
-			switch (key)
+			switch (tolower(key))
 			{
-			case 'Q':
-				// TODO: add +1 to z-value for the camera
-				// 1. Create a struct with bit fields that store updates from window
-				// 2. Pass the struct into platform window
-				// 3. Let the window update it
-				// 4. Pass the struct into Scene::Update()
+			case 'q':
 				GetUserInput().mPressedAscend = true;
 				break;
+			case 'e':
+				GetUserInput().mPressedDescend = true;
+				break;
+			case 'w':
+				GetUserInput().mPressedForward = true;
+				break;
+			case 's':
+				GetUserInput().mPressedBackward = true;
+				break;
+			case 'a':
+				GetUserInput().mPressedLeft = true;
+				break;
+			case 'd':
+				GetUserInput().mPressedRight = true;
+				break;
+			default:
+				assert(false);
 			}
 		}
 
 
 		LRESULT CALLBACK PlatformWindow::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) noexcept
 		{
-			// TODO: process user input with PlatformWindow
-			// LONG_PTR userData = GetWindowLongPtr(hWnd, GWLP_USERDATA);
-			// gsl::not_null<PlatformWindow*> platformWindow = reinterpret_cast<PlatformWindow*>(userData);
-
 			PAINTSTRUCT paintStruct = { nullptr, };
 			HDC hDevice = { nullptr, };
 

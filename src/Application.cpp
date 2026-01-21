@@ -88,7 +88,9 @@ namespace sr
 		// 1. Add the keys in the loop of PlatformWindow::WndProc()
 		//	1.1 Implement Ascend & descend
 		//	1.2 Implement Move
-		//	1.3 Implement Mouse orientation
+		//	1.3 Implement Camera orientation with mouse
+		//  1.4 Create LookTo matrix instead; Current logic uses LookAt, which fixes camera orientation at one point
+		//		1.4.1 The Target position for LookAt matrix should be retrieved from Camera class, which is camera orientation?
 		
 		platform::PlatformWindow::GetUserInput() = {};
 

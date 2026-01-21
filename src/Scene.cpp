@@ -60,7 +60,27 @@ namespace sr
 			auto cameraPosition = mCamera->GetPosition();
 			if (userInput.mPressedAscend)
 			{
-				cameraPosition.z += 1;
+				cameraPosition.y += 0.1;
+			}
+			else if (userInput.mPressedDescend)
+			{
+				cameraPosition.y -= 0.1;
+			}
+			else if (userInput.mPressedForward)
+			{
+				cameraPosition.z += 0.1;
+			}
+			else if (userInput.mPressedBackward)
+			{
+				cameraPosition.z -= 0.1;
+			}
+			else if (userInput.mPressedLeft)
+			{
+				cameraPosition.x -= 0.1;
+			}
+			else if (userInput.mPressedRight)
+			{
+				cameraPosition.x += 0.1;
 			}
 			mCamera->SetPosition(cameraPosition);
 
