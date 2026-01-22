@@ -10,6 +10,7 @@ namespace sr
 			, mAspectRatio(aspectRatio)
 			, mNearZCoords(nearZCoords)
 			, mFarZCoords(farZCoords)
+			, mTargetPosition({ 0, 0, 0 })
 		{
 		}
 
@@ -17,7 +18,12 @@ namespace sr
 
 		XMMATRIX Camera::GetViewLookAtMatrixLh(const XMFLOAT3& eyeCoords, const XMFLOAT3& targetCoords, const XMFLOAT3& upDirection) const noexcept
 		{
-			return XMMatrixLookToLH(XMLoadFloat3(&eyeCoords), XMLoadFloat3(&targetCoords), XMLoadFloat3(&upDirection));
+			return XMMatrixLookAtLH(XMLoadFloat3(&eyeCoords), XMLoadFloat3(&targetCoords), XMLoadFloat3(&upDirection));
+		}
+
+		XMMATRIX Camera::GetViewLookToMatrixLh(const XMFLOAT3& eyeCoords, const XMFLOAT3& upDirection) const noexcept
+		{
+			return XMMatrixLookToLH(XMLoadFloat3(&eyeCoords), XMLoadFloat3(&mTargetPosition), XMLoadFloat3(&upDirection));
 		}
 
 		XMMATRIX Camera::GetProjectionMatrixLh() const noexcept
@@ -25,10 +31,16 @@ namespace sr
 			return XMMatrixPerspectiveFovLH(mFovAngle, mAspectRatio, mNearZCoords, mFarZCoords);
 		}
 
+		void Camera::SetTargetPosition(const XMFLOAT3& targetPosition) noexcept
+		{
+			mTargetPosition = targetPosition;
+
+			XMStoreFloat3(&mTargetPosition, XMVector3Normalize(XMLoadFloat3(&mTargetPosition)));
+		}
+
 		void Camera::Update() noexcept
 		{
 			//TODO: add update code by entity update request
 		}
-
 	}
 }

@@ -86,12 +86,15 @@ namespace sr
 		//	Mouse: change orientation
 		// TODO:
 		// 1. Add the keys in the loop of PlatformWindow::WndProc()
-		//	1.1 Implement Ascend & descend
+		//	1.1 Implement Ascend & descend 
 		//	1.2 Implement Move
 		//	1.3 Implement Camera orientation with mouse
-		//  1.4 Create LookTo matrix instead; Current logic uses LookAt, which fixes camera orientation at one point
-		//		1.4.1 The Target position for LookAt matrix should be retrieved from Camera class, which is camera orientation?
-		
+		//  1.4 Create LookTo matrix instead; LookAt = focal point, LookTo = direction
+		//		[DONE] 1.4.1 Have Camera contain Target Position
+		//		1.4.2 With mouse movement, target position is rotated and updated
+		//		1.4.3 Camera runs LookTo() matrix with a unit vector bewteen Camera and Target position
+		//		1.4.4 Forward direction is calculated with the same unit vector that is compared to each axis; 
+		//			the closer to 1, the more it is forward
 		platform::PlatformWindow::GetUserInput() = {};
 
 		MSG message = {};

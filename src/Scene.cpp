@@ -42,6 +42,7 @@ namespace sr
 			constexpr float farZcoordinate = 100.0f;
 			std::shared_ptr<Camera> camera = make_shared<Camera>(fovAngle, platform::aspectRatio, nearZcoordinate, farZcoordinate);
 			camera->SetPosition(cameraWorldPosition);
+			camera->SetTargetPosition(modelWorldPosition);
 			mEntities.emplace_back(std::move(camera));
 
 			mCamera = reinterpret_cast<Camera*>(mEntities[1].get());
@@ -98,6 +99,7 @@ namespace sr
 			{
 				if (!entity->IsRenderable())
 				{
+					[[unlikely]]
 					continue;
 				}
 				

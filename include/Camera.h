@@ -18,15 +18,18 @@ namespace sr
 			~Camera();
 
 			XMMATRIX GetViewLookAtMatrixLh(const XMFLOAT3& eyeCoords, const XMFLOAT3& targetCoords, const XMFLOAT3& upDireciton) const noexcept;
+			XMMATRIX GetViewLookToMatrixLh(const XMFLOAT3& eyeCoords, const XMFLOAT3& upDirection) const noexcept;
 			XMMATRIX GetProjectionMatrixLh() const noexcept;
 
+			void SetTargetPosition(const XMFLOAT3& targetPosition) noexcept;
 			void Update() noexcept override;
 		private:
-			
 			float mFovAngle = 0.0f;
 			float mAspectRatio = 0.0f;
 			float mNearZCoords = 0.0f;
 			float mFarZCoords = 0.0f;
+
+			XMFLOAT3 mTargetPosition = {};
 		};
 	}
 }
