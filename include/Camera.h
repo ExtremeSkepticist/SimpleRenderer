@@ -18,7 +18,7 @@ namespace sr
 			~Camera();
 
 			XMMATRIX GetViewLookAtMatrixLh(const XMFLOAT3& eyeCoords, const XMFLOAT3& targetCoords, const XMFLOAT3& upDireciton) const noexcept;
-			XMMATRIX GetViewLookToMatrixLh(const XMFLOAT3& eyeCoords, const XMFLOAT3& upDirection) const noexcept;
+			XMMATRIX GetViewLookToMatrixLh(const XMFLOAT3& upDirection) const noexcept;
 			XMMATRIX GetProjectionMatrixLh() const noexcept;
 
 			void SetTargetPosition(const XMFLOAT3& targetPosition) noexcept;

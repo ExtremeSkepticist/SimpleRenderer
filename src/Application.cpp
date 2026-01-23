@@ -92,6 +92,7 @@ namespace sr
 		//  1.4 Create LookTo matrix instead; LookAt = focal point, LookTo = direction
 		//		[DONE] 1.4.1 Have Camera contain Target Position
 		//		1.4.2 With mouse movement, target position is rotated and updated
+		//			// This might need to determine which one is forward and do left/right & up/down rotation with axis-angle
 		//		1.4.3 Camera runs LookTo() matrix with a unit vector bewteen Camera and Target position
 		//		1.4.4 Forward direction is calculated with the same unit vector that is compared to each axis; 
 		//			the closer to 1, the more it is forward

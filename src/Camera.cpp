@@ -21,9 +21,16 @@ namespace sr
 			return XMMatrixLookAtLH(XMLoadFloat3(&eyeCoords), XMLoadFloat3(&targetCoords), XMLoadFloat3(&upDirection));
 		}
 
-		XMMATRIX Camera::GetViewLookToMatrixLh(const XMFLOAT3& eyeCoords, const XMFLOAT3& upDirection) const noexcept
+		XMMATRIX Camera::GetViewLookToMatrixLh(const XMFLOAT3& upDirection) const noexcept
 		{
-			return XMMatrixLookToLH(XMLoadFloat3(&eyeCoords), XMLoadFloat3(&mTargetPosition), XMLoadFloat3(&upDirection));
+			const XMFLOAT3 cameraPos = GetPosition();
+			const XMFLOAT3 targetPos = mTargetPosition;
+			const XMVECTOR cameraVec = XMLoadFloat3(&cameraPos);
+			const XMVECTOR targetVec = XMLoadFloat3(&targetPos);
+
+			const XMVECTOR lookToDirection = XMVector3Normalize(targetVec - cameraVec);
+
+			return XMMatrixLookToLH(cameraVec, lookToDirection, XMLoadFloat3(&upDirection));
 		}
 
 		XMMATRIX Camera::GetProjectionMatrixLh() const noexcept
@@ -34,8 +41,6 @@ namespace sr
 		void Camera::SetTargetPosition(const XMFLOAT3& targetPosition) noexcept
 		{
 			mTargetPosition = targetPosition;
-
-			XMStoreFloat3(&mTargetPosition, XMVector3Normalize(XMLoadFloat3(&mTargetPosition)));
 		}
 
 		void Camera::Update() noexcept

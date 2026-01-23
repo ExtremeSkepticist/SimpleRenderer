@@ -176,7 +176,7 @@ namespace sr
 			// TODO: build const buffer
 			// TODO: set the following values with the .gltf provided values
 			const XMMATRIX worldMatrix = XMMatrixTranspose(node.GetWorldMatrix());
-			const XMMATRIX viewMatrix = XMMatrixTranspose(camera.GetViewLookAtMatrixLh(camera.GetPosition(), targetPosition, sr::rendering::worldUpDirection));
+			const XMMATRIX viewMatrix = XMMatrixTranspose(camera.GetViewLookToMatrixLh(sr::rendering::worldUpDirection));
 			const XMMATRIX projectionMatrix = XMMatrixTranspose(camera.GetProjectionMatrixLh());
 
 			const CpuConstBufferData data = { worldMatrix, viewMatrix, projectionMatrix, XMMatrixIdentity()};
