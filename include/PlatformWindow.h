@@ -32,6 +32,8 @@ namespace sr
 			void Update() noexcept;
 
 			static void OnPressedKey(WPARAM key) noexcept;
+			static void OnMouseMove(LPARAM lparam);
+
 			static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) noexcept;
 			static UserInput& GetUserInput();
 

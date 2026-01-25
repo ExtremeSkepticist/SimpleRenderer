@@ -33,6 +33,18 @@ namespace sr
 			return XMMatrixLookToLH(cameraVec, lookToDirection, XMLoadFloat3(&upDirection));
 		}
 
+		XMMATRIX Camera::GetRotationMatrix(const int xDelta, const int yDelta, XMVECTOR upDirection)
+		{
+			const XMFLOAT3 cameraPos = GetPosition();
+			const XMFLOAT3 targetPos = mTargetPosition;
+			const XMVECTOR cameraVec = XMLoadFloat3(&cameraPos);
+			const XMVECTOR targetVec = XMLoadFloat3(&targetPos);
+
+			const XMVECTOR forwardVec = XMVector3Normalize(targetVec - cameraVec);
+			const XMVECTOR rightVec = XMVector3Cross(forwardVec, upDirection);
+
+			return XMMatrixRotationRollPitchYaw(0, xDelta, yDelta);
+		}
 		XMMATRIX Camera::GetProjectionMatrixLh() const noexcept
 		{
 			return XMMatrixPerspectiveFovLH(mFovAngle, mAspectRatio, mNearZCoords, mFarZCoords);
@@ -45,7 +57,8 @@ namespace sr
 
 		void Camera::Update() noexcept
 		{
-			//TODO: add update code by entity update request
+			//TODO: re-compute mTargetPosition with the current orientation
+			// TODO: Update camera world-space position if delta exists by rotating them
 		}
 	}
 }

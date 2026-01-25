@@ -20,6 +20,7 @@ namespace sr
 			XMMATRIX GetViewLookAtMatrixLh(const XMFLOAT3& eyeCoords, const XMFLOAT3& targetCoords, const XMFLOAT3& upDireciton) const noexcept;
 			XMMATRIX GetViewLookToMatrixLh(const XMFLOAT3& upDirection) const noexcept;
 			XMMATRIX GetProjectionMatrixLh() const noexcept;
+			XMMATRIX GetRotationMatrix(const int xDelta, const int yDelta, XMVECTOR upDirection);
 
 			void SetTargetPosition(const XMFLOAT3& targetPosition) noexcept;
 			void Update() noexcept override;

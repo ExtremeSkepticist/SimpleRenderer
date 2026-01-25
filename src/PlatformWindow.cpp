@@ -1,5 +1,6 @@
 #include <limits>
 #include <Windows.h>
+#include <windowsx.h>
 
 #include "UserInput.h"
 #include "PlatformWindow.h"
@@ -16,6 +17,8 @@ namespace sr
 			, mFrameHeight(frameHeight)
 			, mClassName(className)
 			, mHwnd(nullptr)
+			, mCurrentCursorXpos(0)
+			, mCurrentCursorYpos(0)
 		{
 			Expects(mHwnd == nullptr);
 			Expects(mFrameWidth >= minFrameWidth && mFrameHeight >= minFrameHeight);
@@ -100,6 +103,19 @@ namespace sr
 			}
 		}
 
+		void PlatformWindow::OnMouseMove(LPARAM lparam)
+		{
+			static int currentXpos = 0;
+			static int currentYpos = 0;
+			const int newXpos = GET_X_LPARAM(lparam);
+			const int newYpos = GET_Y_LPARAM(lparam);
+
+			GetUserInput().mCursorDeltaX = newXpos - currentXpos;
+			GetUserInput().mCursorDeltaY = newYpos - currentYpos;
+
+			currentXpos = newXpos;
+			currentYpos = newYpos;
+		}
 
 		LRESULT CALLBACK PlatformWindow::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) noexcept
 		{
@@ -117,6 +133,9 @@ namespace sr
 				break;
 			case WM_CHAR:
 				OnPressedKey(wParam);
+				break;
+			case WM_MOUSEMOVE:
+				OnMouseMove(lParam);
 				break;
 			default:
 				return DefWindowProc(hWnd, message, wParam, lParam);

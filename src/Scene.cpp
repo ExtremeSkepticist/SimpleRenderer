@@ -83,6 +83,10 @@ namespace sr
 			{
 				cameraPosition.x += 0.1;
 			}
+			else if (userInput.mCursorDeltaX > 0 || userInput.mCursorDeltaY)
+			{
+				// TODO: set delta for Camera, and update it in Update() (i.e. update camera position to be rotated)
+			}
 			mCamera->SetPosition(cameraPosition);
 
 			for (auto& entity : mEntities)

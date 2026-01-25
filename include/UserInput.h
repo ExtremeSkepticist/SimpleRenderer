@@ -10,5 +10,8 @@ namespace sr
 		bool mPressedBackward = false;
 		bool mPressedLeft = false;
 		bool mPressedRight = false;
+
+		int mCursorDeltaX = 0;
+		int mCursorDeltaY = 0;
 	};
 }
