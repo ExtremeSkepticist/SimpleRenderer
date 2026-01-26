@@ -21,6 +21,7 @@ namespace sr
 			return XMMatrixLookAtLH(XMLoadFloat3(&eyeCoords), XMLoadFloat3(&targetCoords), XMLoadFloat3(&upDirection));
 		}
 
+		// TODO: fix this with https://chatgpt.com/c/6976ebbf-0cf4-8330-b6fd-7caac18979e1
 		XMMATRIX Camera::GetViewLookToMatrixLh(const XMFLOAT3& upDirection) const noexcept
 		{
 			const XMFLOAT3 cameraPos = GetPosition();
@@ -33,7 +34,7 @@ namespace sr
 			return XMMatrixLookToLH(cameraVec, lookToDirection, XMLoadFloat3(&upDirection));
 		}
 
-		XMMATRIX Camera::GetRotationMatrix(const int xDelta, const int yDelta, XMVECTOR upDirection)
+		XMMATRIX Camera::getRotationMatrix(const int xDelta, const int yDelta, XMVECTOR upDirection)
 		{
 			const XMFLOAT3 cameraPos = GetPosition();
 			const XMFLOAT3 targetPos = mTargetPosition;
@@ -50,6 +51,12 @@ namespace sr
 			return XMMatrixPerspectiveFovLH(mFovAngle, mAspectRatio, mNearZCoords, mFarZCoords);
 		}
 
+		void Camera::SetOrientationDelta(const float xDelta, const float yDelta) noexcept
+		{
+			mDeltaX = xDelta;
+			mDeltaY = yDelta;
+		}
+
 		void Camera::SetTargetPosition(const XMFLOAT3& targetPosition) noexcept
 		{
 			mTargetPosition = targetPosition;
@@ -57,6 +64,7 @@ namespace sr
 
 		void Camera::Update() noexcept
 		{
+			mTargetPosition = XMStoreFloat3(XMVector3Transform(XMLoadFloat3(&mTargetPosition), getRotationMatrix()));
 			//TODO: re-compute mTargetPosition with the current orientation
 			// TODO: Update camera world-space position if delta exists by rotating them
 		}

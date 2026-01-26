@@ -58,36 +58,10 @@ namespace sr
 			// TODO: Add camera movement and update camera position
 			// TODO: Add proper LightSource class
 			//		- mLightPosition is XMMATRIX just to follow const buffer size constraints
-			auto cameraPosition = mCamera->GetPosition();
-			if (userInput.mPressedAscend)
-			{
-				cameraPosition.y += 0.1;
-			}
-			else if (userInput.mPressedDescend)
-			{
-				cameraPosition.y -= 0.1;
-			}
-			else if (userInput.mPressedForward)
-			{
-				cameraPosition.z += 0.1;
-			}
-			else if (userInput.mPressedBackward)
-			{
-				cameraPosition.z -= 0.1;
-			}
-			else if (userInput.mPressedLeft)
-			{
-				cameraPosition.x -= 0.1;
-			}
-			else if (userInput.mPressedRight)
-			{
-				cameraPosition.x += 0.1;
-			}
-			else if (userInput.mCursorDeltaX > 0 || userInput.mCursorDeltaY)
+			if (userInput.mCursorDeltaX > 0 || userInput.mCursorDeltaY)
 			{
 				// TODO: set delta for Camera, and update it in Update() (i.e. update camera position to be rotated)
 			}
-			mCamera->SetPosition(cameraPosition);
 
 			for (auto& entity : mEntities)
 			{
