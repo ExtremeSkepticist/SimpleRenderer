@@ -21,11 +21,11 @@ namespace sr
 			XMMATRIX GetViewLookToMatrixLh(const XMFLOAT3& upDirection) const noexcept;
 			XMMATRIX GetProjectionMatrixLh() const noexcept;
 			
+			void RotateCamera(const int xDelta, const int yDelta);
 			void SetOrientationDelta(const float xDelta, const float yDelta) noexcept;
 			void SetTargetPosition(const XMFLOAT3& targetPosition) noexcept;
 			void Update() noexcept override;
 		private:
-			XMMATRIX getRotationMatrix(const int xDelta, const int yDelta, XMVECTOR upDirection);
 
 			float mFovAngle = 0.0f;
 			float mAspectRatio = 0.0f;

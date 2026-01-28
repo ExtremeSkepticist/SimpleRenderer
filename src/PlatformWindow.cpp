@@ -17,8 +17,6 @@ namespace sr
 			, mFrameHeight(frameHeight)
 			, mClassName(className)
 			, mHwnd(nullptr)
-			, mCurrentCursorXpos(0)
-			, mCurrentCursorYpos(0)
 		{
 			Expects(mHwnd == nullptr);
 			Expects(mFrameWidth >= minFrameWidth && mFrameHeight >= minFrameHeight);
@@ -105,8 +103,8 @@ namespace sr
 
 		void PlatformWindow::OnMouseMove(LPARAM lparam)
 		{
-			static int currentXpos = 0;
-			static int currentYpos = 0;
+			static int currentXpos = GET_X_LPARAM(lparam);
+			static int currentYpos = GET_Y_LPARAM(lparam);
 			const int newXpos = GET_X_LPARAM(lparam);
 			const int newYpos = GET_Y_LPARAM(lparam);
 

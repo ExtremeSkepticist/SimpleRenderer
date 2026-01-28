@@ -60,6 +60,7 @@ namespace sr
 			//		- mLightPosition is XMMATRIX just to follow const buffer size constraints
 			if (userInput.mCursorDeltaX > 0 || userInput.mCursorDeltaY)
 			{
+				mCamera->RotateCamera(userInput.mCursorDeltaX, userInput.mCursorDeltaY);
 				// TODO: set delta for Camera, and update it in Update() (i.e. update camera position to be rotated)
 			}
 

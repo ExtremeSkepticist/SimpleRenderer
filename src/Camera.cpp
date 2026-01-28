@@ -34,18 +34,17 @@ namespace sr
 			return XMMatrixLookToLH(cameraVec, lookToDirection, XMLoadFloat3(&upDirection));
 		}
 
-		XMMATRIX Camera::getRotationMatrix(const int xDelta, const int yDelta, XMVECTOR upDirection)
+		void Camera::RotateCamera(const int xDelta, const int yDelta)
 		{
-			const XMFLOAT3 cameraPos = GetPosition();
-			const XMFLOAT3 targetPos = mTargetPosition;
-			const XMVECTOR cameraVec = XMLoadFloat3(&cameraPos);
-			const XMVECTOR targetVec = XMLoadFloat3(&targetPos);
+			// TODO: need to re-compute target position
+			XMFLOAT3 cameraPos = GetPosition();
+			XMVECTOR cameraVec = XMLoadFloat3(&cameraPos);
+			cameraVec = XMVector3Transform(cameraVec, XMMatrixRotationRollPitchYaw(xDelta * 0.01, yDelta * 0.01, 0));
 
-			const XMVECTOR forwardVec = XMVector3Normalize(targetVec - cameraVec);
-			const XMVECTOR rightVec = XMVector3Cross(forwardVec, upDirection);
-
-			return XMMatrixRotationRollPitchYaw(0, xDelta, yDelta);
+			XMStoreFloat3(&cameraPos, cameraVec);
+			GetRootNode().SetPosition(cameraPos);
 		}
+
 		XMMATRIX Camera::GetProjectionMatrixLh() const noexcept
 		{
 			return XMMatrixPerspectiveFovLH(mFovAngle, mAspectRatio, mNearZCoords, mFarZCoords);
@@ -64,7 +63,7 @@ namespace sr
 
 		void Camera::Update() noexcept
 		{
-			mTargetPosition = XMStoreFloat3(XMVector3Transform(XMLoadFloat3(&mTargetPosition), getRotationMatrix()));
+			// mTargetPosition = XMStoreFloat3(XMVector3Transform(XMLoadFloat3(&mTargetPosition), getRotationMatrix()));
 			//TODO: re-compute mTargetPosition with the current orientation
 			// TODO: Update camera world-space position if delta exists by rotating them
 		}
